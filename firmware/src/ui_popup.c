@@ -211,7 +211,11 @@ static void song_range_sheet_open(void)
 static void nt_quantize_v(char *b){str_cpy(b,ui.note_grid==2u?"0.25 step":ui.note_grid==1u?"0.5 step":"1 step",16);}
 static void nt_quantize_grid(int32_t s){ui.note_grid=(uint8_t)clamp((int32_t)ui.note_grid+s,0,2);ui.force=1;}
 static void nt_quantize(void){ui.note_copy=ui.note_move=0;note_quantize(RECORD_UNIT>>ui.note_grid);ui.force=1;}
-static const sheet_row_t SHEET_PATTERN[] = {{"Quantize",nt_quantize_v,nt_quantize_grid,nt_quantize,0}, {"Clear pattern", 0, 0, 0, CF_CLEAR_SEQ}, {"Clear motion", 0, 0, 0, CF_CLEAR_MOTION}};
+/* .. and the SEQ tools (seq_tools.c): Double, Half, Euclid's hits and turn (KNOB 1; OCT+ writes it) */
+static const sheet_row_t SHEET_PATTERN[] = {{"Quantize",nt_quantize_v,nt_quantize_grid,nt_quantize,0},
+    {"Double", seqt_double_v, 0, seqt_double, 0}, {"Half", seqt_half_v, 0, seqt_half, 0},
+    {"Euclid", seqt_hits_v, seqt_hits_turn, seqt_euclid, 0}, {"Euclid turn", seqt_rot_v, seqt_rot_turn, seqt_euclid, 0},
+    {"Clear pattern", 0, 0, 0, CF_CLEAR_SEQ}, {"Clear motion", 0, 0, 0, CF_CLEAR_MOTION}};
 /* SHARED's (its rack, its slots): the routing (one chain, or each slot its own send from every track), clearing them */
 static void sh_route_v(char *b) { str_cpy(b, song.g[G_FXMODE] ? "Split" : "Chain", 8); }
 static void sh_route_turn(int32_t s) { song.g[G_FXMODE] = (int16_t)(s > 0); ui.force = 1; }

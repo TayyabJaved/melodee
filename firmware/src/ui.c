@@ -1273,6 +1273,7 @@ static void confirm_open(uint32_t kind, uint32_t trk)
 #include "note_tools.c"
 #include "ui_song.c"
 #include "ui_song_sound.c"
+#include "seq_tools.c"                            /* the Pattern sheet's Double, Half, Euclid */
 
 #define TL_MAX 4u
 /* s wrapped into at most m lines of w px in face f (at spaces, always at a '\n'; a word wider than the line: at the
