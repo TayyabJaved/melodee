@@ -283,6 +283,7 @@ static void up_params(const up_rec_t *r, int16_t *out, const int16_t *def)
     int16_t values[UP_PMAX * 2u];
     for (uint32_t i = 0; i < r->np && i < NELEM(values); i++) values[i] = up_value(r, i);
     params_by_count(out, values, r->np, def);
+    if (r->np < HUMVEL_NP_MIN) out[P_HUMVEL] = def[P_HUMVEL];   /* (the SLICER's switch then) */
     if (r->np == 125u) { /* retired two-cut layout: high cuts occupied these IDs */
         out[P_STRUM] = def[P_STRUM]; out[P_STROKE] = def[P_STROKE];
     }

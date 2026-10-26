@@ -167,7 +167,7 @@ static int midi_play(track_t *t, uint32_t ch, uint32_t note, uint32_t vel)
         for (i = 0; i < n; i++) midi_chord_tone(m);
         if (m->strum.total) midi_strum_pending |= 1u << f;
     } else if (!midi_note_held(t, nn[0]) && !midi_local_held(t, nn[0])) {
-        input_on(t, nn[0], vel);
+        input_on(t, nn[0], hum_vel(t, vel));
     }
     return 1;
 }

@@ -1370,3 +1370,14 @@ track, and assignment edits preserve notes and automation. Copy carries the
 assignment; Delete removes it with the pattern and supports the existing undo.
 The assignment map participates in project hashes, compact storage, backups and
 track removal. No new editor wire command is introduced.
+
+### Humanize velocity
+
+Common track ID 45 `HVEL` (SCL > Humanize) reuses the retired SLICER switch's
+slot, so `P_COUNT`, `P_E0` and every stored layout are unchanged. It is an enum:
+0 OFF, 1 LOW, 2 HIGH, default 0, and it survives sound loads like the chord keys.
+LOW moves each live note's velocity by up to ±10 and HIGH by up to ±24 (clamped to
+1..127). The FM-1 keys play at 100; every chord tone gets its own offset, and MIDI
+OUT and recording use the humanized value. MIDI IN notes are humanized too. Stores
+with 104 or fewer parameters (written before the SLICER was retired) load it as OFF.
+Old automation on ID 45 stays inert.
