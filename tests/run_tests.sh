@@ -50,7 +50,8 @@
 # LAYERS / SCREEN (tests/layer_screen_test.c): GLO double-tap lock, SCL tap navigation, SCREEN OFF, LFO 2.
 # INPUT (tests/input_test.c): the key / button debounce of hal/fm1_input.h against the TIMER5 scan and bouncing
 #                   contacts: a press within 2 scans (<= 2.3 ms), one note per bouncy press, no early or hanging
-#                   release, stray samples ignored, fast repeats, the encoders' detents.
+#                   release, stray samples ignored, fast repeats, the encoders' detents. tests/key_nav_test.c: the
+#                   MELODEE_KEY_NAV layer (F5 / G5 + six black keys press the panel buttons, never a note).
 # USB audio (tests/usb_audio_*): the descriptors of every build (MIDI only, CDC, USB audio) as a host parses them
 #                   (usb_audio_desc_test.py); the rings against clock drift, packet bounds and recovery
 #                   (usb_audio_test.c); the endpoint driver against a model SIE: SET_INTERFACE, feedback, capture
@@ -315,6 +316,8 @@ if core; then
     t "canvas drawing overlaps DMA without changing pending pixels" lcd_overlap_test -O1 -w -Ibuild/gen
     t "user presets (UP_PUT parser, bank round trip, versions, PHYS DRUM -> DRUM, grid records)" upreset_test
     t "keys and buttons: fast press, long release, bouncy contacts (one note each), glitches, encoders, fast spins" input_test
+    t "keys and buttons with the M1 / M2 key layer built in" input_nav:input_test -DMELODEE_KEY_NAV=1
+    t "M1 / M2 key layer: twelve buttons, matched releases, modifier timing, merged presses" key_nav_test
     t "LED hardware PWM: pin ownership, duty per scan, overlapping planes, blanking" led_pwm_test
     t "Panel fixed column words: full scan and GPIO/PWM fallback" led_pwm_fast:led_pwm_test -DMELODEE_PANEL_FAST=1
     t "Rejected panel brightness cache: exact masks/edits/fallback and sparse/changing costs" panel_prepare_bench -O2
