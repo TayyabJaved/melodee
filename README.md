@@ -779,8 +779,9 @@ Recorded properties and deletion are editable during playback; stop live recordi
 those notes. Live recording follows the playhead; ordinary playback leaves the editing focus alone.
 The screen shows the four knob controls plus selection, zoom, movement and deletion hints.
 The DRUM grid retains white-key step entry and black-key lane selection for manual patterns;
-recorded drum performances use the same precise NOTES piano roll and individual-hit controls after
-recording stops. During live drum recording, the grid and lane keys stay in place.
+in this fork it stays the drum NOTES view after recording too, with recorded hits drawn as short bars beside the
+programmed ones (see "Pages and the header" below); the piano roll is the pattern sheet's **Drum view: Notes**.
+During live drum recording, the grid and lane keys stay in place.
 
 Armed live recording preserves played timing, velocity and each note's held duration, including
 repeated hits within one step and overlapping chord notes with different releases.
@@ -1140,8 +1141,6 @@ You can leave a tip with [ko-fi](https://ko-fi.com/keremimo).
 - VOICE engine: after [klattsch](https://github.com/tgies/klattsch) by Tony Gies (MIT); formant data from Klatt (1980) and Hillenbrand et al. (1995)
 - Native CZ engine: uPD933 model by Devin Acker in [MAME](https://github.com/mamedev/mame/blob/master/src/devices/sound/upd933.cpp) ([BSD-3-Clause](LICENSES/BSD-3-Clause-uPD933.txt))
 - PHYS engine: models ported from [DaisySP](https://github.com/electro-smith/DaisySP) by Electrosmith and Emilie Gillet ([MIT](LICENSES/MIT-DaisySP.txt)) and from Emilie Gillet's [eurorack](https://github.com/pichenettes/eurorack) code ([MIT](LICENSES/MIT-Rings.txt))
-- SID engine: after [reSID](https://github.com/libsidplayfp/resid) by Dag Lem (GPL-2.0-or-later); its samples of a real
-  6581's and 8580's combined waveforms are included as data ([assets/resid](assets/resid/README.md))
 - FM6 engine: msfa from [Dexed](https://github.com/asb2m10/dexed) by Google Inc. and Pascal Gauthier ([Apache-2.0](LICENSES/Apache-2.0-msfa.txt))
 - Package format and boot files: [JieLi AC79 SDK](https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK) ([Apache-2.0](LICENSES/Apache-2.0.txt); three of its files are in every package, none in this tree)
 - Contributions: [Charles Vestal](https://github.com/charlesvestal) (knob acceleration and 808/909 models),
@@ -1267,3 +1266,53 @@ Clear motion it has:
 
 Each is undone with **EDIT** held, one at a time. Euclid does not work on a pattern with recorded notes, and none of
 them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)'s SEQ tools (Theo Dainis).
+
+### Pages and the header (this fork)
+
+- **Page position:** the header shows where you are among the button's pages as **2/4**, right after the BPM, on
+  every page with more than one. HOME shows 1/2 or 2/2 where there is room.
+- **ENV, LFO and EDIT, one home each:** on the Prophet, FM6 and CZ-1, ENV holds the synth's own envelopes and LFO
+  its own LFO, then the track LFO and MOD; EDIT holds the rest of the synth. SELECT stays on the pages of the button
+  you pressed, which stays lit; EDIT pressed on an ENV or LFO page goes to EDIT (pressed on an EDIT page: the section
+  map). On the CZ-1, ENV walks all five pages of each envelope, and PRESETS (or ENV again) jumps to the next one.
+- **Sections:** turning PRESETS on an EDIT page jumps to the first page of the next section, and the header shows
+  the section's name (FILTER, OP3, LINE 1) where the page's name goes, for half a second. On the CZ-1's ENV pages it
+  jumps to the next envelope (PITCH 1, WAVE 1).
+- **No save page in EDIT:** the Prophet's and FM6's STORE pages are gone from EDIT; **SAVE** saves every engine's
+  sound, and the sound sheet (OCT+ on Stage or PRESETS) has Init sound. (Sending a patch as SysEx went with them.)
+- **Two LFOs, clearly named:** the synth's own pages carry its name (**P5 LFO**, **P5 WHEEL**, **FM LFO**,
+  **CZ VIBRATO**); the track LFO, on every engine, is **TRACK LFO**, **TRACK LFO 2** and **TRACK DEST**. The synth's
+  LFO is saved in its patches; the track LFO is off in factory sounds and saved in your own presets and projects.
+- **Drum NOTES is always the grid:** programmed hits are full cells, recorded hits short bars, together. Editing a
+  recorded cell on the grid turns that step into programmed hits (its played timing snaps to the step); a hit's
+  pitch, length and sound are on **DRUM HIT**. For precise timing edits of recorded hits, hold OCT+ for the pattern
+  sheet and set **Drum view** to **Notes** (the piano roll; programmed hits do not show there), back to **Grid** the
+  same way. It starts as Grid at power-on.
+- **Keyboard shortcuts (the `-nav` build):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
+  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+. While M3 is
+  held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). While one is held, its keys and
+  the buttons they press light up. Momentary edits:
+  hold LFO and turn knobs, the values spring back when you let go; press F#5 (or OCT+) while holding to keep them.
+- **Bluetooth:** its status shows in the header on Settings > Bluetooth only, and the BLUETOOTH row says OFF, ON or
+  CONNECTED. Elsewhere, connecting, disconnecting and failures are brief messages; a pairing PIN shows on every
+  screen until it is entered.
+
+### Sounds, chords and the arp (this fork)
+
+- **No SID:** the SID engine, its SID KIT / SID DIGI drum kits and TRIO are removed to make room in flash. Songs and
+  presets that used them keep their engine number and play silent; a stored SID drum kit plays the 909.
+- **Drum keys:** on a drum track the first eight black keys play the eight lanes (as on the grid), everywhere; the
+  white keys are silent.
+- **Chord sequencer (SEQ > CHORDS, CHORDS 2):** each step holds one note and the chord to play on it. PRESETS moves
+  the step. CHORDS turns NOTE, CHORD (OFF, DIA3 … POW), VOICE and STRUM; CHORDS 2 turns DIR, VEL, LENGTH and NUDGE
+  (±50 % of a step, early or late). A key sets the step's note and keeps its chord, an empty step takes the last
+  chord set; every edit plays the chord. The piano roll underneath shows the notes each step plays, its strum and
+  nudge included. Steps written on NOTES play as they are.
+- **SHAPE arp (ARP > MODE SHAPE):** a rhythm for the arp. Each step (up to 64) is ON or OFF: an ON step plays the
+  next note of the chord you hold, an OFF step is a rest (the next ON step carries on with the next note). On ARP 2,
+  STEPS (1–64, 16 at first) and DIR (UP, DN, UPDN, RND) take the places of PROB and ORD; OCT, RATE, GATE, SWING and
+  HOLD are the arp's. It starts with every step ON, so it plays as UP until you add rests. On the ARP page the keys
+  play as always; hold **M3** (F#5, the `-nav` build) or **OCT−** and the 16 white keys are steps 1–16 of the page
+  shown (PRESETS turns the page): tap one to turn it on or off, the ON steps light up. The screen shows the steps and
+  the one playing. The other modes are unchanged, and switching keeps both settings. A song with its own shape saves
+  it; such a song needs this firmware to load.
