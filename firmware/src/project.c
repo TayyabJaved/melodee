@@ -60,6 +60,7 @@ typedef struct {
     uint8_t pattern[PROJ_TRK];                     /* FUN13's active-bank ids (also in the full container) */
     char name[PROJ_NAME_LEN];                  /* the project's name: upper-case ASCII 32..126, 0-padded; "" = none */
     uint16_t user[PROJ_TRK];                    /* shared slot + 1; sound remains embedded independently */
+    uint8_t gen[PROJ_TRK][GN_SAVE];             /* ARP > GEN (gen_track.c gn_save); all 0: none, MODE OFF */
     uint32_t sum;
 } __attribute__((may_alias)) project_t;
 /* The four formerly reserved runtime bytes keep Prophet user-slot origins.
@@ -102,6 +103,7 @@ static uint8_t proj_p5_origin_value(const project_t *p,uint32_t track)
 #define PROJ_P5_ORIGIN_TAG1 0x35u
 #define PROJ_P5_ORIGIN_MAX 128u /* native Prophet user collection */
 #define PROJ_MPC_OCT_WIRE (PROJ_TONE_WIRE - 2u) /* tagged bank octaves in the unused project tail */
+#define PROJ_GEN_WIRE (2u + PROJ_TRK * GN_SAVE)  /* 'G', 4, then each track's generator: after the 'U' block */
 #define TMPL_MPC_OCT_G G_RESERVED25             /* template metadata only; remains an inert runtime global */
 
 /* Four signed octaves in a tagged 16-bit word; zero is an older record (all banks at zero).
@@ -128,6 +130,8 @@ static int mpc_octaves_unpack(int8_t oct[PROJ_TRK], uint32_t word)
     return 1;
 }
 typedef union { uint32_t align; uint8_t raw[PROJ_STORE_SIZE]; } project_store_t;
+_Static_assert(68u + PROJ_TRK * (P_COUNT + 2u + NSTEP * 8u) + sizeof(((project_t *)0)->chain) + sizeof(motion_store_t) + 2u + 2u * PROJ_TRK +
+               PROJ_GEN_WIRE <= PROJ_MPC_OCT_WIRE, "the generators' block fits the record's tail (a save would fail)");
 _Static_assert(G_MFXTYPE == PROJ_GLOBALS && G_FXMODE==40u && G_BUDGET==41u && G_MFXTONE==42u && G_COUNT==45u, "old global IDs and wire header stay fixed");
 /* FUN21 / TPLK's two cuts (LO CUT 10 + 10 v Hz, HI CUT 100 + 20 v Hz, 0 OFF) -> the TONE nearest them, the low cut
  * first (TONE holds one); a low cut at or under 150 Hz is what the effects' own floor does now (fx_floor_hz) */
@@ -191,9 +195,10 @@ static int proj_import_note10(project_t *q,const uint8_t *b,uint32_t n)
         if(r[5])v=(recorded_note_t){.on=(uint16_t)(r[0]|r[1]<<8), .duration=(uint16_t)(r[2]|r[3]<<8), .note7=r[4], .vel=r[5], .owner=r[6], .step=r[7], .pitch=(int8_t)r[8], .length=(r[9]&1u), .extended=(r[9]>>1)};
         q->recording[i]=v;
     }
-    uint32_t tail=__builtin_offsetof(project_t,pattern),old=at+RECORD_MAX*10u;
-    /* Forward byte copy also supports an in-place shrinking import. */
-    for(uint32_t i=0;i<sizeof *q-tail;i++)((uint8_t *)q)[tail+i]=b[old+i];
+    uint32_t tail=__builtin_offsetof(project_t,pattern),old=at+RECORD_MAX*10u,gen=__builtin_offsetof(project_t,gen);
+    /* Forward byte copy also supports an in-place shrinking import. Those snapshots predate gen[]: none, MODE OFF */
+    for(uint32_t i=0;i<gen-tail;i++)((uint8_t *)q)[tail+i]=b[old+i];
+    memset(q->gen,0,sizeof q->gen);
     q->size=sizeof *q;q->sum=proj_sum(q);return proj_ok(q);
 }
 /* FUN18 / FUN17 / FUN16 or a project_t (host RAM slots) -> q; 0 = not a project. */
@@ -205,7 +210,7 @@ static int proj_import(project_t *q, const void *b, int n)
         memcpy(q, b, sizeof *q);
         return 1;
     }
-    if(n==(int)(sizeof *q+RECORD_MAX))return proj_import_note10(q,b,(uint32_t)n);
+    if(n==(int)(sizeof *q-sizeof q->gen+RECORD_MAX))return proj_import_note10(q,b,(uint32_t)n);
     return 0;
 }
 static int proj_fn_none(project_t *q)          /* a record without FM6 function settings: Dexed's */
@@ -338,12 +343,17 @@ static int proj_pack(project_store_t *out, const project_t *q)
             if(!proj_step_pack(b+pos,&q->t[t].step[i]))return 0;pos+=8u;
         }
     }
-    if (pos + sizeof q->chain + sizeof q->motion + 2u + 2u*PROJ_TRK > PROJ_MPC_OCT_WIRE) return 0;
+    if (pos + sizeof q->chain + sizeof q->motion + 2u + 2u*PROJ_TRK + PROJ_GEN_WIRE > PROJ_MPC_OCT_WIRE) return 0;
     memcpy(b + pos, &q->chain, sizeof q->chain); pos += sizeof q->chain;
     memcpy(b + pos, &q->motion, sizeof q->motion);
     pos += sizeof q->motion;
     b[pos++]='U';b[pos++]=3u;
     for(t=0;t<PROJ_TRK;t++){b[pos++]=(uint8_t)q->user[t];b[pos++]=(uint8_t)(q->user[t]>>8);}
+    {   /* the generators, only while one plays (none: the record as before); older firmware never reads past 'U' */
+        uint32_t any = 0;
+        for (t = 0; t < PROJ_TRK; t++) any |= q->gen[t][0];
+        if (any) { b[pos++]='G'; b[pos++]=4u; memcpy(b + pos, q->gen, sizeof q->gen); pos += sizeof q->gen; }
+    }
     b[PROJ_MPC_OCT_WIRE] = (uint8_t)octword;
     b[PROJ_MPC_OCT_WIRE+1u] = (uint8_t)(octword >> 8);
     memcpy(b + PROJ_FM6_OFF, q->fm6, sizeof q->fm6);
@@ -446,6 +456,10 @@ static int proj_unpack(project_t *q, const uint8_t *b)
     pos += sizeof q->motion;
     if(pos+2u+2u*PROJ_TRK<=PROJ_FM6_OFF && b[pos]=='U' && b[pos+1u]==3u){
         for(t=0;t<PROJ_TRK;t++){uint32_t user=b[pos+2u+2u*t]|(uint32_t)b[pos+3u+2u*t]<<8;q->user[t]=(uint16_t)(user<=384u?user:0);}
+        uint32_t g=pos+2u+2u*PROJ_TRK,v=b[g+1u],n=v==1u?14u:v==2u?18u:v==3u?19u:v==4u?GN_SAVE:0u;   /* the generators after it, as
+                                                       * 1.5.0-nav writes them: version 1 14 bytes a track, 2 18, the rest 0 */
+        if(n && g+2u+PROJ_TRK*n<=PROJ_MPC_OCT_WIRE && b[g]=='G')
+            for(t=0;t<PROJ_TRK;t++)memcpy(q->gen[t], b + g + 2u + n*t, n);
     }else if(pos+2u+PROJ_TRK<=PROJ_FM6_OFF && b[pos]==PROJ_P5_ORIGIN_TAG0 && b[pos+1u]==PROJ_P5_ORIGIN_TAG1){
         for(t=0;t<PROJ_TRK;t++){uint32_t origin=b[pos+2u+t];if(origin && origin<=128u){uint32_t slot=origin-1u,bank=slot/26u,k=slot%26u,spill=bank*8u+k-18u;q->user[t]=(uint16_t)(1u+(k<18u?(16u+bank)*18u+k:spill<32u?spill/2u*18u+16u+spill%2u:378u+spill-32u));}}
     }
@@ -723,6 +737,7 @@ static void project_capture(project_t *p)
             if(user_of(t)<UP_SLOTS)p->user[i]=(uint16_t)(user_of(t)+1u);
             p->pattern[i] = t->pattern;
             memcpy(p->t[i].step, t->step, sizeof t->step);
+            if (src < GN_TRACKS && gn[src].mode) gn_save(src, p->gen[i]);   /* (its generator moves with it; OFF: none) */
         } else {                                        /* the place left empty: its power-on sound, no steps */
             uint32_t e = trk_def_engine(i);
             p->t[i].engine = (uint8_t)e;
@@ -982,6 +997,7 @@ static int project_restore_runtime(const project_t *input)
         memcpy(t->step, s->step, sizeof t->step);
         proj_steps(t->step);
         pattern_commit(t);
+        gn_load(k, p->gen[k]);                          /* (none saved: MODE OFF) */
         {   /* the project's own FM6 patch */
             uint8_t v[FP_SIZE + 1u];
             fm6_unpack(p->fm6[k], v);
@@ -1330,6 +1346,7 @@ static void project_new_blank(void)
     fm1_irq_off();
     chain_defaults(&chain_config);
     pattern_init();
+    for (k = 0; k < GN_TRACKS; k++) gn_defaults(k);  /* (no generators) */
     fm1_irq_on();
     for (i = 0; i < G_COUNT; i++)
         song.g[i] = GP[i].def;

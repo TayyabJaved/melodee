@@ -102,6 +102,7 @@ static void track_blank(uint32_t k)
             p.timing[i] = TP[P_SLEN + i].def;
         pattern_write(k % NTRK, b, &p);
     }
+    if (k % NTRK < GN_TRACKS) gn_defaults(k % NTRK);   /* (no generator) */
     pattern_switch(t, 0);
     t->pattern_next = 0xff;
     t->pattern_gen++;
