@@ -737,15 +737,26 @@ static void input_off(track_t *t, uint32_t note)
     if (!recording_owns(t, note)) trk_note_off(t, note); /* other mode (ARP switched while held) */
 }
 
+/* SCL > HUMANIZE VEL: a live note's velocity moved by up to +-10 (LOW) or +-24 (HIGH), each chord tone its own;
+ * OFF leaves it, and the random sequence, untouched */
+static uint32_t hum_vel(const track_t *t, uint32_t vel)
+{
+    static const uint8_t SPAN[3] = {0, 10, 24};
+    uint32_t s = SPAN[clamp(t->p[P_HUMVEL], 0, 2)];
+    if (!s || !vel) return vel;
+    return (uint32_t)clamp((int32_t)vel + (int32_t)(rng() % (2u * s + 1u)) - (int32_t)s, 1, 127);
+}
+
 /* Start only this tone's ownership before input_on: note-triggered recording can
  * re-enter seq_advance(0). Shared tones retain the existing single-note policy. */
 static void key_chord_tone(uint32_t k, track_t *t)
 {
-    uint32_t x = kb_chord[k][kb_chn[k]], held = midi_local_held(t, x);
+    uint32_t x = kb_chord[k][kb_chn[k]], held = midi_local_held(t, x), vel;
     kb_chn[k]++;
     if (held) return;
-    input_on(t, x, 100);
-    if (!midi_track_only(t)) midi_out_event(0x09u | (0x90u | trk_midi_ch(trk_index(t))) << 8 | x << 16 | 100u << 24);
+    vel = hum_vel(t, 100);
+    input_on(t, x, vel);
+    if (!midi_track_only(t)) midi_out_event(0x09u | (0x90u | trk_midi_ch(trk_index(t))) << 8 | x << 16 | vel << 24);
 }
 
 static void key_on(uint32_t k, track_t *t)
@@ -781,7 +792,7 @@ static void midi_chord_tone(mchord_t *m)
     uint32_t held = midi_note_held(t, note) || midi_local_held(t, note);
     m->n++;
     /* MPC's duplicate drum pads are separate strikes, even while another pad holds that sound. */
-    if (!held || (t->p[P_QUANT] == Q_MPC && drum_track(t))) input_on(t, note, m->strum.vel);
+    if (!held || (t->p[P_QUANT] == Q_MPC && drum_track(t))) input_on(t, note, hum_vel(t, m->strum.vel));
 }
 
 /* Return the next string boundary, bounded by this clock advance. Splitting the
