@@ -2625,6 +2625,9 @@ static void panel_setup(void)
 {
     uint32_t i, used = 0, t0 = fm1_ms;
     const panel_t old = panel;
+#if MELODEE_KEY_NAV
+    panel_nav(0);
+#endif
     setup_title();
     while (fm1_in.buttons) {                             /* wait for OCT-/OCT+ release */
         fm1_wdt_feed();
@@ -2675,10 +2678,16 @@ static void panel_setup(void)
     panel.magic = PANEL_MAGIC;
     lcd_fill(0, 0, 240, 240, T_BG);
     ui.force = 1;
+#if MELODEE_KEY_NAV
+    panel_nav(1);
+#endif
     return;
 timeout:
     panel = old;
     lcd_fill(0, 0, 240, 240, T_BG);
     ui.force = 1;
+#if MELODEE_KEY_NAV
+    panel_nav(1);
+#endif
     ui_message("SETUP CANCELLED");
 }

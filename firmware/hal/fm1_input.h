@@ -103,6 +103,9 @@ static volatile struct {
     int8_t enc_sub[FM1_NENC];    /* net transitions since the last rest state */
     int16_t enc_steps[FM1_NENC]; /* + = clockwise */
     uint32_t frames;
+#if MELODEE_KEY_NAV
+    uint32_t keys, panel;        /* debounced contacts; notes / buttons are what the application sees */
+#endif
 } fm1_in;
 static uint8_t fm1_led[FM1_NCOL];
 static uint8_t fm1_led_dim[3][FM1_NCOL];
@@ -237,11 +240,95 @@ static void fm1_input_init(void)
         fm1_in.enc_prev[i] = fm1_in.enc_last[i] = 0xFF;   /* seeded by the first frame */
 }
 
+#if MELODEE_KEY_NAV
+/* F5 / G5 held (M1 / M2): black keys press the top / bottom row of panel buttons (M2: OCT- OCT+ too). A key's
+ * route is chosen at its press and undone at its release; both modifiers held: new keys do nothing. Armed by
+ * fm1_input_nav */
+#define FM1_NAV_N 8u
+static const uint8_t FM1_NAV_MOD[2] = {24, 26};                                /* F5 M1, G5 M2 */
+static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25, 8, 10}; /* F#4 G#4 A#4 C#5 D#5 F#5 C#4 D#4 */
+#ifdef __ELF__
+#define FM1_NAV_POOL __attribute__((section(".pool")))   /* zeroed at boot; off the full .bss bank */
+#else
+#define FM1_NAV_POOL                                     /* (a host without ELF sections) */
+#endif
+static volatile struct {
+    uint32_t mod, held, mute, btn;   /* modifier keys down, keys routed to a button, keys ignored, buttons pressed */
+    uint8_t to[27];                  /* each routed key's button */
+    uint8_t on, row[2][FM1_NAV_N];   /* armed; matrix button ids, M1 row then M2 row; >= 14: none (a note) */
+} fm1_nav FM1_NAV_POOL;
+
+/* arm the layer with the matrix buttons of its rows, 0: off (keys already routed still release). No lock: the
+ * scan sees the layer off while the table changes, so this is safe before interrupts are set up too */
+static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N])
+{
+    uint32_t r, i;
+    fm1_nav.on = 0;
+    for (r = 0; btn && r < 2u; r++)
+        for (i = 0; i < FM1_NAV_N; i++)
+            fm1_nav.row[r][i] = btn[r][i];
+    fm1_nav.on = btn != 0;
+}
+#define FM1__NOTES fm1_in.keys
+#define FM1__BUTTONS fm1_in.panel
+
+static void fm1__buttons(void)
+{
+    uint32_t was = fm1_in.buttons, now = fm1_in.panel | fm1_nav.btn;
+    fm1_in.pressed |= now & ~was;
+    fm1_in.released |= was & ~now;
+    fm1_in.buttons = now;
+}
+
+static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a note */
+{
+    uint32_t bit = 1u << k, m1 = 1u << FM1_NAV_MOD[0], m2 = 1u << FM1_NAV_MOD[1], i;
+    if (!down) {
+        if (fm1_nav.held & bit) {
+            fm1_nav.held &= ~bit;
+            fm1_nav.btn &= ~(1u << fm1_nav.to[k]);
+            fm1__buttons();
+            return 1;
+        }
+        if ((fm1_nav.mod | fm1_nav.mute) & bit) {
+            fm1_nav.mod &= ~bit;
+            fm1_nav.mute &= ~bit;
+            return 1;
+        }
+        return 0;
+    }
+    if (!fm1_nav.on)
+        return 0;
+    if (bit & (m1 | m2)) {
+        fm1_nav.mod |= bit;
+        return 1;
+    }
+    if ((fm1_nav.mod & (m1 | m2)) == (m1 | m2)) {
+        fm1_nav.mute |= bit;
+        return 1;
+    }
+    for (i = 0; fm1_nav.mod && i < FM1_NAV_N; i++)
+        if (k == FM1_NAV_KEY[i]) {
+            fm1_nav.to[k] = fm1_nav.row[(fm1_nav.mod & m2) != 0u][i];
+            if (fm1_nav.to[k] >= 14u)
+                return 0;
+            fm1_nav.held |= bit;
+            fm1_nav.btn |= 1u << fm1_nav.to[k];
+            fm1__buttons();
+            return 1;
+        }
+    return 0;
+}
+#else
+#define FM1__NOTES fm1_in.notes
+#define FM1__BUTTONS fm1_in.buttons
+#endif
+
 static void fm1__key(uint32_t id, uint32_t closed)
 {
     volatile uint8_t *c = &fm1_in.cnt[id];
     uint32_t note = id >= 14u, bit = note ? 1u << (id - 14u) : 1u << id;
-    uint32_t on = ((note ? fm1_in.notes : fm1_in.buttons) & bit) != 0u;
+    uint32_t on = ((note ? FM1__NOTES : FM1__BUTTONS) & bit) != 0u;
     if (closed == on) {                            /* agrees with the state: start over */
         *c = 0;
         return;
@@ -252,6 +339,11 @@ static void fm1__key(uint32_t id, uint32_t closed)
         return;
     *c = 0;
     if (note) {
+#if MELODEE_KEY_NAV
+        fm1_in.keys ^= bit;
+        if (fm1__nav(id - 14u, !on))
+            return;
+#endif
         if (!on) {
             uint32_t d = FM1_INPUT_NOW() - fm1_in.note_t0[id - 14u];
             fm1_in.notes_pressed |= bit;
@@ -262,11 +354,16 @@ static void fm1__key(uint32_t id, uint32_t closed)
         }
         fm1_in.notes ^= bit;
     } else {
+#if MELODEE_KEY_NAV
+        fm1_in.panel ^= bit;
+        fm1__buttons();
+#else
         fm1_in.buttons ^= bit;
         if (!on)
             fm1_in.pressed |= bit;
         else
             fm1_in.released |= bit;
+#endif
     }
 }
 

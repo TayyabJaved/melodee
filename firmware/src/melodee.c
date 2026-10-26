@@ -41,8 +41,15 @@
 #ifndef MELODEE_ID
 #define MELODEE_ID "FM-1_900"    /* package identity (build.py: the .fwsc marker string) */
 #endif
+#ifndef MELODEE_KEY_NAV
+#define MELODEE_KEY_NAV 0        /* F5 / G5 held: black keys press the panel buttons (hal/fm1_input.h) */
+#endif
 #ifndef MELODEE_VERSION
+#if MELODEE_KEY_NAV
+#define MELODEE_VERSION "v1.6.0-rc.5-nav"
+#else
 #define MELODEE_VERSION "v1.6.0-rc.5" /* shown in the menu, the console and the editor; build.py --release X.Y[.Z] */
+#endif
 #endif
 #if MELODEE_OTA && !MELODEE_FLASH
 #error "MELODEE_OTA needs MELODEE_FLASH"

@@ -19,6 +19,10 @@ static int p5_favorite_set(uint32_t slot,int on,int factory){(void)slot;(void)on
 #define ENGI_CZ 15u
 static void fm1_led_key(unsigned k, int on) { (void)k; (void)on; }
 static int fm1_enc_take(unsigned k) { (void)k; return 0; }
+#if MELODEE_KEY_NAV
+#define FM1_NAV_N 8u
+static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }
+#endif
 static void lcd_sync(void) {}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c) { (void)x; (void)y; (void)w; (void)h; (void)c; }
 static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *p)

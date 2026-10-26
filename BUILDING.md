@@ -157,6 +157,7 @@ Build options (environment; most use `0` or `1`; defaults in `firmware/src/build
 | `MELODEE_CORE1_FALLBACK` | 1 | automatic recovery on one core; `0` halts for watchdog reset on CPU1 failure |
 | `MELODEE_SLICE` | 1 | the SLICE engine |
 | `MELODEE_ICONS` | 1 | parameter icons on the knob cards |
+| `MELODEE_KEY_NAV` | 0 | experimental: hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; G5 + C#4 / D#4 are OCT− / OCT+. F5 and G5 no longer play notes. The version shows `-nav` |
 
 To diagnose the automatic CPU1 fallback, build with `./build.sh --no-core1-fallback`
 or `MELODEE_CORE1_FALLBACK=0 ./build.sh`. CPU1 still starts normally. Worker
