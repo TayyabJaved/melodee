@@ -1268,3 +1268,26 @@ Clear motion it has:
 
 Each is undone with **EDIT** held, one at a time. Euclid does not work on a pattern with recorded notes, and none of
 them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)'s SEQ tools (Theo Dainis).
+
+### Pages and the header (this fork)
+
+- **Page position:** the header shows where you are among the button's pages as **2/4**, right after the BPM, on
+  every page with more than one. HOME shows 1/2 or 2/2 where there is room.
+- **ENV, LFO and EDIT, one home each:** on the Prophet, FM6 and CZ-1, ENV holds the synth's own envelopes and LFO
+  its own LFO, then the track LFO and MOD; EDIT holds the rest of the synth. SELECT stays on the pages of the button
+  you pressed, which stays lit; EDIT pressed on an ENV or LFO page goes to EDIT (pressed on an EDIT page: the section
+  map). On the CZ-1, ENV walks all five pages of each envelope, and PRESETS (or ENV again) jumps to the next one.
+- **Sections:** turning PRESETS on an EDIT page jumps to the first page of the next section, and the header shows
+  the section's name (FILTER, OP3, LINE 1) where the page's name goes, for half a second. On the CZ-1's ENV pages it
+  jumps to the next envelope (PITCH 1, WAVE 1).
+- **No save page in EDIT:** the Prophet's and FM6's STORE pages are gone from EDIT; **SAVE** saves every engine's
+  sound, and the sound sheet (OCT+ on Stage or PRESETS) has Init sound. (Sending a patch as SysEx went with them.)
+- **Two LFOs, clearly named:** the synth's own pages carry its name (**P5 LFO**, **P5 WHEEL**, **FM LFO**,
+  **CZ VIBRATO**); the track LFO, on every engine, is **TRACK LFO**, **TRACK LFO 2** and **TRACK DEST**. The synth's
+  LFO is saved in its patches; the track LFO is off in factory sounds and saved in your own presets and projects.
+- **Keyboard shortcuts (the `-nav` build):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
+  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+. Momentary edits:
+  hold LFO and turn knobs, the values spring back when you let go; press F#5 (or OCT+) while holding to keep them.
+- **Bluetooth:** its status shows in the header on Settings > Bluetooth only, and the BLUETOOTH row says OFF, ON or
+  CONNECTED. Elsewhere, connecting, disconnecting and failures are brief messages; a pairing PIN shows on every
+  screen until it is entered.
