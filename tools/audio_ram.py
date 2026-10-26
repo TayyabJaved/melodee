@@ -21,6 +21,9 @@ ROOTS = {'fm1_alnk0_irq', 'audio_block', 'mix_block', 'ua_audio', 'click_render'
 CALLBACKS = {'note_on', 'render', 'amp', 'block', 'done', 'alloc', 'legato',
              'mono_key', 'post', 'units', 'cap', 'keys', 'desc'}
 COLD_CALLBACKS = {'preset_make'}
+# Kept in flash, called through a far pointer, with everything only they reach: usb_poll (below) and the
+# generators (gen_track.c: once a step, not per sample)
+XIP = {'usb_poll', 'gn_next', 'gn_restart_all'}
 
 
 def engine_roots(src):
@@ -99,7 +102,7 @@ def relocate(ir, roots):
         name = pending.pop()
         # usb_poll is deliberately excluded: TIMER5 calls it only outside
         # the audio interrupt. Nested endpoint/UART/input work remains resident.
-        if name == 'usb_poll' or name not in functions or name in selected:
+        if name in XIP or name not in functions or name in selected:
             continue
         selected.add(name)
         pending.extend(REFERENCE.findall(functions[name][5]))

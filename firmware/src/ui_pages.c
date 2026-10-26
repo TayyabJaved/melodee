@@ -583,6 +583,119 @@ static void pv_steps(int32_t h)
     cv_rrect(16, h - 12, 208, 4, 2, T_LINE, T_PANEL);
     cv_rrect(16, h - 12, (int32_t)len * 208 / NSTEP, 4, 2, T_THEME, T_LINE);
 }
+/* GEN, GEN 2 (gen_track.c): what the generator plays (CHANGE's offsets on the settings), under a line of its mode, last
+ * note, seed and CHANGE (a value waiting for the bar: "42>43"), MARKOV's LOCK ("rec" keeping, "loop"). TURING: its LEN steps
+ * as they come round, the one sounding at the left (framed), a hit filled, the loop's first step in another colour; EUCLID: its STEPS as dots, a hit filled; MARKOV: its eight degrees, the chance of each next one as a bar, the
+ * one it sits on marked; ATLAS: a bar of kick, snare and hat from the map, an accent larger; SERIES: its next 16 degrees;
+ * BOUNCE: the box, its balls, the walls just hit (FALL: the leaves). The step playing white. OFF: the steps play */
+static uint32_t pv_gen_sig(void)
+{
+    uint32_t k = song.sel % GN_TRACKS, h = 2166136261u;
+    uint8_t b[GN_SAVE];
+    gn_save(k, b);
+    for (uint32_t i = 0; i < GN_SAVE; i++) h = (h ^ b[i]) * 16777619u;
+    for (uint32_t i = 0; i < GEN_BOUNCE_MAX; i++) h = (h ^ gn[k].bounce.x[i] ^ (uint32_t)gn[k].bounce.y[i] << 8) * 16777619u;
+    for (uint32_t i = 0; i < GEN_FALL_LEAVES; i++) h = (h ^ gn[k].bounce.lx[i] ^ (uint32_t)gn[k].bounce.ly[i] << 8) * 16777619u;
+    h = (h ^ gn[k].series.n ^ (uint32_t)gn[k].bounce.hit << 16) * 16777619u;
+    return (h ^ gn[k].turing.reg ^ (uint32_t)gn[k].turing.step_idx << 8 ^ (uint32_t)gn[k].euclid.step_idx << 16 ^ (uint32_t)gn[k].markov.cur_state << 22 ^
+            (uint32_t)gn[k].grids.step_idx << 25 ^ gn[k].last * 40503u ^ gn[k].aseed * 7919u ^ gn[k].achange * 104729u ^
+            (uint32_t)gn[k].rec << 29) * 16777619u;
+}
+static void pv_gen(int32_t h)
+{
+    uint32_t k = song.sel % GN_TRACKS, m = gn[k].mode, i, p;
+    int32_t top = 34, bot = h - 14;
+    char b[40];
+    if (!m) {
+        cv_free_text(12, 6, TY_LB, "OFF \xB7 the steps play", T_MID, T_PANEL, PV_PANEL_W - 24);
+        return;
+    }
+    str_cpy(b, GN_NAME[m], sizeof b);
+    if (gn[k].last && m != GN_ATLAS) {
+        str_cpy(b + str_len(b), " \xB7 ", 4);
+        note_name(b + str_len(b), gn[k].last);
+    }
+    str_cpy(b + str_len(b), " \xB7 ", 4);
+    fmt_int(b + str_len(b), (int32_t)gn[k].aseed);
+    if (gn[k].seed != gn[k].aseed) { str_cpy(b + str_len(b), ">", 2); fmt_int(b + str_len(b), (int32_t)gn[k].seed); }
+    if (gn[k].achange || gn[k].change) {
+        str_cpy(b + str_len(b), " +", 3);
+        fmt_int(b + str_len(b), (int32_t)gn[k].achange);
+        if (gn[k].change != gn[k].achange) { str_cpy(b + str_len(b), ">", 2); fmt_int(b + str_len(b), (int32_t)gn[k].change); }
+    }
+    if (m == GN_MARKOV && gn[k].lock)                   /* LOCK: keeping its phrase, or playing it */
+        str_cpy(b + str_len(b), gn[k].rec ? " \xB7 rec" : " \xB7 loop", 8);
+    cv_free_text(12, 6, TY_LB, b, T_MID, T_PANEL, PV_PANEL_W - 24);
+    if (m == GN_TURING) {
+        uint32_t len = gn[k].turing.len ? gn[k].turing.len : 16u, first = gn_turing_first(k);
+        int32_t y = (top + bot) / 2 - 12;
+        for (i = 0; i < 16u; i++) {
+            uint32_t on = gn_turing_hit(k, i);
+            cv_rrect(16 + (int32_t)i * 13, y, 11, 24, 3, i >= len ? ux_mix(T_PANEL, T_LINE, 50) :
+                     i == first ? (on ? T_KNOB(3) : ux_mix(T_PANEL, T_KNOB(3), 40)) : on ? (i ? T_THEME : T_TEXT) : T_LINE, T_PANEL);
+        }
+        cv_frame(14, y - 2, 15, 28, T_ACCENT);
+    } else if (m == GN_EUCLID) {
+        gen_euclid_t e;
+        const gen_euclid_t *g = &e;
+        gn_eff_euclid(k, &e);
+        uint32_t n = g->steps ? g->steps : 16u, play = song.playing ? (g->step_idx + n - 1u) % n : 0xFFu;
+        for (i = 0; i < n; i++) {
+            uint32_t hit = (uint32_t)gen_euclid_hit((uint8_t)i, (uint8_t)n, g->pulses, g->rot);
+            int32_t y = n > 16u ? top + (int32_t)(i / 16u) * (bot - top) / 2 + 8 : (top + bot) / 2;
+            cv_disc(PV_STEP_X(i), y, i == play || hit ? 9 : 5, i == play ? T_TEXT : hit ? T_THEME : T_LINE, 0);
+        }
+    } else if (m == GN_MARKOV) {
+        gen_markov_t mk;
+        const gen_markov_t *g = &mk;
+        gn_eff_markov(k, &mk);
+        uint8_t row[8];
+        uint32_t prev = 0, top_c = 1, c[8];
+        gen_markov_row(g->tension, g->cur_state, row);
+        for (i = 0; i < 8u; i++) { c[i] = row[i] - prev; prev = row[i]; top_c = c[i] > top_c ? c[i] : top_c; }
+        for (i = 0; i < 8u; i++) {
+            int32_t bh = (int32_t)(c[i] * (uint32_t)(bot - top - 14) / top_c) + 2, x = 22 + (int32_t)i * 26;
+            cv_rrect(x, bot - 10 - bh, 18, bh, 3, i == g->cur_state ? T_TEXT : T_THEME, T_PANEL);
+            cv_disc(x + 9, bot - 2, i == g->cur_state ? 7 : 4, i == g->cur_state ? T_TEXT : T_LINE, 0);
+        }
+    } else if (m == GN_SERIES) {
+        gen_series_t sr;
+        gn_eff_series(k, &sr);
+        for (i = 0; i < 16u; i++) {                     /* the next 16 degrees, the next one lit */
+            int32_t d = (int32_t)gen_sr_degree(&sr, i), bh = 4 + d * (bot - top - 8) / 14;
+            cv_rrect(17 + (int32_t)i * 13, bot - bh, 10, bh, 3, !i ? T_TEXT : T_THEME, T_PANEL);
+        }
+    } else if (m == GN_BOUNCE) {
+        const gen_bounce_t *g = &gn[k].bounce;
+        int32_t bw = 204, bh = bot - top, x0 = 18, y0 = top;
+        cv_rrect(x0 - 4, y0 - 4, bw + 8, bh + 8, 4, T_LINE, T_PANEL);
+        cv_rrect(x0 - 2, y0 - 2, bw + 4, bh + 4, 3, T_PANEL, T_LINE);
+        if (g->balls == GEN_BOUNCE_FALL) {              /* FALL: the leaves (resting: dim, on the floor) */
+            for (i = 0; i < GEN_FALL_LEAVES; i++)
+                cv_disc(x0 + (int32_t)g->lx[i] * bw / 255, y0 + bh - (int32_t)g->ly[i] * bh / 255, g->lt[i] ? 5 : 7,
+                        g->lt[i] ? T_LINE : (g->lv[i] & 0x80u) ? T_KNOB(2) : T_THEME, 0);
+        } else {
+            for (i = 0; i < g->balls && i < GEN_BOUNCE_MAX; i++)
+                cv_disc(x0 + (int32_t)g->x[i] * bw / 255, y0 + bh - (int32_t)g->y[i] * bh / 255, 9, !i ? T_TEXT : T_THEME, 0);
+            if (g->hit & 1u) cv_rrect(x0, y0 + bh - 2, bw, 3, 1, T_TEXT, T_PANEL);   /* (the walls just hit) */
+            if (g->hit & 2u) cv_rrect(x0 - 1, y0, 3, bh, 1, T_TEXT, T_PANEL);
+            if (g->hit & 4u) cv_rrect(x0 + bw - 2, y0, 3, bh, 1, T_TEXT, T_PANEL);
+            if (g->hit & 8u) cv_rrect(x0, y0, bw, 3, 1, T_TEXT, T_PANEL);
+        }
+    } else {
+        gen_grids_t gr;
+        const gen_grids_t *g = &gr;
+        gn_eff_grids(k, &gr);
+        uint32_t n = gen_grids_steps(gn_steps_per_bar(TSEL)), play = song.playing ? (g->step_idx + n - 1u) % n : 0xFFu;
+        for (p = 0; p < 3u; p++)
+            for (i = 0; i < n; i++) {
+                int acc;
+                int hit = gen_grids_hit(g, i, n, p, 0, &acc);
+                int32_t x = 18 + (int32_t)(i * 204u / (n - 1u)), y = top + 6 + (int32_t)p * (bot - top - 6) / 2;
+                cv_disc(x, y, hit ? (acc ? 9 : 7) : 3, i == play ? T_TEXT : hit ? T_KNOB(p) : T_LINE, 0);
+            }
+    }
+}
 
 
 static uint32_t pv_pic(int32_t *cut, int32_t *res)
@@ -592,6 +705,8 @@ static uint32_t pv_pic(int32_t *cut, int32_t *res)
     *cut = -1;
     *res = 0;
     if(pg->fam==FAM_FX)return 9u;
+    if (pg->scope == SC_GEN)                            /* GEN: what the generator plays */
+        return 10u;
     if (pg->graph == GR_ARP || pg->graph == GR_STEPS)
         return pg->graph == GR_ARP ? 5u : 6u;
     if (pg->fam == FAM_ARP)                             /* ARP 2: the notes it plays too */
@@ -772,7 +887,9 @@ static void pv_picture(void)
         sig ^= (uint32_t)(m ? song.g : TSEL->p)[id - 1u] * 7919u +
                (uint32_t)(m ? fx_state[(id-G_MFXMIX)/FX_PARAMS].failed : 0u) * 347u;
     }
-    if (pic >= 5u) {                                    /* ARP, PATTERN: the keys and steps */
+    if (pic == 10u)
+        sig ^= pv_gen_sig();
+    else if (pic >= 5u) {                               /* ARP, PATTERN: the keys and steps */
         sig ^= steps_hash(TSEL) + (song.playing ? 1u + TSEL->seq_idx * 257u : 0u) * 2246822519u;
         for (i = 0; i < TSEL->nheld && i < 16u; i++)
             sig = (sig ^ TSEL->held[i]) * 16777619u;
@@ -800,6 +917,7 @@ static void pv_picture(void)
         else if (pic == 6u) pv_steps(h);
         else if (pic == 3u) pv_filter(cut, res, h);
         else if (pic == 9u) pv_fx(h);
+        else if (pic == 10u) pv_gen(h);
         else stage_wave(T_THEME, 8, h - 16);
         cv_blit_band(0, (uint32_t)y);
     }

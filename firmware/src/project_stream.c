@@ -30,7 +30,7 @@ static int proj_image_valid(const project_t *q)
     }
     if(!mpc_octaves_pack(oct))return 0;
     for(uint32_t i=0;i<RECORD_MAX;i++)if(!recording_valid(&q->recording[i])||(q->recording[i].vel&&(!proj_owner_ok(recorded_owner(&q->recording[i]))||recorded_step(&q->recording[i])>=64u)))return 0;
-    return 68u+PROJ_TRK*(P_COUNT+2u+NSTEP*8u)+sizeof q->chain+sizeof q->motion+2u+2u*PROJ_TRK<=PROJ_MPC_OCT_WIRE;
+    return 68u+PROJ_TRK*(P_COUNT+2u+NSTEP*8u)+sizeof q->chain+sizeof q->motion+2u+2u*PROJ_TRK+PROJ_GEN_WIRE<=PROJ_MPC_OCT_WIRE;
 }
 static int proj_image_capture(int runtime)
 {

@@ -1195,3 +1195,59 @@ humanized too. Recording and MIDI OUT capture the humanized velocities, and
 playback repeats them as recorded. How audible it is depends on the sound's
 velocity response. Humanize belongs to the track: sound loads keep it, and
 projects, templates and user presets save it.
+
+### Generators (ARP > GEN)
+
+Tap **ARP** until **GEN** (after ARP and ARP 2). **KNOB 1, MODE** lets track 1–4 play a generator instead of its
+steps: **TURING**, **EUCLID**, **MARKOV**, **ATLAS**, **SERIES** or **BOUNCE**. The written steps stay and play
+again with MODE OFF.
+Generators run at the track's PATTERN DIV and SWING and play in its SCL and TRN. The panel shows what the
+generator plays; its top line gives the seed and CHANGE playing ("42 +6"; a value waiting for the bar: "42>43").
+
+**GEN** (KNOB 1–4): **MODE**, **SEED** (1–128), **CHANGE** (0–99, shown as CHNG), **EVERY** (OFF, 1, 2, 4, 8, 16 bars).
+
+- **SEED:** every generator's random choices and starting material come from it, and every PLAY starts again from
+  it, so a song plays the same each time.
+- **CHANGE:** each detent forward makes one small change; turning back undoes it exactly. Change *n* is worked out
+  from the seed and *n* alone, so the same SEED and CHANGE always give the same line.
+  - TURING flips a bit of its loop;
+  - EUCLID moves its rotation a step or picks new pitches;
+  - MARKOV moves LEAP;
+  - ATLAS moves around the map;
+  - SERIES moves START;
+  - BOUNCE turns ANGLE (WIND in FALL).
+
+  The changes sit on top of GEN 2's knobs, so those keep the values you set.
+- **EVERY:** turns CHANGE up by one every so many bars, so the line evolves by itself. Turn CHANGE back to return
+  to a version you liked.
+- **While playing:** a new SEED or CHANGE starts on the track's next bar.
+
+**GEN 2** (shown while a generator is on): the generator's three settings and **GATE**, the notes' length: PAT
+(PATTERN's GATE), 10 %, 25 %, 50 %, 75 %, FULL, or HOLD (each note held to the next). The fourth knob differs on two
+generators:
+
+- **MARKOV: LOCK** (it plays at PATTERN's GATE). LOCK keeps its first pass over PATTERN's LEN (up to 32 steps), then
+  each step replays the kept one at LOCK % and walks on otherwise. 100 is a fixed loop; 0 never repeats. The panel
+  shows "rec" while it keeps the phrase and "loop" while it plays it. A change of LEAP, DENS, SPAN, LEN, CHANGE or
+  SEED keeps a new phrase from the next loop start, and every PLAY gives the same loop again.
+- **ATLAS: CHAOS**, Grids' random extra hits each bar.
+
+| MODE | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | What it plays |
+| --- | --- | --- | --- | --- | --- |
+| **TURING** | LEN (2–16) | PROB (0–100 %) | SPAN (1–3 oct) | GATE | A looping shift register. PROB 0 locks the loop; 100 is new every pass |
+| **EUCLID** | STEPS (1–32) | PULSE | ROT | GATE | Hits spread evenly over STEPS, turned by ROT, on pitches picked by the seed |
+| **MARKOV** | LEAP (0–100 %) | DENS (5–100 %) | SPAN (1–3 oct) | LOCK (0–100 %) | A random walk over the scale: LEAP 0 moves to neighbours, 100 leaps |
+| **ATLAS** | X (0–255) | Y (0–255) | DENS (0–100 %) | CHAOS (0–100 %) | Kick, snare and closed hat from Grids' drum map, on the DRUM lanes (any engine) |
+| **SERIES** | START (0–127) | INTV (1–7) | LOOP (OFF, 1–16) | GATE | Per Nørgård's infinity series: a melody alike at every scale, a note every step. START picks where it begins, INTV how many scale degrees a step of the series is, LOOP repeats that many steps (OFF never repeats). It has no randomness: SEED only shapes its CHANGEs |
+| **BOUNCE** | SPEED (1–64) | ANGLE (0–90°) | BALLS (1–4, FALL) | GATE | Balls in a box: a note where a ball hits a wall (which wall, and where along it); balls hitting together play up to three notes. Each extra ball starts from its own place and angle (the seed's). **FALL**: eight leaves fall at their own speeds and play where they land, left low, right high; ANGLE becomes **WIND**: calm in the middle, leaning the melody low or high either side and gusting further out |
+
+**Printing:** hold **OCT+** on GEN for **Print to pattern**, or **hold REC** on a generator track. What it played
+in the last bars goes into the pattern as recorded notes, and MODE turns OFF so the pattern plays them (EDIT held
+undoes the notes). REC does not arm a generator track.
+
+**Saving:** projects save each generator that is on; a track with MODE OFF saves no generator settings. Removing a
+track carries its generator along, and new songs and templates start with every generator OFF.
+
+The generators come from [Tessera](https://github.com/Rastapopolix/tessera) by Theo Dainis, ATLAS's map from
+Émilie Gillet's Grids; SERIES follows the norns script nørgård, and FALL ambalek's norns script Fall (their ideas,
+no code).

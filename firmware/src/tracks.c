@@ -103,6 +103,7 @@ static void track_blank(uint32_t k)
         pattern_write(k % NTRK, b, &p);
     }
     memset(pattern_sound[k % NTRK], 0, sizeof pattern_sound[0]);
+    if (k % NTRK < GN_TRACKS) gn_defaults(k % NTRK);   /* (no generator) */
     pattern_switch(t, 0);
     t->pattern_next = 0xff;
     t->pattern_gen++;

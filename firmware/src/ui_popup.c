@@ -220,6 +220,31 @@ static const sheet_row_t SHEET_SHARED[] = {{"Routing", sh_route_v, sh_route_turn
                                            {"Clear shared FX", 0, 0, 0, CF_CLEAR_SHARED}};
 /* PATTERNS' (OCT+): the selected track's pattern; Copy to: its place picked on the grid (ui_patterns.c) */
 static const sheet_row_t SHEET_PATTERNS[] = {{"Set preset", 0, 0, pattern_preset_open, 0}, {"Remove preset", 0, 0, pattern_preset_remove, 0}, {"Copy to\x85", 0, 0, ptc_start, 0}, {"Delete pattern", 0, 0, 0, CF_DEL_PAT}};
+/* the generators (gen_track.c), as the UI changes them: the audio ISR between steps */
+static void gn_mode_set(uint32_t k, uint32_t mode) { fm1_irq_off(); gn_mode_apply(k, mode); fm1_irq_on(); }
+static void gn_page_put(uint32_t id, int32_t v)         /* GEN's knob id: the value v (ui_input.c edit_param) */
+{
+    uint32_t k = song.sel;
+    uint8_t *p;
+    if (k >= GN_TRACKS) return;
+    fm1_irq_off();
+    if (!id) gn_mode_apply(k, (uint32_t)v);
+    else if (id == 1u) gn_seed_apply(k, (uint32_t)v);
+    else if (id == 2u) gn_change_apply(k, (uint32_t)v);
+    else if ((p = gn_value(k, id)) != 0) {
+        *p = (uint8_t)(v + (gn[k].mode == GN_BOUNCE && id == 6u ? 1 : 0));   /* (BALLS: the names 0..4 are 1..5) */
+        if (id == 3u) gn[k].bars = 0;                   /* (EVERY counts from its new setting) */
+        if (gn[k].mode == GN_MARKOV && id >= 4u) gn_rearm(k);   /* (its phrase kept again: LEAP DENS SPAN, LOCK) */
+        if (gn[k].mode == GN_EUCLID) {                  /* PULSE and ROT inside STEPS */
+            if (gn[k].euclid.pulses > gn[k].euclid.steps) gn[k].euclid.pulses = gn[k].euclid.steps;
+            if (gn[k].euclid.rot >= gn[k].euclid.steps) gn[k].euclid.rot = (uint8_t)(gn[k].euclid.steps - 1u);
+        }
+    }
+    fm1_irq_on();
+}
+/* GEN's (OCT+): Print */
+static void gn_print(void);                             /* ui_input.c */
+static const sheet_row_t SHEET_GEN[] = {{"Print to pattern", 0, 0, gn_print, 0}};
 
 /* the step's: NOTES' note at the cursor (KNOB 1 its length, velocity, chance), the drum grid's hit of the lane there */
 static void st_cap(uint32_t c, char *b)                 /* NOTES' column c as its chip shows it (draw_columns) */
@@ -340,6 +365,8 @@ static uint32_t page_sheet(void)
         return 4;
     if (cur_page()->graph == GR_ROLL || cur_page()->graph == GR_STEPS)
         return 3;
+    if (cur_page()->scope == SC_GEN)
+        return 6;
     fam = cur_page()->fam;
     if (fam == FAM_FX && cur_page()->scope == SC_GLOBAL)   /* SHARED, its slots */
         return 5;
@@ -360,6 +387,9 @@ static void page_sheet_open(void)
         fmt_int(nm, chain_config.count);
         str_cpy(nm + str_len(nm), chain_config.count == 1u ? " section" : " sections", 10);
         sheet_open("Song", nm, SHEET_SONG, NELEM(SHEET_SONG));
+        break;
+    case 6:
+        sheet_open("Generator", GN_NAME[gn[song.sel % GN_TRACKS].mode], SHEET_GEN, NELEM(SHEET_GEN));
         break;
     case 3:
         str_cpy(nm, "T1", sizeof nm);

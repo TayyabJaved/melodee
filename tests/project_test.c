@@ -41,7 +41,7 @@ int main(void)
     bad += check("FUN16 fits its record", sizeof(project_store_t) == PROJ_STORE_SIZE);
 
     {   /* Reconstruct the prior raw layout independently of RAM bitfields. */
-        static uint8_t old[sizeof(project_t)+RECORD_MAX];blank(&q);
+        static uint8_t old[sizeof(project_t)-sizeof(((project_t *)0)->gen)+RECORD_MAX];blank(&q);   /* (before gen[]) */
         q.recording[0]=(recorded_note_t){.on=65535, .duration=49321, .note7=127, .vel=91, .owner=255, .step=255, .pitch=-24, .length=1};
         uint32_t at=__builtin_offsetof(project_t,recording),tail=__builtin_offsetof(project_t,pattern);
         memcpy(old,&q,at);
@@ -49,7 +49,7 @@ int main(void)
             const recorded_note_t *r=&q.recording[i];uint8_t v[10]={r->on,r->on>>8,r->duration,r->duration>>8,recorded_note(r),r->vel,r->owner,r->step,(uint8_t)r->pitch,recorded_legacy_length(r)};
             memcpy(old+at+i*10u,v,10);
         }
-        memcpy(old+at+RECORD_MAX*10u,(uint8_t *)&q+tail,sizeof q-tail);
+        memcpy(old+at+RECORD_MAX*10u,(uint8_t *)&q+tail,__builtin_offsetof(project_t,gen)-tail);
         uint32_t size=sizeof old,sum;memcpy(old+4,&size,4);sum=proj_hash(old,sizeof old-4u);memcpy(old+sizeof old-4u,&sum,4);
         bad+=check("ten-byte raw snapshots import before RAM packing",sizeof old==16456u&&proj_import(&q2,old,sizeof old)&&q2.recording[0].on==65535u&&q2.recording[0].duration==49321u&&q2.recording[0].pitch==-24&&q2.recording[0].vel==91);
         old[at+4u]=255;sum=proj_hash(old,sizeof old-4u);memcpy(old+sizeof old-4u,&sum,4);
