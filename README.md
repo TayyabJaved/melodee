@@ -1249,3 +1249,21 @@ track carries its generator along, and new songs and templates start with every 
 The generators come from [Tessera](https://github.com/Rastapopolix/tessera) by Theo Dainis, ATLAS's map from
 Émilie Gillet's Grids; SERIES follows the norns script nørgård, and FALL ambalek's norns script Fall (their ideas,
 no code).
+
+### Pattern tools (Double, Half, Euclid)
+
+Hold **OCT+** on NOTES, PATTERN or the drum grid for the pattern's sheet. Besides Quantize, Clear pattern and
+Clear motion it has:
+
+- **Double:** the pattern twice as long (up to 64 steps). Its steps, recorded notes and motion are copied after
+  themselves; a playing pattern carries on into the copy.
+- **Half:** LEN halved (15 steps become 8). The steps past it stay, hidden, as when LEN is turned down.
+- **Euclid:** KNOB 1 sets the hits ("5 of 16 C4"), and OCT+ spreads them over LEN as evenly as they go, the first on
+  step 1. On the drum grid it writes the selected lane; on NOTES one note row: the note at the cursor, else the
+  pattern's first note, else ROOT. A step with a hit gets the note, a step without one loses it; other lanes and notes
+  stay. 3 of 8 is the tresillo, 5 of 8 the cinquillo, 5 of 16 a bossa-like pulse.
+- **Euclid turn:** KNOB 1 starts the hits that many steps later (OCT+ writes them); turn a lane so it interlocks
+  with another.
+
+Each is undone with **EDIT** held, one at a time. Euclid does not work on a pattern with recorded notes, and none of
+them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)'s SEQ tools (Theo Dainis).
