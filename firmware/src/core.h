@@ -234,8 +234,13 @@ static int param_master_fx(uint32_t id){return id>=G_MFXTYPE && id<=G_MFX3CHAR;}
 #define G_SAFETY G_RESERVED9
 #define G_DRREV G_RESERVED26
 
+/* SCL > HUMANIZE VEL (seq.c hum_vel): the retired SLICER switch's slot. Every store written with more than 104
+ * parameters holds 0 there (loads cleared it since the SLICER went); older stores load it as OFF */
+#define P_HUMVEL P_RESERVED45
+#define HUMVEL_NP_MIN 105u
 static int param_reserved(uint32_t id)
-{ return (id>=P_RESERVED33 && id<=P_RESERVED36) || (id>=P_RESERVED45 && id<=P_RESERVED48); }
+{ return (id>=P_RESERVED33 && id<=P_RESERVED36) || (id>P_HUMVEL && id<=P_RESERVED48); }
+static int param_motion_inert(uint32_t id) { return param_reserved(id) || id == P_HUMVEL; }   /* old SLICER automation */
 static int global_reserved(uint32_t id)
 { return (id>=G_RESERVED4 && id<=G_RESERVED11) || (id>=G_RESERVED24 && id<=G_RESERVED26); }
 

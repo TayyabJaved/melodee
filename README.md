@@ -1183,3 +1183,14 @@ whole chord immediately. Kits and single-voice modes retain their normal behavio
 Strum settings belong to the track, survive sound loads and save with projects;
 older projects load with STRUM OFF. Existing manually entered sequencer chords
 are unchanged; recorded strums replay their captured timing.
+
+### Humanize velocity
+
+The **SCL** list's last row, **Humanize**, gives every note played live on the
+track its own small random velocity offset: **LOW** up to ±10, **HIGH** up to ±24
+(OFF by default). The FM-1 keys normally play every note at velocity 100, so with
+CHORD on, each tone of a chord now gets its own level. Incoming MIDI notes are
+humanized too. Recording and MIDI OUT capture the humanized velocities, and
+playback repeats them as recorded. How audible it is depends on the sound's
+velocity response. Humanize belongs to the track: sound loads keep it, and
+projects, templates and user presets save it.

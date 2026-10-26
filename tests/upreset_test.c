@@ -245,12 +245,25 @@ int main(void)
     up_params(&r, v, def);
     ok = 1;
     for (i = 0; i < 49u; i++)
-        ok &= v[i] == (int16_t)(50 + i);
+        ok &= v[i] == (i == P_HUMVEL ? def[i] : (int16_t)(50 + i));
     for (i = P_M1SRC; i <= P_M4AMT; i++)
         ok &= v[i] == def[i];
     for (i = 0; i < 8u; i++)
         ok &= v[P_E0 + i] == (int16_t)(50 + 49 + i);
-    bad += check("old record (np 57): SLICER kept, matrix defaults, E0..E7 kept", ok);
+    bad += check("old record (np 57): SLICER kept (its switch: HUMANIZE VEL's default), matrix defaults, E0..E7 kept", ok);
+    /* HUMANIZE VEL in the SLICER switch's slot: stores of 104 parameters or fewer may hold an old SLICER mode there */
+    {
+        static const uint8_t NPS[3] = {104, 105, P_COUNT};
+        ok = 1;
+        for (uint32_t k = 0; k < 3u; k++) {
+            r.np = NPS[k];
+            for (i = 0; i < NPS[k]; i++)
+                up_set_value(&r, i, (int16_t)(i == P_HUMVEL ? 2 : 0));
+            up_params(&r, v, def);
+            ok &= v[P_HUMVEL] == (NPS[k] < HUMVEL_NP_MIN ? def[P_HUMVEL] : 2);
+        }
+        bad += check("HUMANIZE VEL: an np 104 record's slot 45 loads as the default; np 105 and today's keep it", ok);
+    }
     /* records of versions 4 (packed bytes) and 5 (a drum grid) saved before the chord keys (P_COUNT 89, P_E0
      * 81) and before the FM operator ENVs (69, P_E0 61): their engine values land on today's E0..E7 (83..90),
      * the chord keys take their defaults (OFF, CLOSE), the operator parameters too for 69 */
@@ -270,7 +283,7 @@ int main(void)
                 ok &= up_valid(&o);
                 up_params(&o, v, def);
                 for (i = 0; i < np - 8u; i++)
-                    ok &= v[i] == (int16_t)(i % 100u - 30);
+                    ok &= v[i] == (i == P_HUMVEL ? def[i] : (int16_t)(i % 100u - 30));   /* (slot 45: the SLICER switch then) */
                 for (i = np - 8u; i < P_E0; i++)
                     ok &= v[i] == mapped_value(i, def[i]);
                 for (i = 0; i < 8u; i++)

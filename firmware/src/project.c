@@ -406,6 +406,7 @@ static int proj_unpack(project_t *q, const uint8_t *b)
         if (q->t[t].engine >= NENGINES) return 0;  /* a fork's engine ID must not wrap into ours */
         for (i = 0; i < P_COUNT; i++) def[i] = param_desc_of(q->t[t].engine % NENGINES, i)->def;
         params_by_count(q->t[t].p, values, np, def);
+        if (np < HUMVEL_NP_MIN) q->t[t].p[P_HUMVEL] = 0;   /* (the SLICER's switch then) */
         if (magic == PROJ_CUT_MAGIC) {
             q->t[t].p[P_STRUM] = q->t[t].p[P_STROKE] = 0; /* old high cuts occupied these new IDs */
         }
@@ -1126,6 +1127,7 @@ static int tmpl_take(const uint8_t *b,uint32_t len)
         int16_t def[P_COUNT],values[PROJ_CUT_NP];tmpl.t[k].engine=b[off++];tmpl.t[k].preset=b[off++];
         for(uint32_t i=0;i<P_COUNT;i++)def[i]=param_desc_of(tmpl.t[k].engine%NENGINES,i)->def;
         memcpy(values,b+off,np*2u);off+=np*2u;params_by_count(tmpl.t[k].p,values,np,def);
+        if(np<HUMVEL_NP_MIN)tmpl.t[k].p[P_HUMVEL]=0;
         if(np==PROJ_CUT_NP)tmpl.t[k].p[P_STRUM]=tmpl.t[k].p[P_STROKE]=0;
         if(np==PROJ_CUT_NP)for(uint32_t i=0;i<FX_SLOTS;i++)tmpl.t[k].p[P_FXTONE+i]=proj_tone_of_cuts(values[P_FXTONE+i],values[P_FXTONE+FX_SLOTS+i]);
     }

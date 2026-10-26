@@ -1642,7 +1642,7 @@ async function czBankRead(rq,index){const r=parse[CMD.CZ_BANK](await rq(req.czBa
 const TRACK_OWN = new Set([0, 8, 39, 40, ...Array.from({ length: 16 }, (_, i) => 17 + i)]);
 const P_CHORD = [81, 82];                          /* core.h P_CHRD, P_VOIC (since P_COUNT 91, P_E0 83) */
 const P_MPCDEG = 83;                               /* core.h P_MPCDEG (since P_COUNT 92, P_E0 84) */
-const trackOwn = (i, pe0) => TRACK_OWN.has(i) || (pe0 >= 83 && P_CHORD.includes(i)) || (pe0 >= 84 && i === P_MPCDEG) || (pe0 >= 100 && i >= 96 && i < Math.min(pe0,114)) || (pe0 >= 116 && (i === 114 || i === 115));
+const trackOwn = (i, pe0) => TRACK_OWN.has(i) || i === 45 || (pe0 >= 83 && P_CHORD.includes(i)) || (pe0 >= 84 && i === P_MPCDEG) || (pe0 >= 100 && i >= 96 && i < Math.min(pe0,114)) || (pe0 >= 116 && (i === 114 || i === 115));
 /* play a patch without writing flash, as UP_LOAD would load it: the sound only. SET the engine (G_ENGSEL:
    engine defaults and its first preset), then every instrument parameter that differs, except the track's
    own (TRACK_OWN). The steps are never touched. The device keeps a copy of the sound from before (EDIT held
@@ -2041,7 +2041,7 @@ const reservedFm4 = (engines, e) => e === 1 && (engines || [])[1] === "-";   /* 
 /* an engine's name to show: the reserved engine 1 holds DIGITAL sounds that play as FM6 */
 const engineLabel = (engines, e) => (e === 1 && (engines || [])[1] === "-" ? "FM6" : (engines || [])[e] ?? String(e));
 
-const paramReserved = id => (id>=33 && id<=36) || (id>=45 && id<=48);
+const paramReserved = id => (id>=33 && id<=36) || (id>45 && id<=48);   /* (45: HUMANIZE VEL, core.h P_HUMVEL) */
 const globalReserved = id => (id>=4 && id<=11) || (id>=24 && id<=26);
 function makeMockDevice(opt = {}) {
   const NONOFF = ["OFF", "ON"], NDIV = ["1/4", "1/8", "1/16", "1/32", "8T", "16T", "1/2", "1/1", "2BAR", "4BAR"], NGO = ["--", "GO"], NDASH = ["--"];
@@ -2062,7 +2062,7 @@ function makeMockDevice(opt = {}) {
     ...Array.from({length:4},()=>D("",F.INT,0,127,0)),
     E("VCE", ["POLY", "MONO", "LEG", "UNI"], 0), D("GLD", F.TIME, 0, 127, 0), D("PAN", F.BIPCT, -64, 63, 0), E("MUTE", NONOFF, 0),
     E("GLMOD", ["RATE", "TIME"], 0), E("PRIO", ["LAST", "LOW", "HIGH"], 0), E("ALLOC", ["ROT", "REUSE"], 0), D("DTUNE", F.INT, 0, 127, 40),
-    ...Array.from({length:4},()=>D("",F.INT,0,127,0)),
+    E("HVEL", ["OFF", "LOW", "HIGH"], 0), ...Array.from({length:3},()=>D("",F.INT,0,127,0)),   /* 45 HUMANIZE VEL: the retired SLICER switch's slot */
     ...[1, 2, 3, 4].flatMap((k) => [E("SRC" + k, MSRC, 0), E("DST" + k, MDST, 0), D("AMT" + k, F.BIPCT, -64, 63, 0)]),   /* the matrix */
   ];
   const GP = [

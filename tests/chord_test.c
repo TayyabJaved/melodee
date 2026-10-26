@@ -493,9 +493,57 @@ static int strum_storage(void)
     return bad;
 }
 
+/* SCL > HUMANIZE VEL: every tone of a key's chord gets its own velocity within the level's range, MIDI OUT the same;
+ * OFF plays 100 and draws no random number; MIDI IN notes too, clamped to 127 */
+static int humanize(void)
+{
+    static const uint8_t SPAN[3] = {0, 10, 24}, CH[3] = {62, 65, 69};
+    int bad = 0;
+    track_t *t = &trk[0];
+    for (uint32_t l = 0; l < 3u; l++) {
+        uint32_t lo = 127, hi = 0, mixed = 0, inside = 1, same = 1, rng_kept = 1;
+        reset();
+        t->p[P_CHRD] = CH_DIA3; t->p[P_HUMVEL] = (int16_t)l;
+        for (uint32_t n = 0; n < 100u; n++) {
+            uint32_t st = rng_state;
+            mo_w = mo_r = 0;
+            key_down(K_D4);
+            for (uint32_t i = 0; i < 3u; i++) {
+                uint32_t v = live_velocity[0][CH[i]];
+                lo = v < lo ? v : lo; hi = v > hi ? v : hi;
+                inside &= v + SPAN[l] >= 100u && v <= 100u + SPAN[l] && gate_note(t, CH[i]);
+            }
+            for (uint32_t i = 0; i < mo_w; i++)
+                same &= midi_out_q[i] >> 24 == live_velocity[0][(midi_out_q[i] >> 16) & 0x7Fu];
+            same &= mo_w == 3u;
+            mixed |= live_velocity[0][CH[0]] != live_velocity[0][CH[1]] || live_velocity[0][CH[1]] != live_velocity[0][CH[2]];
+            if (!l) rng_kept &= rng_state == st;
+            key_up(K_D4);
+        }
+        char what[96];
+        snprintf(what, sizeof what, "HUMANIZE VEL %s: chord tones in 100 +-%u, %s; MIDI OUT the same", l ? (l == 1 ? "LOW" : "HIGH") : "OFF",
+                 SPAN[l], l ? "each its own" : "all 100, no random number");
+        bad += check(what, inside && same && (l ? mixed && hi - lo >= SPAN[l] : lo == 100u && hi == 100u && !mixed && rng_kept));
+    }
+    {
+        uint32_t inside = 1, top = 0;
+        reset();
+        t->p[P_HUMVEL] = 2;
+        for (uint32_t n = 0; n < 100u; n++) {
+            midi(0x90, 60, 120);
+            uint32_t v = live_velocity[0][60];
+            inside &= v >= 96u && v <= 127u && gate_note(t, 60);
+            top |= v == 127u;
+            midi(0x80, 60, 0);
+        }
+        bad += check("  MIDI IN: a note humanized too, clamped to 127", inside && top && !ngated(t));
+    }
+    return bad;
+}
+
 int main(void)
 {
-    int bad = theory() + shapes_voicings() + keys() + arp_rec() + midi_in() + kits() + strumming() + strum_storage();
+    int bad = theory() + shapes_voicings() + keys() + arp_rec() + midi_in() + kits() + strumming() + strum_storage() + humanize();
     printf("%s\n", bad ? "CHORD TEST FAILED" : "chord keys test passed");
     return bad != 0;
 }
