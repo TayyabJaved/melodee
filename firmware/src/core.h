@@ -32,6 +32,8 @@
 #define NMIDI 4                  /* MIDI-only tracks: tracks 5..8, the MIDI Track engine and no audio */
 #endif
 #define NTRK (NPART + NMIDI)     /* tracks: the parts, then the MIDI-only ones (a project's first NPART on its FUN wire) */
+#define GN_TRACKS NPART          /* ARP > GEN's generators (gen_track.c): the parts */
+#define GN_SAVE 25u              /* a track's generator in a project ('G' block 4): MODE, seed, 6 x 3 settings, CHANGE EVERY GATE CHAOS LOCK */
 /* Shared with engine-buffer placement: the queued recorder needs one runtime
  * counter per event, while the reference countdown implementation needs two. */
 #ifndef MELODEE_RECORD_CURSOR

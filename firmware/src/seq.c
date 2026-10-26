@@ -944,6 +944,8 @@ static __attribute__((noinline)) void audition_tick(uint32_t n)
     if(audition_active) { if(n>=audition_left)audition_stop(); else audition_left-=n; }
 }
 /* -------------------------------------------------------- sequencer --- */
+#include "gen_track.c"                          /* ARP > GEN: generators instead of the steps */
+
 static void seq_start(void)
 {
     cin_left = 0; /* MIDI Start also cancels a pending local count-in. */
@@ -977,6 +979,7 @@ static void seq_start(void)
         t->rh_n = 0;
         cap_step[i] = 0xFFFFu;                     /* (capture: step 0 is the first) */
     }
+    gn_restart_all();                              /* (every generator from the top of its seed) */
     cap_from = cap_w;                              /* capture and the jam log: this run */
     cap_track = song.sel;
     jam.n = 0;
@@ -1112,9 +1115,9 @@ static __attribute__((noinline)) void seq_step(track_t *t, const step_t *s, uint
     skip = recording_step_skip(t, s, skip);
     uint32_t i, j, gate = step_gate(s) ? period * step_gate(s) / 255u : period * (uint32_t)t->p[P_SGATE] / 128u;
     uint32_t vel = (s->flags & SF_ACCENT) ? 127u : (s->vel ? s->vel : 96u);
-    uint32_t slide_in = t->seq_hold && t->seq_n;
+    uint32_t slide_in = t->seq_hold && t->seq_n && !gn_active(t);   /* (a generator's HOLD: no slide) */
     uint32_t len = t->p[P_SLEN] ? (uint32_t)t->p[P_SLEN] : 1u;
-    uint32_t next_tie = seq_steps(t)[(t->seq_idx + 1u) % len].time == ST_TIE;
+    uint32_t next_tie = gn_active(t) ? gn_holds(t) : seq_steps(t)[(t->seq_idx + 1u) % len].time == ST_TIE;
     uint8_t nn[4 + NLANE], vv[4 + NLANE];           /* the notes it plays: its notes, then its hits */
     uint32_t m = 0, sk = 0;
     if (step_chance(s) < 100u && rng() % 100u >= step_chance(s)) {
@@ -1242,6 +1245,8 @@ static void seq_grid_tick(track_t *t, uint32_t n)
                 }
                 t->rskip_n = 0;
             }
+            step_t gs;
+            s = gn_step(t, s, &gs);                     /* (a generator's step instead: gen_track.c) */
             if (chain_rest(t) || ((seq_hush >> trk_index(t)) & 1u))
                 s = &SEQ_HUSH_STEP;
             if (starting && chain.running && chain.seek_samples[trk_index(t)] && s->time == ST_TIE) {
@@ -1274,7 +1279,7 @@ static void seq_tick(track_t *t, uint32_t n)
         uint32_t chunk = t->seq_pos < span ? span - t->seq_pos : 1u;
         if (chunk > n) chunk = n;
         uint32_t before = t->seq_idx;
-        if (recording_tracks & (1u << trk_index(t))) recording_tick(t, chunk);
+        if ((recording_tracks & (1u << trk_index(t))) && !gn_active(t)) recording_tick(t, chunk);
         seq_grid_tick(t, chunk);
         if (!t->seq_idx && (before || t->p[P_SLEN] == 1) && t->seq_pos < chunk) recording_zero(t);
         n -= chunk;

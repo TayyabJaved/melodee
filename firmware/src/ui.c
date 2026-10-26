@@ -269,6 +269,8 @@ static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's n
 
 static int page_visible(uint32_t i)
 {
+    if (PAGES[i].scope == SC_GEN)                       /* (generators: the parts; GEN 2 while one plays) */
+        return song.sel < GN_TRACKS && (!PAGES[i].id[0] || gn[song.sel].mode);
     if (midi_track_only(TSEL)) {
         if (trk_midi_slot(song.sel) && PAGES[i].graph == GR_BROWSE) return 0;   /* (tracks 5..8: no other sound) */
         if (PAGES[i].fam == FAM_ENV || PAGES[i].fam == FAM_LFO) return 0;

@@ -483,7 +483,7 @@ enum { S_HOME, S_HOME_IDLE, S_HOME_NOTE, S_HOME_CHORD, S_HOME_INVERSION, S_HOME_
        S_REF_SHEET_MOTION, S_REF_MOD, S_REF_PICKER_MOD, S_REF_ARP, S_REF_PATTERN,
        S_REF_FMEG, S_REF_GRID, S_REF_SCALES, S_FX_PHASER, S_FX_WIDTH, S_FX_FORMANT, S_FX_TAPE, S_FX_SPIT, S_FX_ROOM, S_FX_CHORUS, S_FX_FULL, S_FX_SLOT2, S_FX_SLOT3, S_FX_RACK, S_FX_RACK_SPLIT, S_FX_RACK_PICK, S_FX_RACK_LIST, S_FX_BUS1, S_FX_BUS2, S_FX_BUS3, S_FX_SHARED, S_FX_SHARED_SPLIT, S_FX_SHARED_SHEET, S_FX_TONE_DARK, S_FX_TONE_THIN, S_BOOT_MIGRATION, S_BOOT_UPDATE, S_BOOT_ERROR, S_BOOT_COMPLETE, S_BOOT_WIPE_CONFIRM, S_BOOT_WIPING, S_BOOT_UPDATE_ERROR, S_MAP_DRUM_KIT, S_MAP_DRUM_HIT, S_MAP_DRUM_CATEGORY,
        S_STAGE_UNUSED1, S_STAGE_UNUSED3, S_MIXER_UNUSED2, S_MENU_TRACKS,
-       S_FX_MIDIVERB, S_FX_MIDIDELAY, S_FX_MIDI_RACK, S_FX_MIDI_LIST, S_PUNCH_PEEK, S_PUNCH_ACTIVE, S_PUNCH_LOCK, S_PUNCH_MEMORY, S_PUNCH_END, S_REVERB, S_PEDAL_DRIVE, S_PEDAL_CRUSH, S_PEDAL_PHASER, S_PEDAL_CHORUS, S_PEDAL_FLANGER, S_PUNCH_LOOP, S_PEDAL_FOLD, S_STAGE_MIDI, S_STAGE_MIDI_PARTIAL, S_MIXER_MIDI, S_PATGRID_MIDI, S_SONG_MIDI, S_GLO_MIDI, S_MENU_MIDI_GENERAL, S_MENU_MIDI_MINILAB, S_MENU_MIDI_MODE, S_PATGRID_PRESET, S_PATGRID_PRESET_PENDING, S_SONG_LONG, S_SONG_CELL, S_SONG_COPY, S_SONG_RANGE, S_SONG_LOOP, S_SONG_PUNCH, S_SONG_PUNCH_ACTIVE, S_SONG_PUNCH_MEMORY, S_SONG_PRESET, S_SONG_PRESET_SHEET, S_SONG_PRESET_BROWSE, S_SCL_HUMANIZE, S_COUNT };
+       S_FX_MIDIVERB, S_FX_MIDIDELAY, S_FX_MIDI_RACK, S_FX_MIDI_LIST, S_PUNCH_PEEK, S_PUNCH_ACTIVE, S_PUNCH_LOCK, S_PUNCH_MEMORY, S_PUNCH_END, S_REVERB, S_PEDAL_DRIVE, S_PEDAL_CRUSH, S_PEDAL_PHASER, S_PEDAL_CHORUS, S_PEDAL_FLANGER, S_PUNCH_LOOP, S_PEDAL_FOLD, S_STAGE_MIDI, S_STAGE_MIDI_PARTIAL, S_MIXER_MIDI, S_PATGRID_MIDI, S_SONG_MIDI, S_GLO_MIDI, S_MENU_MIDI_GENERAL, S_MENU_MIDI_MINILAB, S_MENU_MIDI_MODE, S_PATGRID_PRESET, S_PATGRID_PRESET_PENDING, S_SONG_LONG, S_SONG_CELL, S_SONG_COPY, S_SONG_RANGE, S_SONG_LOOP, S_SONG_PUNCH, S_SONG_PUNCH_ACTIVE, S_SONG_PUNCH_MEMORY, S_SONG_PRESET, S_SONG_PRESET_SHEET, S_SONG_PRESET_BROWSE, S_SCL_HUMANIZE, S_GEN_OFF, S_GEN_TURING, S_GEN_EUCLID, S_GEN_MARKOV, S_GEN_ATLAS, S_GEN_SHEET, S_GEN_PAGE2, S_GEN_ATLAS2, S_GEN_CHANGE, S_GEN_MARKOV2, S_GEN_SERIES, S_GEN_BOUNCE, S_GEN_FALL, S_COUNT };
 static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "home_note", "home_chord", "home_inversion", "home_wide", "home_released", "home_fm6", "message", "message_key", "presets", "presets_nofav", "presets_cat", "presets_pending", "presets_recent", "user",
     "project", "project_boot", "tempo", "song_empty", "song", "step", "pattern", "motion", "drum",
     "mixer", "mixer_pan", "env", "env_dest", "lfo", "mod", "scl", "chord", "chord_wide", "chord_off", "chord_kit", "chord_auto", "chord_auto_set", "chord_auto_micro", "chord_melody", "chord_melody_open", "arp",
@@ -509,7 +509,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "home_note", "h
     "stage_long", "stage_3tracks_long", "stage_2tracks_long", "stage_1track_long",
     "ref_stage_held", "ref_stage_released", "ref_stage_cutoff", "ref_stage_drum", "ref_browser", "ref_patterns", "ref_song", "ref_env", "ref_lfo", "ref_edit_osc", "ref_mixer", "ref_notes", "ref_settings", "ref_dialog", "ref_sheet_sound", "ref_sheet_song", "ref_picker_wave", "ref_picker_mode", "ref_sections_p5", "ref_map_p5", "ref_map_fm6", "ref_scl_list", "ref_sheet_project", "ref_sheet_note", "ref_sheet_hit", "ref_motion", "ref_sheet_motion", "ref_mod", "ref_picker_mod", "ref_arp", "ref_pattern", "ref_fmeg", "ref_grid", "ref_scales", "fx_phaser", "fx_width", "fx_formant", "fx_tape", "fx_spit", "fx_room", "fx_chorus", "fx_full", "fx_slot2", "fx_slot3", "fx_rack", "fx_rack_split", "fx_rack_pick", "fx_rack_list", "fx_bus1", "fx_bus2", "fx_bus3", "fx_shared", "fx_shared_split", "fx_shared_sheet", "fx_tone_dark", "fx_tone_thin", "boot_migration", "boot_update", "boot_error", "boot_complete", "boot_wipe_confirm", "boot_wiping", "boot_update_error", "map_drum_kit", "map_drum_hit", "map_drum_category",
     "stage_unused_1track", "stage_unused_3tracks", "mixer_unused_2tracks", "menu_unused_tracks",
-    "fx_midiverb", "fx_mididelay", "fx_midi_rack", "fx_midi_list", "punch_peek", "punch_active", "punch_lock", "punch_memory", "punch_end", "fx_reverb", "fx_pedal_drive", "fx_pedal_crush", "fx_pedal_phaser", "fx_pedal_chorus", "fx_pedal_flanger", "punch_loop", "fx_pedal_fold", "stage_midi", "stage_midi_partial", "mixer_midi", "patterns_midi", "song_midi", "layer_glo_midi", "menu_midi_general", "menu_midi_minilab", "menu_midi_mode", "patterns_preset", "patterns_preset_pending", "song_long", "song_cell", "song_copy", "song_range", "song_loop", "song_punch", "song_punch_active", "song_punch_memory", "song_preset", "song_preset_sheet", "song_preset_browse", "scl_humanize"};
+    "fx_midiverb", "fx_mididelay", "fx_midi_rack", "fx_midi_list", "punch_peek", "punch_active", "punch_lock", "punch_memory", "punch_end", "fx_reverb", "fx_pedal_drive", "fx_pedal_crush", "fx_pedal_phaser", "fx_pedal_chorus", "fx_pedal_flanger", "punch_loop", "fx_pedal_fold", "stage_midi", "stage_midi_partial", "mixer_midi", "patterns_midi", "song_midi", "layer_glo_midi", "menu_midi_general", "menu_midi_minilab", "menu_midi_mode", "patterns_preset", "patterns_preset_pending", "song_long", "song_cell", "song_copy", "song_range", "song_loop", "song_punch", "song_punch_active", "song_punch_memory", "song_preset", "song_preset_sheet", "song_preset_browse", "scl_humanize", "gen_off", "gen_turing", "gen_euclid", "gen_markov", "gen_atlas", "gen_sheet", "gen_page2", "gen_atlas2", "gen_change", "gen_markov2", "gen_series", "gen_bounce", "gen_fall"};
 
 /* the scenes of the UI design screens: the state the UI-redesign
  * prototype drew them from (its setup(): two pattern tracks, the drum pattern on track 4, a synthetic scope),
@@ -1309,6 +1309,46 @@ static void setup(int s)
     case S_MOD: TSEL->p[P_M1SRC] = 1; TSEL->p[P_M1DST] = 2; TSEL->p[P_M1AMT] = 40; TSEL->p[P_M2SRC] = 6;
         TSEL->p[P_M2DST] = 14; TSEL->p[P_M2AMT] = -64; mod_ui_slot = 1; go_title("MOD"); break;
     case S_SCL: TSEL->p[P_SCALE] = 2; go_title("SCL"); break;
+    case S_GEN_SERIES: case S_GEN_BOUNCE: case S_GEN_FALL:   /* SERIES (LOOP 8), BOUNCE (3 balls), FALL, after some steps */
+        song.playing = 0;
+        gn_defaults(song.sel);
+        fm1_irq_off();
+        gn_mode_apply(song.sel, s == S_GEN_SERIES ? GN_SERIES : GN_BOUNCE);
+        gn[song.sel].series.loop = 8; gn[song.sel].bounce.balls = s == S_GEN_FALL ? GEN_BOUNCE_FALL : 3;
+        gn_seed_apply(song.sel, 42);
+        fm1_irq_on();
+        for (uint32_t i = 0; i < 9u; i++) { step_t st; (void)gn_step(TSEL, &TSEL->step[0], &st); }
+        go_title(s == S_GEN_SERIES ? "GEN" : "GEN 2");
+        ui.hot_col = s == S_GEN_SERIES ? 1 : 3; ui.hot_t = 30;
+        break;
+    case S_GEN_PAGE2: case S_GEN_ATLAS2: case S_GEN_CHANGE: case S_GEN_MARKOV2:   /* GEN 2 (TURING: GATE; ATLAS: CHAOS;
+                                                                                  * MARKOV: LOCK, its loop); GEN with a CHANGE */
+        song.playing = 0;                            /* waiting for the bar */
+        gn_defaults(song.sel);
+        fm1_irq_off();
+        gn_mode_apply(song.sel, s == S_GEN_ATLAS2 ? GN_ATLAS : s == S_GEN_MARKOV2 ? GN_MARKOV : GN_TURING);
+        gn_seed_apply(song.sel, 42); gn_change_apply(song.sel, 6);
+        gn[song.sel].gate = GN_HOLD; gn[song.sel].every = 3; gn[song.sel].grids.chaos = 30; gn[song.sel].lock = 80;
+        fm1_irq_on();
+        for (uint32_t i = 0; i < (s == S_GEN_MARKOV2 ? 20u : 5u); i++) { step_t st; (void)gn_step(TSEL, &TSEL->step[0], &st); }
+        if (s == S_GEN_CHANGE) { gn[song.sel].change = 7; gn[song.sel].seed = 43; }   /* (playing: they wait) */
+        go_title(s == S_GEN_CHANGE ? "GEN" : "GEN 2");
+        ui.hot_col = s == S_GEN_CHANGE ? 2 : 3; ui.hot_t = 30;
+        break;
+    case S_GEN_OFF: case S_GEN_TURING: case S_GEN_EUCLID: case S_GEN_MARKOV: case S_GEN_ATLAS: case S_GEN_SHEET:
+        song.playing = 0;                            /* ARP > GEN: each mode on track 1, its panel; GEN's sheet */
+        gn_defaults(song.sel);
+        if (s != S_GEN_OFF) {
+            fm1_irq_off();
+            gn_mode_apply(song.sel, s == S_GEN_SHEET ? GN_EUCLID : GN_TURING + (uint32_t)(s - S_GEN_TURING));
+            gn[song.sel].seed = 42; gn_restart(song.sel);
+            fm1_irq_on();
+            for (uint32_t i = 0; i < 5u; i++) { step_t st; (void)gn_step(TSEL, &TSEL->step[0], &st); }
+        }
+        go_title("GEN");
+        if (s == S_GEN_SHEET) page_sheet_open();
+        else { ui.hot_col = 1; ui.hot_t = 30; }
+        break;
     case S_SCL_HUMANIZE:                             /* SCL's list scrolled to its last row: HUMANIZE VEL HIGH */
         song.playing = 0; TSEL->p[P_HUMVEL] = 2;
         go_title("SCL"); lst.page = ui.page; lst.row = (uint8_t)(list_n(list_of(ui.page)) - 1u); lst.first = 0;

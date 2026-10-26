@@ -569,6 +569,10 @@ static void tracks_edit(uint32_t slot, int32_t steps)
 static void rec_toggle(uint32_t latch)
 {
     uint8_t bit = (uint8_t)(1u << song.sel);
+    if (gn_active(TSEL) && !(song.rec & bit)) {         /* (its steps do not play: nothing to record into) */
+        ui_message("GEN: HOLD REC TO PRINT");
+        return;
+    }
     if (!ui.home && cur_page()->graph == GR_SONG && !(song.rec & bit)) {
         ui_message("[SEQ] TO RECORD");
         return;
@@ -598,6 +602,10 @@ static void rec_play(void)
     ui.rec_t0 |= 2u;
     if (chain_busy()) {
         ui_message("STOP TO RECORD");
+        return;
+    }
+    if (gn_active(TSEL)) {
+        ui_message("GEN: HOLD REC TO PRINT");
         return;
     }
     if (!ui.home && cur_page()->graph == GR_SONG) {
@@ -643,7 +651,7 @@ static void qsave_poll(void)
  * its pattern, as recorded notes (timing, velocity and length as played): an empty pattern takes 1, 2 or 4 bars (16, 32
  * or 64 steps), as many as the notes span, its LEN set to it; a pattern with notes the last LEN steps, over them. The
  * bars end at the bar playing when a note in it was played, else at its start. EDIT held undoes it */
-static void capture_take(void)
+static uint32_t capture_take(void)
 {
     track_t *t = TSEL;
     uint32_t k = song.sel, n = 0, i, now, first = 0xFFFFu, last = 0, end, w, start, put = 0, full = 0, j = 0, from;
@@ -651,8 +659,8 @@ static void capture_take(void)
     int empty;
     cap_ev_t captured[CAP_N];
     uint32_t until;
-    if (chain_busy()) { ui_message("STOP SONG TO CAPTURE"); return; }
-    if (rec_any() || ((song.rec >> k) & 1u)) { ui_message("RECORDING"); return; }
+    if (chain_busy()) { ui_message("STOP SONG TO CAPTURE"); return 0; }
+    if (rec_any() || ((song.rec >> k) & 1u)) { ui_message("RECORDING"); return 0; }
     fm1_irq_off();                                      /* the selected track's events of this run: the newest, the oldest */
     cap_select(k);
     now = cap_now(t);
@@ -669,7 +677,7 @@ static void capture_take(void)
         if (back > last) last = back;
         if (back < first) first = back;
     }
-    if (!n) { ui_message("NOTHING TO CAPTURE"); return; }
+    if (!n) { ui_message("NOTHING TO CAPTURE"); return 0; }
     {   /* (16-bit step counts: they wrap) */
         uint32_t cur = (now >> 8) & 0xFFFFu, pos = cur & 15u, span;
         end = (uint16_t)(cur - pos + (first <= pos ? 16u : 0u));     /* a bar's start */
@@ -729,7 +737,7 @@ static void capture_take(void)
     if (put)
         t->seq_active = 1;
     load_end(t);
-    if (!put) { ui_message("NOTHING TO CAPTURE"); return; }
+    if (!put) { ui_message("NOTHING TO CAPTURE"); return 0; }
     {
         char b[16];
         fmt_int(b, (int32_t)(w % 16u ? w : w / 16u));
@@ -737,6 +745,17 @@ static void capture_take(void)
         ui_say(full ? "FULL: " : "CAPTURED ", b);
     }
     ui.force = 1;
+    return put;
+}
+/* Print (REC held on a generator track, GEN's sheet): what the generator played in the last bars into the pattern, as
+ * Capture writes it; then MODE OFF, so the pattern plays what was printed. EDIT held undoes the notes (MODE stays OFF) */
+static void gn_print(void)
+{
+    if (!gn_active(TSEL)) { ui_message("GEN IS OFF"); return; }
+    if (capture_take()) {
+        gn_mode_set(song.sel, GN_OFF);
+        ui_message("PRINTED: GEN OFF");
+    }
 }
 
 /* SEQ > SONG TAKE JAM: the patterns played since PLAY (seq.c jam) become the song's rows */
@@ -1126,6 +1145,10 @@ static void edit_param(uint32_t slot, int32_t steps)
        ((uint32_t)(vp-song.g)-G_MFXTYPE)%FX_PARAMS==0u){
         uint32_t flags=motion_guard();shared_fx_select(song.g,((uint32_t)(vp-song.g)-G_MFXTYPE)/FX_PARAMS,v);motion_unguard(flags);
     }else *vp = (int16_t)v;
+    if (pg->scope == SC_GEN) {                           /* (a copy of the generator's value: written back there) */
+        gn_page_put(pg->id[slot], v);
+        return;
+    }
     if(pg->scope==SC_P5){
         uint8_t old[MO_NATIVE_N];uint32_t f=motion_guard();
         motion_native_peek(TSEL,old);p5_edit_value(TSEL,pg->id[slot],p5_panel_raw(TSEL,pg->id[slot],v));native_motion(old);
@@ -2208,6 +2231,8 @@ static void ui_input(void)
     } else if (rec == BT_HOLD) {
         if (!ui.home && cur_page()->graph == GR_SONG)    /* SONG: TAKE JAM (the jam's rows as the song) */
             ps_jam();
+        else if (gn_active(TSEL))
+            gn_print();
         else
             capture_take();
     }

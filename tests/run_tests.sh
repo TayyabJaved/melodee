@@ -354,6 +354,8 @@ if core && [ $TABLES = 1 ]; then
     t "microtonal: catalogue, layouts, note ownership, recordings and rendered pitch" microtonal_test -O2 $FW
     t "scale picker: families, favorites, empty lists, shared settings and navigation" scale_picker_test -O1 $FW
     t "chord keys: diatonic and fixed chords, voicings, MONO root, releases, recording, ARP, MIDI IN, kits" chord_test $FW
+    t "generators (gen.c from Tessera): seeds replay, TURING lock, EUCLID hits, MARKOV range, the Grids map" gen_test
+    t "ARP > GEN: generator steps, scale, seeds, ATLAS lanes, REC / Print, the project's 'G' block, removal, page" gen_track_test -O1 $FW
     t "AUTO chords: Western scales, melody, cadences, voice leading and frozen ownership" chord_auto_test $FW
     t "AUTO2: stable melody, harmony below, Western scales and immediate strum attack" chord_melody_test $FW
     t "project record (FUN16 round trip, the song chain, names, FM6 patches; older formats refused)" project_test $FW
