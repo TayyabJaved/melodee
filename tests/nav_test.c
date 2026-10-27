@@ -185,6 +185,66 @@ static int test_cz_envelopes(void)
     return bad;
 }
 
+static int head_overlap(void)                           /* two header texts on the same columns */
+{
+    for (uint32_t i = 0; i < hd_n; i++)
+        for (uint32_t j = i + 1u; j < hd_n; j++)
+            if (hd[i].x0 < hd[j].x1 && hd[j].x0 < hd[i].x1) return 1;
+    return 0;
+}
+/* every visible page: "k/n" when its button has two or more, k its place in what SELECT walks, nothing overlapping */
+static int pos_sweep(const char *what, int crowd)
+{
+    uint32_t i, k, n, bad_pages = 0, shown = 0;
+    char want[12];
+    for (i = 0; i < NPAGES; i++) {
+        if (!page_visible(i) || PAGES[i].graph == GR_MOTION) continue;
+        ui.home = 0; ui.page = (uint8_t)i;
+        if (crowd) { song.rec = (uint8_t)(1u << song.sel); song.octave = 2; ui_message("SAVED"); }
+        n = nav_pos(&k);
+        head();
+        snprintf(want, sizeof want, "%u/%u", (unsigned)k + 1u, (unsigned)n);
+        if (n >= 2u ? !head_has(want) : head_starts("1/")) bad_pages++;
+        if (head_overlap()) bad_pages++;
+        shown += n >= 2u;
+        if (bad_pages == 1u && (n >= 2u ? !head_has(want) : 1)) {
+            printf("  (%s: page %s, want %s; header:", what, PAGES[i].title, want);
+            for (uint32_t j = 0; j < hd_n; j++) printf(" [%s %d-%d]", hd[j].t, hd[j].x0, hd[j].x1);
+            printf(")\n");
+            bad_pages++;
+        }
+    }
+    song.rec = 0; song.octave = 0; ui.msg_t = 0;
+    return check(what, !bad_pages && shown > 20u);
+}
+static int test_page_position(void)
+{
+    static const uint32_t ENG[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, 3u, ENGI_DRUM};
+    int bad = 0;
+    uint32_t e;
+    ui_power_on();
+    go_title("ARP");
+    head();
+    bad += check("ARP: 1/3 after the BPM (ARP, ARP 2, GEN)", head_has("1/3"));
+    turn(EN_SELECT, 1); head();
+    bad += check("..SELECT: 2/3", head_has("2/3"));
+    ui_message("SAVED"); head();
+    bad += check("..with a message showing: still 2/3", head_has("2/3"));
+    ui.msg_t = 0;
+    go_home(); head();
+    bad += check("HOME: 1/2 (Stage, the chord view)", head_has("1/2"));
+    for (e = 0; e < 5u; e++) {
+        char what[80];
+        ui_power_on();
+        set_engine_of(TSEL, ENG[e]);
+        snprintf(what, sizeof what, "engine %u: every page: k/n where SELECT has two or more, no overlap", (unsigned)ENG[e]);
+        bad += pos_sweep(what, 0);
+        snprintf(what, sizeof what, "engine %u: ..with REC armed, an octave pill and a message", (unsigned)ENG[e]);
+        bad += pos_sweep(what, 1);
+    }
+    return bad;
+}
+
 int main(void)
 {
     int bad = 0;
@@ -195,6 +255,7 @@ int main(void)
     bad += test_pages_one_home();
     bad += test_edit_button();
     bad += test_cz_envelopes();
+    bad += test_page_position();
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;
 }

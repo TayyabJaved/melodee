@@ -272,9 +272,14 @@ place status cards over knobs, lists, waveforms, or notes.
 - **Master punch:** keep the normal page/transport header during song punches and their wet fades.
   Show effect names in the punch editor; keep the song footer for position and progress.
   The live FX layer retains its own HOLD / LOCK / MEMORY context and names the selected key.
-- **Optional context:** octave, song row, page dots, and the low-battery glyph use the remaining header space in
-  the normal layout. Never overlap or truncate a status to preserve optional context. Use a concise, documented
-  label that fits both Rubik and Melodee Pixel; `WAIT LOOP` is the header label for “waiting for loop”.
+- **Page position** (this fork, 2026-10-26; `firmware/src/ui_nav.c`): "2/4" in the label face right after the BPM
+  and the REC mark, on every page of a button with two or more; it counts what SELECT walks (an EDIT section's pages).
+  It stays while messages show; a status keeps its room first. HOME shows "1/2" / "2/2" as optional context, after its
+  octave pill. No page dots.
+- **Optional context:** octave, song row and the low-battery glyph use the remaining header space in
+  the normal layout; then the page name drops to the label face, and last it is ellipsised. Never overlap or truncate
+  a status to preserve optional context. Use a concise, documented label that fits both Rubik and Melodee Pixel;
+  `WAIT LOOP` is the header label for “waiting for loop”.
   The signed octave pill (`+2`, `-1`) shows the selected track's MPC bank octave while QNT is MPC;
   otherwise it shows the shared keyboard octave. It updates on track/mode changes and disappears at zero.
   In MPC mode the latest accepted pad note selects its track silently; use the normal track context and
