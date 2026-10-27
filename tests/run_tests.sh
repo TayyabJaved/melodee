@@ -360,6 +360,7 @@ if core && [ $TABLES = 1 ]; then
     t "generators (gen.c from Tessera): seeds replay, TURING lock, EUCLID hits, MARKOV range, the Grids map" gen_test
     t "Pattern sheet: Euclid and its turn, Double, Half, their limits and undo" seq_tools_test -O1 $FW
     t "ARP > GEN: generator steps, scale, seeds, ATLAS lanes, REC / Print, the project's 'G' block, removal, page" gen_track_test -O1 $FW
+    t "header and navigation (ui_nav.c): Bluetooth only on its page, toasts, page position, ENV / LFO / EDIT pages" nav_test -O1 $FW
     t "AUTO chords: Western scales, melody, cadences, voice leading and frozen ownership" chord_auto_test $FW
     t "AUTO2: stable melody, harmony below, Western scales and immediate strum attack" chord_melody_test $FW
     t "project record (FUN16 round trip, the song chain, names, FM6 patches; older formats refused)" project_test $FW
