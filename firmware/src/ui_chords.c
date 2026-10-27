@@ -193,8 +193,7 @@ static int cseq_edit(uint32_t slot, int32_t steps)
         *cseq_pen() = c;
     }
     fm1_irq_on();
-    if (f < 3u)
-        notes_preview();
+    notes_preview();                                  /* every entry edit is immediately audible */
     return 1;
 }
 
