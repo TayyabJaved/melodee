@@ -229,7 +229,7 @@ static int head_shared_status(void)
 {
     return head_waiting()
 #if MELODEE_BLE
-        || mb.on
+        || (mb.on && ui.menu == 3) || mel_ble_code() != BLE_NO_PASSKEY
 #endif
         ;
 }
@@ -253,7 +253,7 @@ static void ble_head_text(char text[24])
     if (code != BLE_NO_PASSKEY) {
         str_cpy(text, "PIN 000000", 24);
         for (uint32_t n = 0; n < 6; n++) { text[9u - n] = (char)('0' + code % 10u); code /= 10u; }
-    } else if (mb.on && !mb.ready) {
+    } else if (mb.on && !mb.ready && ui.menu == 3) {   /* (status on the Bluetooth page only: ui_nav.c toasts) */
         const char *s = mel_ble_status();
         if (str_eq(s,"CONNECTION TIMEOUT")) s = "BLE TIMEOUT";
         else if (str_eq(s,"WAITING FOR MIDI")) s = "BLE WAIT";
@@ -335,9 +335,6 @@ static void draw_head(void)
 #if MELODEE_USB_HOST
         if (uh.on) tag = "HOST";
 #endif
-#if MELODEE_BLE
-        if (mb.on) tag = tag[0] ? "HOST BLE" : "BLE";
-#endif
         int32_t hw = tag[0] ? text_w(TY_LB, tag) + 10 : 0;
 
         int32_t cw = text_w(cf, chip) + 4;
@@ -394,9 +391,6 @@ static void draw_head(void)
         uint16_t tag_color = T_THEME;
 #if MELODEE_USB_HOST
         if (uh.on && !uh.run) tag_color = T_MID;
-#endif
-#if MELODEE_BLE
-        if (mb.ready) tag_color = T_THEME;
 #endif
         if (hw)
             cv_text_on(236 - cw - (low ? 22 : 0) - hw + 4, ty_y(H_HEAD / 2, TY_LB), TY_LB, tag, tag_color, T_BG);

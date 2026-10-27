@@ -27,7 +27,9 @@ Mac use Audio MIDI Setup's Bluetooth MIDI window; on a phone use a music app's
 Bluetooth MIDI settings. Connecting out from Melodee finds a BLE controller,
 synth, another FM-1, or an app advertising the BLE-MIDI service.
 
-The shared header shows connection/setup state. **PIN 000042**, for example,
+The Bluetooth page's header shows connection/setup state; elsewhere connecting,
+disconnecting and failures are brief messages, and Settings' BLUETOOTH row says
+OFF / ON / CONNECTED. **PIN 000042**, shown on every screen while pairing,
 means enter all six digits on the other device, including leading zeros.
 The code disappears on encryption, failure, cancellation or timeout. The
 device is connected for MIDI only after its notification subscription is

@@ -323,6 +323,9 @@ static void draw_menu(void)
 #if MELODEE_USB_HOST
                 if (i == MI_USB_HOST) value = uh.want ? "ON" : "OFF";
 #endif
+#if MELODEE_BLE
+                if (i == MI_BLE) value = !mb.on ? "OFF" : mb.ready ? "CONNECTED" : "ON";   /* (the header: only there) */
+#endif
                 if (i == MI_HOLD) {                         /* "0.4 s" */
                     str_cpy(b, "0.4 s", sizeof b);
                     b[2] = (char)('0' + HOLD_MS[settings_hold % 4u] / 100u);
