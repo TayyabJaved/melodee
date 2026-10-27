@@ -23,9 +23,16 @@ static void nav_say_section(const char *name);
 /* ENV, LFO and EDIT: one home per page (task.md 2). An engine's own envelope and LFO pages (ui.c native_titles:
  * Prophet, FM6, CZ-1) are ENV's and LFO's only: SELECT walks the lit button's pages, EDIT's sections leave them out,
  * EDIT pressed there goes to EDIT, PRESETS jumps an envelope (CZ-1's: five pages each) */
-static uint32_t nav_owner(uint32_t i)                  /* page i's button (family) */
+/* EDIT has no save page: the Prophet's and FM6's STORE pages (SLOT, STORE, SEND, INIT) are no button's, so SELECT,
+ * the sections and the map never show them; SAVE saves every engine's sound, the sound sheet has Init sound */
+static int nav_hidden(uint32_t i)
 {
-    return native_page(i, FAM_ENV) ? FAM_ENV : native_page(i, FAM_LFO) ? FAM_LFO : PAGES[i].fam;
+    return PAGES[i].scope == SC_P5STORE || PAGES[i].graph == GR_FMSTORE;
+}
+static uint32_t nav_owner(uint32_t i)                  /* page i's button (family); FAM_COUNT: none */
+{
+    return nav_hidden(i) ? FAM_COUNT : native_page(i, FAM_ENV) ? FAM_ENV : native_page(i, FAM_LFO) ? FAM_LFO :
+           PAGES[i].fam;
 }
 static uint32_t nav_pages(uint32_t fam, uint8_t *pg)   /* the pages fam's button walks, in order -> how many */
 {
@@ -162,16 +169,27 @@ static int32_t nav_head_pos(int32_t x)                 /* (ui_draw.c draw_head) 
     return x + 6 + w;
 }
 
-/* PRESETS jumping a section (EDIT) or an envelope (ENV, LFO): the header shows the section's name for about half a
- * second in place of the page's (ui_sections.c sec_turn, nav_preset) */
-#define NAV_SECTION_FRAMES 33u                         /* (ui_draw: a frame each 15 ms at most) */
+/* PRESETS jumping a section (EDIT) or an envelope (ENV, LFO): the header shows the section's name, in capitals, in
+ * place of the page's name for half a second, while that page stays (ui_sections.c sec_turn, nav_preset) */
+#define NAV_SECTION_MS 500u
+static struct { const char *name; uint32_t until; uint8_t page; } nav_sec __attribute__((section(".pool")));
 static void nav_say_section(const char *name)
 {
-    char b[24];
-    uint32_t i;
-    for (i = 0; name[i] && i + 1u < sizeof b; i++)
-        b[i] = name[i] >= 'a' && name[i] <= 'z' ? (char)(name[i] - 32) : name[i];
-    b[i] = 0;
-    ui_message(b);
-    ui.msg_t = NAV_SECTION_FRAMES;
+    nav_sec.name = name;
+    nav_sec.page = ui.page;
+    nav_sec.until = (fm1_ms + NAV_SECTION_MS) | 1u;    /* (0: none) */
 }
+static void nav_head_chip(char *chip)                  /* (ui_draw.c draw_head, after head_chip_text) */
+{
+    uint32_t i;
+    if (!nav_sec.until)
+        return;
+    if (ui.home || ui.page != nav_sec.page || (int32_t)(nav_sec.until - fm1_ms) <= 0) {
+        nav_sec.until = 0;
+        return;
+    }
+    for (i = 0; nav_sec.name[i] && i < 15u; i++)
+        chip[i] = nav_sec.name[i] >= 'a' && nav_sec.name[i] <= 'z' ? (char)(nav_sec.name[i] - 32) : nav_sec.name[i];
+    chip[i] = 0;
+}
+

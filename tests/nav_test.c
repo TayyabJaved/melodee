@@ -251,19 +251,52 @@ static int test_section_name(void)
     uint32_t f;
     ui_power_on();
     set_engine_of(TSEL, ENGI_PROPHET);
-    go_title("P5 FILTER");
-    ui.msg_t = 0;
+    go_title("EDIT 2");                                 /* (Sound's second page) */
     turn(EN_PRESET, 1);
     head();
-    bad += check("EDIT: PRESETS to the next section: its name (MOD) in the header", msg_is("MOD") && head_has("MOD"));
-    bad += check("..for about half a second", ui.msg_t > 20u && ui.msg_t <= NAV_SECTION_FRAMES);
-    for (f = 0; f < NAV_SECTION_FRAMES + 2u; f++) frame();
+    bad += check("EDIT: PRESETS to the next section: its first page (P5 OSC A)", str_eq(cur_page()->title, "P5 OSC A"));
+    bad += check("..its name (OSC) where the page's name goes, no message", head_has("OSC") && !head_has("OSC A") && !ui.msg_t);
+    turn(EN_SELECT, 2);
+    turn(EN_PRESET, -1);
+    bad += check("..PRESETS back: that section's first page (EDIT 1), not the one last used", str_eq(cur_page()->title, "EDIT 1"));
+    turn(EN_PRESET, 1);
+    bad += check("..forward again: OSC's first page, not the one last used", str_eq(cur_page()->title, "P5 OSC A"));
+    for (f = 0; f < 40u; f++) frame();                  /* (640 ms) */
     head();
-    bad += check("..then the page's name again (POLYMOD)", !ui.msg_t && head_has("POLYMOD"));
+    bad += check("..after half a second the page's name again (OSC A)", head_has("OSC A"));
+    go_title("EDIT 1"); turn(EN_PRESET, 1); turn(EN_SELECT, 1);
+    {
+        char want[16];
+        sec_chip(ui.page, want, sizeof want);
+        head();
+        bad += check("..SELECT on from there: that page's name at once, not the section's", !head_has("OSC") && head_has(want));
+    }
     set_engine_of(TSEL, ENGI_CZ);
     open_family(FAM_ENV);
     turn(EN_PRESET, 1);
-    bad += check("CZ-1 ENV: PRESETS to the next envelope: WAVE 1", msg_is("WAVE 1"));
+    head();
+    bad += check("CZ-1 ENV: PRESETS to the next envelope: WAVE 1 in the header", head_has("WAVE 1"));
+    return bad;
+}
+static int test_no_save_in_edit(void)
+{
+    static const uint32_t ENG[] = {ENGI_PROPHET, ENGI_FM6};
+    int bad = 0;
+    for (uint32_t e = 0; e < 2u; e++) {
+        uint32_t i, ok = 1;
+        ui_power_on();
+        set_engine_of(TSEL, ENG[e]);
+        uint8_t pg[NPAGES];
+        uint32_t n = nav_pages(FAM_EDIT, pg);
+        for (i = 0; i < n; i++)
+            if (PAGES[pg[i]].scope == SC_P5STORE || PAGES[pg[i]].graph == GR_FMSTORE) ok = 0;
+        sec.ok = 0;
+        sec_build();
+        for (i = 0; i < sec.n; i++)
+            if (str_eq(sec.name[i], "Store")) ok = 0;
+        bad += check(ENG[e] == ENGI_FM6 ? "FM6: no STORE page or Store section in EDIT" :
+                     "Prophet: no P5 STORE page or Store section in EDIT", ok);
+    }
     return bad;
 }
 
@@ -279,6 +312,7 @@ int main(void)
     bad += test_cz_envelopes();
     bad += test_page_position();
     bad += test_section_name();
+    bad += test_no_save_in_edit();
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;
 }

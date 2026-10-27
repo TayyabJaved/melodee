@@ -353,7 +353,8 @@ and incremental redraws when the state ends or the selected track changes (`test
 
 - **Sections**: an engine's pages in sections (Prophet: Osc, Mixer, Filter, Mod, Voice; FM6: Algorithm, OP1-OP6,
   Controls; CZ-1 ..; this fork: without the envelope and LFO pages, which are ENV's and LFO's). This fork: a PRESETS
-  jump shows the section's name in the header for about half a second in place of the page's (`ui_nav.c`). PRESETS jumps a section (to its last-used page), SELECT turns the
+  jump opens the section's first page and shows the section's name, in capitals, where the page's name goes for half
+  a second (`ui_nav.c`); the Prophet's and FM6's STORE pages are in no section (SAVE saves; Init sound: the sheet). PRESETS jumps a section (to its last-used page), SELECT turns the
   pages (on across the sections). The sections as tabs under the header, the pages of one as the header's dots.
 - **The map**: EDIT pressed on an EDIT page: a row a section, a tile a page (FM6: operators x their pages); KNOB 1 (or
   SELECT) moves to the next page of the category, KNOB 2 to the next category (its last-used page), one per detent,
