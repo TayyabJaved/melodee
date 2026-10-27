@@ -2526,9 +2526,9 @@ static int test_popups(void)
         bad += check("SECTIONS: EDIT again closes the map", !smap.on);
         press(B_EDIT);
         uint32_t row = smap.row;
-        turn(EN_K2, 2);                               /* (Mod, then Voice and Store below it) */
-        o = smap.row == row + 2u;
-        turn(EN_K2, -2);
+        turn(EN_K2, -2);                              /* (Mod, then Mixer two rows up: no Store below Voice) */
+        o = smap.row == row - 2u;
+        turn(EN_K2, 2);
         bad += check("SECTIONS: map KNOB 2 counts categories, including several detents in one frame",
                      o && smap.row == row);
         turn(EN_K2, -1);                              /* Filter remembers P5 FILTER, not Mod's page column */
@@ -3437,8 +3437,8 @@ static int test_cz1_factory(void)
 static int test_edit_cycle(void)
 {
     static const char *const CYC_A[] = {"EDIT 1", "EDIT 2", "VOICE", "EDIT 1"};   /* (VOICE: VOICE 1-3's list) */
-    static const char *const CYC_F[] = {"EDIT 1", "EDIT 2", "STORE", "ALGO", "FREQ", "OUT", "SCALE",   /* (its EGs, LFO: */
-                                        "CURVE", "FM BEND", "VOICE", "EDIT 1"};                     /* ENV's, LFO's) */
+    static const char *const CYC_F[] = {"EDIT 1", "EDIT 2", "ALGO", "FREQ", "OUT", "SCALE",   /* (its EGs, LFO: */
+                                        "CURVE", "FM BEND", "VOICE", "EDIT 1"};      /* ENV's, LFO's; no STORE) */
     static const char *const CYC_D[] = {"EDIT 1", "EDIT 2", "OP1 ENV", "OP2 ENV", "OP3 ENV", "OP4 ENV",
                                         "OP LEVEL", "VOICE", "EDIT 1"};
     int bad = 0, ok;
