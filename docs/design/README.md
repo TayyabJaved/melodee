@@ -347,6 +347,9 @@ and incremental redraws when the state ends or the selected track changes (`test
   PRESETS or ENV again: the next envelope), the lit button never changes as it does, EDIT pressed there goes to
   EDIT. The header names a page by its full title (P5 LFO, C1 PIT R1-4), and the track LFO's as TRACK LFO,
   TRACK LFO 2, TRACK DEST, so the two LFOs are told apart on every engine.
+- **Drum NOTES** (this fork, 2026-10-27; `firmware/src/ui_nav.c`): the grid always, programmed hits full cells,
+  recorded hits (an `SF_RECORDED` step) short bars; the pattern sheet's Drum view (drum tracks only, Grid / Notes)
+  brings back the roll for timing edits of recorded hits. Upstream: the roll once a pattern held a recording.
 - Defaults (Kerem, 2026-10-10): OCT+ (tapped, or held about 0.7 s) opens a page's own sheet; CHANCE lives in
   the note / hit sheets (its page retired, Kerem 2026-10-10); a picker closes ST_KNOB_MS after the last turn or on OCT-.
 

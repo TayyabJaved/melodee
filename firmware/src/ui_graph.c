@@ -354,8 +354,11 @@ static void graph_grid(const track_t *t, uint16_t c)
             int32_t x = 44 + (int32_t)i * 12;
             if (step_lanes(st) & b) {
                 uint16_t col = (step_accents(st) & b) ? T_ACCENT : c;
-                cv_rrect(x, y + 2, 10, 10, 2, col, row);
-                if (pick && step_sound_note(t, st, sound) < 0)
+                if (nav_rec_cell(st))                   /* (a recorded hit: a short bar, ui_nav.c) */
+                    cv_rrect(x, y + 4, 10, 6, 2, col, row);
+                else
+                    cv_rrect(x, y + 2, 10, 10, 2, col, row);
+                if (pick && !nav_rec_cell(st) && step_sound_note(t, st, sound) < 0)
                     cv_rrect(x + 2, y + 4, 6, 6, 1, row, col);
             } else
                 cv_rect(x + 4, y + 6, 2, 2, i % 4u == 0u || sel ? T_MID : T_DIM);
