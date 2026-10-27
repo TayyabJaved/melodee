@@ -393,6 +393,7 @@ static void fm1_main(void)
         glo_poll();                                     /* a kept GLO value changed: the settings, later */
 #if MELODEE_BLE
         mel_ble_poll();
+        nav_ble_toasts();                               /* (ui_nav.c) */
         if (mb_revision != mb_committed) persist_pending = 1;
 #endif
         settings_poll();                              /* queued settings save: only while stopped */

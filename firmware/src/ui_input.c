@@ -2716,3 +2716,4 @@ timeout:
 #endif
     ui_message("SETUP CANCELLED");
 }
+#include "ui_nav.c"                             /* ours: header and navigation (task.md) */
