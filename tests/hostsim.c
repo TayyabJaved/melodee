@@ -76,6 +76,7 @@ static void fm1_icfg_set(uint32_t v) { (void)v; }
 static void fm1_irq_off(void) {}
 static void fm1_irq_on(void) {}
 static void fm1_ble_crumb_boot(void) {}
+static uint8_t fm1_rf_cal_on;                 /* (hal/fm1_ble_rf.h: measure the radio calibration) */
 #include "../firmware/src/midi_ble.h"
 #endif
 #include "../firmware/src/usb.c"

@@ -208,8 +208,8 @@ static void fm1_rfspi(uint32_t addr, uint32_t cmd, uint32_t data)   /* HW §5.2:
  * fm1_ble_rf_run is ignored then. docs/bt/RF-CALIBRATION.md. */
 #include "fm1_rf_cal.h"
 static uint8_t fm1_rf_cal_on;                               /* set by the firmware: measure (1), or the stored 187 (0) */
-static struct fm1_rf_cal fm1_rfc;                           /* what was measured (the log reads it) */
-static uint8_t fm1_rfc_x187[68];                            /* the record built from it */
+static struct fm1_rf_cal fm1_rfc __attribute__((section(".pool")));   /* what was measured (the log reads it) */
+static uint8_t fm1_rfc_x187[68] __attribute__((section(".pool")));   /* the record built from it (off the full bank) */
 static uint8_t fm1_rfc_scanned, fm1_rfc_trimmed;
 static int fm1_rfc_scan_rc, fm1_rfc_trim_rc;
 
