@@ -96,3 +96,64 @@ static void nav_chip(const page_t *pg, char *b)
     str_cpy(b, "TRACK ", 16);
     str_cpy(b + 6, t, 10);
 }
+
+/* The page position (task.md 1): "k/n" in the label face right after the BPM and the REC mark, on every page of a
+ * button with two or more. It counts what SELECT walks (an EDIT section's pages, as its tabs show).
+ * The right side's octave pill and song row give way first, then the page name's face, then the name is ellipsised;
+ * a status (ERASING, WAIT LOOP, BLE, a PIN) keeps its room: only then does the position step aside */
+static uint32_t nav_pos(uint32_t *k)                   /* -> n, the page's place in *k */
+{
+    uint8_t pg[NPAGES];
+    uint32_t n = 0, m = 0, i, fam;
+    *k = 0;
+    if (song_punch_on())
+        return 0;
+    if (ui.home) {                                     /* (HOME: its "1/2" where there is room, after its octave
+        *k = ui.home_pg;                               * pill: ui_draw.c draw_head) */
+        return 2u;
+    }
+    if (designer_on() && !name_on()) {                 /* the designer: its stage's pages */
+        designer_pages(&n, k);
+        return n;
+    }
+    fam = nav_owner(ui.page);
+    n = nav_pages(fam, pg);
+    if (fam == FAM_EDIT && sec_on()) {                 /* an engine in sections: the section's pages */
+        uint32_t sc = sec_of(ui.page);
+        for (i = 0; i < n; i++)
+            if (PAGES[pg[i]].scope == SC_FMOP ? PAGES[ui.page].scope == SC_FMOP : sec_of(pg[i]) == sc)
+                pg[m++] = pg[i];
+        n = m;
+    }
+    for (i = 0; i < n && pg[i] != ui.page; i++)
+        ;
+    *k = i;
+    return i < n ? n : 0u;
+}
+static int32_t nav_head_pos(int32_t x)                 /* (ui_draw.c draw_head) -> the pen after it */
+{
+    char b[12], bt[24];
+    const char *st = "";
+    uint32_t k, n = nav_pos(&k);
+    int32_t w;
+    if (n < 2u || ui.home)
+        return x;
+    fmt_int(b, (int32_t)k + 1);
+    str_cpy(b + str_len(b), "/", 2);
+    fmt_int(b + str_len(b), (int32_t)n);
+    w = text_w(TY_LB, b);
+    if (seq_erase_active(TSEL))
+        st = "ERASING";
+    else if (head_waiting())
+        st = "WAIT LOOP";
+#if MELODEE_BLE
+    else {
+        ble_head_text(bt);
+        st = bt;
+    }
+#endif
+    if (st[0] && x + 6 + w + 6 + text_w(TY_LB, st) > 236)
+        return x;
+    cv_text_on(x + 6, ty_y(H_HEAD / 2, TY_LB), TY_LB, b, T_MID, T_BG);
+    return x + 6 + w;
+}

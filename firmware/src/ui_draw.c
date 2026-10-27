@@ -315,13 +315,16 @@ static void draw_head(void)
         cv_icon_mid(x, H_HEAD / 2, 16, ((song.rec & ~song.rec_wait) >> song.sel) & 1u ? ICON_X_REC : ICON_X_REC_O, T_REC, T_BG);
         x += 18;
     }
+    x = nav_head_pos(x);                                /* the page position, "2/4" (ui_nav.c) */
     if (msg && head_toast(x + 6))                       /* (too long for the header: a toast under it, draw_toast; the
                                                          * header as it is) */
         msg = 0;
     if (seq_erase_active(TSEL)) {
-        cv_text_r(236, ty_y(H_HEAD / 2, TY_TX), TY_TX, "ERASING", T_REC, T_BG);
+        const aafont_t *f = ty_fit(TY_TX, "ERASING", 236 - x - 6);
+        cv_text_r(236, ty_y(H_HEAD / 2, f), f, "ERASING", T_REC, T_BG);
     } else if (head_waiting()) {
-        cv_text_r(236, ty_y(H_HEAD / 2, TY_TX), TY_TX, "WAIT LOOP", T_REC, T_BG);
+        const aafont_t *f = ty_fit(TY_TX, "WAIT LOOP", 236 - x - 6);
+        cv_text_r(236, ty_y(H_HEAD / 2, f), f, "WAIT LOOP", T_REC, T_BG);
 #if MELODEE_BLE
     } else if (ble_text[0] && (!msg || mel_ble_code() != BLE_NO_PASSKEY)) {
         const aafont_t *f = ty_fit(TY_TX, ble_text, 236 - x - 6);
@@ -352,6 +355,12 @@ static void draw_head(void)
                 cw = text_w(cf, chip) + 4;
             }
         }
+        if (x + 6 + cw + (low ? 22 : 0) + hw > 236) {   /* still too wide: the name ellipsised (the page position stays) */
+            char t[16];
+            text_fit(t, sizeof t, chip, cf, 236 - x - 6 - (low ? 22 : 0) - hw - 4);
+            str_cpy(chip, t, sizeof chip);
+            cw = text_w(cf, chip) + 4;
+        }
         if (octave) {                                   /* selected MPC bank's octave, else the shared octave */
             int32_t w;
             b[0] = octave > 0 ? '+' : '-';
@@ -376,16 +385,11 @@ static void draw_head(void)
             if (x + 2 + text_w(TY_LB, b) + 6 <= 236 - cw - (low ? 22 : 0) - hw - 6)
                 x = cv_text_on(x + 2, ty_y(H_HEAD / 2, TY_LB), TY_LB, b, T_MID, T_BG) + 6;
         }
-        if (!ui.home) {                                 /* a page: where it is in its family */
-            head_pages(x + 6, 236 - cw - (low ? 22 : 0) - hw);
-        } else if (x + 6 + 28 <= 236 - cw - (low ? 22 : 0) - hw - 6) {   /* HOME: its two pages (Stage, the chord view),
-                                                                   * where there is room */
-            uint32_t i;
-            for (i = 0, x += 6; i < 2u; i++) {
-                int32_t w = i == ui.home_pg ? 16 : 6;
-                cv_rrect(x, H_HEAD / 2 - 3, w, 6, 3, i == ui.home_pg ? T_THEME : T_LINE, T_BG);
-                x += w + 6;
-            }
+        /* (a page's place: "2/4" after the BPM, ui_nav.c nav_head_pos; head_pages unused) */
+        if (ui.home && x + 6 + text_w(TY_LB, "1/2") <= 236 - cw - (low ? 22 : 0) - hw - 6) {   /* HOME: its two pages
+                                                                   * (Stage, the chord view), where there is room */
+            str_cpy(b, ui.home_pg ? "2/2" : "1/2", sizeof b);
+            cv_text_on(x + 6, ty_y(H_HEAD / 2, TY_LB), TY_LB, b, T_MID, T_BG);
         }
         if (low)                                        /* the battery, only when it runs low */
             cv_icon_mid(236 - cw - 20, H_HEAD / 2, 16, batt_level() ? ICON_X_BAT1 : ICON_X_BAT0, T_REC, T_BG);
