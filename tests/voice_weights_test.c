@@ -5,7 +5,7 @@
 #define UI_TEST_NO_MAIN 1
 #include "ui_test.c"
 
-static const uint8_t kinds[VOICE_KINDS] = {ENGI_PROPHET, ENGI_CZ, ENGI_FM6, 3u /* SID */, 10u /* DRUM */};
+static const uint8_t kinds[VOICE_KINDS] = {ENGI_PROPHET, ENGI_CZ, ENGI_FM6, 0xFFu /* the removed SID's: kept, unused */, 10u /* DRUM */};
 /* The rule before GLO > WEIGHTS (admission off): what AUTO must keep. */
 static uint32_t builtin(const track_t *t)
 {
@@ -36,6 +36,7 @@ int main(void)
     int bad = 0, ok = 1;
     ui_power_on(); defaults();
     for (uint32_t k = 0; k < VOICE_KINDS; k++) {
+        if (kinds[k] == 0xFFu) continue;
         host_preset(&trk[0], kinds[k], 0);
         uint32_t auto_units = builtin(&trk[0]);
         ok &= voice_units(&trk[0]) == auto_units;
@@ -108,10 +109,10 @@ int main(void)
     ok &= settings_vpoints[0] == 1 && str_eq(value("WEIGHTS", 0, &vp, &label), "1");
     ok &= str_eq(value("WEIGHTS", 1, &vp, &label), "AUTO") && str_eq(label, "CZ-1");
     ok &= str_eq(value("WEIGHTS", 2, &vp, &label), "AUTO") && str_eq(label, "FM6");
-    ok &= str_eq(value("WEIGHTS", 3, &vp, &label), "AUTO") && str_eq(label, "SID");
-    ok &= str_eq(value("WEIGHTS 2", 0, &vp, &label), "AUTO") && str_eq(label, "DRUM") && vp == &settings_vpoints[4];
+    ok &= str_eq(value("WEIGHTS", 3, &vp, &label), "AUTO") && str_eq(label, "DRUM") && vp == &settings_vpoints[4];
     value("WEIGHTS 2", 1, &vp, &label);
     ok &= str_eq(label, "BUDGET") && vp == &settings_budget;
+    ok &= !page_desc(cur_page(), 0, &vp);
     ok &= !page_desc(cur_page(), 2, &vp);
     ok &= str_eq(value("WEIGHTS 2", 3, &vp, &label), "OFF") && str_eq(label, "GUARD") && vp == &settings_safety;
     turn(EN_K4, 1);
@@ -119,7 +120,7 @@ int main(void)
     turn(EN_K4, -1);
     ok &= settings_safety == 0 && str_eq(value("WEIGHTS 2", 3, &vp, &label), "OFF");
     for (uint32_t id = G_WP5; id <= G_SAFETY; id++) ok &= !song.g[id] && global_reserved(id);
-    bad += check("WEIGHTS: P5 CZ-1 FM6 SID; WEIGHTS 2: DRUM BUDGET - SAFETY; edits reach the settings only", ok);
+    bad += check("WEIGHTS: P5 CZ-1 FM6 DRUM; WEIGHTS 2: - BUDGET - SAFETY; edits reach the settings only", ok);
 
     project_capture(&proj_scratch);
     ok = !project_restore_runtime(&proj_scratch) && settings_vpoints[0] == 1 && !settings_safety;

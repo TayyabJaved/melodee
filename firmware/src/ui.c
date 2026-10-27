@@ -296,6 +296,16 @@ static void nav_dview_v(char *b);
 static void nav_dview_turn(int32_t s);
 static void nav_dview(void);
 static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play);
+static uint32_t cseq_page(void);                        /* SEQ > CHORDS (ui_chords.c) */
+static int cseq_page_i(uint32_t i);
+static uint32_t cseq_roll(const track_t *t, const step_t *st, uint8_t *out, int32_t *at, uint32_t period);
+static int cseq_columns(void);
+static int cseq_edit(uint32_t slot, int32_t steps);
+static int cseq_preset(int32_t s);
+static int cseq_entry_root(uint32_t note);
+static uint32_t cseq_heard(const step_t *st, uint8_t *nn, uint8_t *vv);
+static void cseq_frame(void);
+static void cseq_chip(char *b);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);
@@ -330,6 +340,7 @@ static int page_visible(uint32_t i)
     if (PAGES[i].fam == FAM_ENV && native_titles(FAM_ENV))   /* (the track's ADSR, ENV DEST: nothing there) */
         return 0;
     if(PAGES[i].scope==SC_DRUM || PAGES[i].scope==SC_DRUMHIT)return drum_track(TSEL);
+    if (cseq_page_i(i)) return !drum_track(TSEL);      /* (SEQ > CHORDS: melodic tracks) */
     if (PAGES[i].scope == SC_TRACK && PAGES[i].id[0] >= P_LN0 && PAGES[i].id[0] <= P_LN7)
         return drum_track(TSEL);
     if(TSEL->eng_req==ENGI_CZ && PAGES[i].scope==SC_ENGINE && PAGES[i].fam==FAM_EDIT && (PAGES[i].id[0]==P_E0 || PAGES[i].id[0]==P_E4))return 0;
@@ -444,6 +455,7 @@ static int step_on(const step_t *st) { return st->time == ST_NOTE && (st->n || s
 
 static void step_clear(step_t *st)
 {
+    st->note[1] = st->note[2] = st->note[3] = 0;        /* (a chord entry's settings go too: chord_seq.c) */
     st->n = 0;
     st->time = ST_REST;
     st->flags = 0;
@@ -1090,7 +1102,7 @@ static void engine_load_of(track_t *t, uint32_t ei, uint32_t pi)
 /* the engine's defaults and its first preset (PROPHET: Sequential's first factory program, not INIT) */
 static void set_engine_of(track_t *t, uint32_t ei) { engine_load_of(t, ei, ei % NENGINES == ENGI_PROPHET ? 1u : 0u); }
 
-/* the engine's own starting point, nothing changed: its INIT preset (Prophet, CZ-1, SID, FM6: "INIT .."), else
+/* the engine's own starting point, nothing changed: its INIT preset (Prophet, CZ-1, FM6: "INIT .."), else
  * its first (DRUM: the 808 kit) */
 static uint32_t preset_init(uint32_t e)
 {

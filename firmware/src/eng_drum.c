@@ -5,8 +5,7 @@
  * Retriggers reuse a lane's voice; closed hats choke open hats. Key release does not end a hit.
  * KIT retains stored value 4 for existing patches. All older custom kits now use the 808.
  * Parameters and output processing remain live while the hit rings. No recorded material.
- * KIT SID (drum_sid.c): one Commodore 6581 for the part, on one voice; its drums are C64 frame programs,
- * DIGI ON plays KICK and SNARE on the volume register, TONE and RES are its filter's.
+ * This fork removed KIT SID: a stored one (6) plays the 909.
  * KIT CR78 (drum_cr78.c) and KIT FM (drum_fm.c): eight lanes on one voice (drum_lanes.c); CR78's KICK is HATS. */
 /* Lane and GM roles shared by the grid and the synthesized 808. */
 enum { DV_KICK, DV_SNARE, DV_CLAP, DV_HATC, DV_HATO, DV_TOM, DV_RIM, DV_BELL, DV_NLANE };
@@ -42,17 +41,14 @@ static uint32_t drum_lane(uint32_t note);
 static uint32_t drum_gm(const int16_t *p,uint32_t note,int32_t *st);
 static int32_t drum_event_pitch;
 static uint32_t drum_event_length;
-static int drum_is909(const track_t *t) { return t->p[P_E0] == DK_909; }
-static int drum_issid(const track_t *t) { return t->p[P_E0] == DK_SID; }
+static int drum_is909(const track_t *t) { return t->p[P_E0] == DK_909 || t->p[P_E0] == DK_SID; }   /* (6: a removed SID kit) */
 static int drum_iscr(const track_t *t) { return t->p[P_E0] == DK_CR78; }
 static int drum_isfm(const track_t *t) { return t->p[P_E0] == DK_FM; }
 static int drum_islane(const track_t *t) { return t->p[P_E0] >= DK_CR78; }   /* the lane kits (drum_lanes.c) */
-static int drum_isone(const track_t *t) { return t->p[P_E0] >= DK_SID; }      /* a whole kit on one voice */
-typedef struct dsk_part dsk_part_t;
-static uint32_t dsk_bytes(void);
+static int drum_isone(const track_t *t) { return t->p[P_E0] >= DK_CR78; }    /* a whole kit on one voice */
 typedef struct dlk_part dlk_part_t;
 static uint32_t dlk_bytes(void);
-static uint32_t drum_bytes(const track_t *t) { return drum_is909(t) ? sizeof(drum909_part_t) : drum_issid(t) ? dsk_bytes() : drum_islane(t) ? dlk_bytes() : sizeof(drum_lane_t)*DV_NLANE; }
+static uint32_t drum_bytes(const track_t *t) { return drum_is909(t) ? sizeof(drum909_part_t) : drum_islane(t) ? dlk_bytes() : sizeof(drum_lane_t)*DV_NLANE; }
 static drum909_part_t *drum909_of(const track_t *t)
 {
     drum909_part_t *k = drum909_part((uint32_t)(t-trk));
@@ -74,7 +70,7 @@ static const char *const DRUM_SOUND_NAME[16]={"KICK","SNARE","TOM L","TOM M","TO
 static uint32_t drum_sound_count(const track_t *t){return drum_is909(t)?D9_NUM:16u;}
 static uint32_t drum_sound_note(const track_t *t,uint32_t sound){return !drum_is909(t) && sound==D9_RD?56u:DRUM_SOUND_NOTE[sound];}
 /* MPC pads 01..16, left to right from the bottom row. Keep the main beat under the fingers;
- * the 909 repeats useful hits where the 808/SID have extra percussion. These are sound identities,
+ * the 909 repeats useful hits where the 808 has extra percussion. These are sound identities,
  * independent of scale, transpose and input octave, just like a recorded GM drum hit. */
 static uint32_t drum_mpc_note(const track_t *t, uint32_t pad)
 {
@@ -170,7 +166,7 @@ static void drum_block(track_t *t)
     if(drum_is909(t)) { drum909_part_t *k=drum909_of(t); if(k)k->nz=d9_noise_block(&k->d,CTL); }
 }
 
-static const char *const N_DRUM_KIT[] = {"808", "808", "808", "808", "808", "909", "SID", "CR78", "FM"};
+static const char *const N_DRUM_KIT[] = {"808", "808", "808", "808", "808", "909", "", "CR78", "FM"};   /* ("": the removed SID kit, skipped) */
 static const char *const N_DRUM_KICK[] = {"PUNCH", "ROUND"};
 
 /* General MIDI notes 35..81 -> the drum (DVT_*; DVT_PUNCH: the kick KICK picks) and semitones from its
@@ -194,7 +190,7 @@ static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
         t = DVT_ROUND;
     return t;
 }
-#include "drum_sid.c"                          /* KIT SID */
+#include "drum_sid_gone.c"                     /* (ours: what drum_lanes.c needs of the removed KIT SID) */
 #include "drum_lanes.c"                        /* KIT CR78, KIT FM */
 
 /* ----------------------------------------------------- the grid's lanes --- */
@@ -327,9 +323,6 @@ static void drum_note_on(track_t *t, voice_t *v)
 {
     drum_flash[(uint32_t)(t - trk) % NTRK] |= (uint8_t)(1u << drum_lane(v->note));
     v->s[3]=(int32_t)drum_event_length; v->s[4]=drum_event_pitch; v->s[5]=drum_event_length!=0;
-    if(drum_issid(t)) {                                  /* the hit's own length: its SID voice's gate */
-        v->s[2]=DK_SID; v->s[5]=0; v->env_out=32767; dsk_hit(t,v->note,v->vel); return;
-    }
     if(drum_islane(t)) {                                 /* the hit's own length: its lane's */
         v->s[2]=t->p[P_E0]; v->s[5]=0; v->env_out=32767; dlk_hit(t,v->note,v->vel); return;
     }
@@ -372,8 +365,8 @@ static void drum_note_on(track_t *t, voice_t *v)
  * velocity in their trigger level: the voice's own (voice.c: x velocity) taken out again, ACC's put in */
 static int32_t drum_amp(track_t *t, voice_t *v, int32_t adsr)
 {
-    if(v->s[2]>=DK_SID || drum_isone(t)) {               /* the chip, the lane kits: on while any of it sounds */
-        if(v->s[2]==t->p[P_E0] && (drum_issid(t) ? dsk_tick(t) : dlk_tick(t))) { v->env=1<<24; return 32767*127/(v->vel?v->vel:1); }
+    if(v->s[2]>=DK_CR78 || drum_isone(t)) {              /* the lane kits: on while any of it sounds */
+        if(v->s[2]==t->p[P_E0] && dlk_tick(t)) { v->env=1<<24; return 32767*127/(v->vel?v->vel:1); }
         v->active=v->gate=v->stage=0; v->env=0; return 0;
     }
     if(v->s[5] && v->s[3]<=0){v->active=v->gate=v->stage=0;v->env=0;return 0;}
@@ -400,7 +393,7 @@ static int32_t drum_amp(track_t *t, voice_t *v, int32_t adsr)
 static __attribute__((noinline)) int drum_source(track_t *t,voice_t *v,drum_lane_t *L,int32_t *y,uint32_t n,dr_scratch_t *scratch,const int16_t *p)
 {
     uint32_t i;
-    if(p[P_E0]==DK_909) {
+    if(p[P_E0]>=DK_909) {
         drum909_part_t *k=drum909_of(t); if(!k || !k->nz)return 0;
         float f[CTL]={0}; drum909_render_voice(&k->d,v->s[1],k->nz,f,(int)n);
         for(i=0;i<n;i++)y[i]=(int32_t)(fm_clampf(f[i],-2.0f,2.0f)*12000.0f);
@@ -425,11 +418,6 @@ static __attribute__((noinline)) void drum_color(drum_lane_t *L,int32_t value,in
 }
 static void drum_render_into(track_t *t,voice_t *v,int32_t *out,uint32_t n,const vmod_t *m,dr_scratch_t *scratch,const int16_t *p)
 {
-    if (p[P_E0] == DK_SID) {
-        if (v->s[2] == DK_SID)
-            dsk_render(t, out, n > CTL ? CTL : n, m, p);
-        return;
-    }
     if (p[P_E0] >= DK_CR78) {
         if (v->s[2] == p[P_E0])
             dlk_render(t, out, n > CTL ? CTL : n, m, p);
@@ -479,24 +467,16 @@ static int32_t drum_keys(const track_t *t, uint32_t k)
     return clamp(29 + 12 * input_octave(t) + (int32_t)k, 0, 127);
 }
 
-/* {KIT, TUNE, TONE, DECY, SNAP, ACC, KICK, DRV} (SID: DIGI, RES; CR78: HATS); every kit suggests the BEAT pattern (GM notes) */
+/* {KIT, TUNE, TONE, DECY, SNAP, ACC, KICK, DRV} (CR78: HATS); every kit suggests the BEAT pattern (GM notes) */
 static const preset_t DRUM_PRESETS[] = {
     {"808 KIT", {DK_808, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0},
     {"909 KIT", {DK_909, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0},
-    {"SID KIT", {DK_SID, 64, 80, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0},    /* every drum on the SID */
-    {"SID DIGI", {DK_SID, 64, 80, 64, 64, 100, 1, 0}, {0, 100, 127, 100}, 0, 0},   /* kick, snare on $D418 */
     {"CR78 KIT", {DK_CR78, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0},
     {"FM KIT", {DK_FM, 64, 64, 64, 64, 100, 0, 0}, {0, 100, 127, 100}, 0, 0},
 };
-/* KIT SID: KICK is DIGI (KICK and SNARE on $D418), DRV the filter's resonance */
-static const char *const N_DRUM_DIGI[] = {"OFF", "ON"};
-static const param_desc_t DRUM_SID_DIGI = {"DIGI", F_ENUM, 0, 1, 0, N_DRUM_DIGI, 0};
-static const param_desc_t DRUM_SID_RES = {"RES", F_PCT, 0, 127, 0, 0, 0};
 static const param_desc_t *drum_desc(const track_t *t, uint32_t k)
 {
-    if (drum_iscr(t))
-        return k == 6u ? &DRUM_CR_HATS : 0;
-    return !drum_issid(t) ? 0 : k == 6u ? &DRUM_SID_DIGI : k == 7u ? &DRUM_SID_RES : 0;
+    return drum_iscr(t) && k == 6u ? &DRUM_CR_HATS : 0;
 }
 static uint32_t drum_cap(const track_t *t) { return drum_isone(t) ? 1u : DV_NLANE; }
 
@@ -521,8 +501,6 @@ static const engine_t ENG_DRUM = {
     .block = drum_block,
     .knob = {P_E1, P_E2, P_E3, P_E4},
     .poly = DV_NLANE,
-    .cap = drum_cap,
-    .desc = drum_desc,
     .oneshot = 1,
     .keys = drum_keys,
 };

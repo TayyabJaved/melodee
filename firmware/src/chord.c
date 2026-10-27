@@ -99,10 +99,18 @@ static uint32_t chord_tones(const track_t *t, uint32_t mode, int32_t *root, int3
 /* the chord on note `root` as track t plays it now -> out (ascending), the number of notes (1..CHORD_MAX);
  * *rp its root, *maskp its tones above the root (bit i: i semitones; 0 = no chord). The root alone when CHRD
  * is OFF, on a kit, or for MONO / LEGATO / UNISON (their chord's root) */
+static uint32_t chord_make_as(const track_t *t, uint32_t root, uint32_t mode, uint32_t voic, uint8_t *out, int32_t *rp,
+                              uint16_t *maskp);
 static uint32_t chord_make(const track_t *t, uint32_t root, uint8_t *out, int32_t *rp, uint16_t *maskp)
 {
+    return chord_make_as(t, root, (uint32_t)t->p[P_CHRD], (uint32_t)t->p[P_VOIC], out, rp, maskp);
+}
+/* chord_make with a chord and voicing of its own (SEQ > CHORDS: an entry's, chord_seq.c) */
+static uint32_t chord_make_as(const track_t *t, uint32_t root, uint32_t mode, uint32_t voic, uint8_t *out, int32_t *rp,
+                              uint16_t *maskp)
+{
     int32_t iv[CHORD_MAX + 1u], r = (int32_t)root, x;
-    uint32_t mode = (uint32_t)t->p[P_CHRD], n, i, j, m = 0;
+    uint32_t n, i, j, m = 0;
     int32_t period = (int32_t)scale_note_period(t);
     uint16_t mask = 0;
     *rp = r;
@@ -125,14 +133,14 @@ static uint32_t chord_make(const track_t *t, uint32_t root, uint8_t *out, int32_
         out[0] = (uint8_t)clamp(r, 0, 127);
         return 1;
     }
-    switch (t->p[P_VOIC]) {
+    switch (voic) {
     case VC_OPEN:                                       /* 1-5-3(-7): the second tone an octave up */
         if (n >= 3u)
             iv[1] += period;
         break;
     case VC_INV2:
     case VC_INV1:
-        for (j = 0; j < (t->p[P_VOIC] == VC_INV2 ? 2u : 1u); j++) {   /* the lowest tone an octave up */
+        for (j = 0; j < (voic == VC_INV2 ? 2u : 1u); j++) {   /* the lowest tone an octave up */
             x = iv[0] + period;
             for (i = 1; i < n; i++)
                 iv[i - 1u] = iv[i];
@@ -253,17 +261,25 @@ static void mchord_forget(uint32_t track)               /* panic: the track's MI
 /* A division describes the complete first-to-last sweep, not each string gap.
  * Freeze its rate and pitch order at the press; tempo may still change. ARP owns
  * timing while enabled, so it receives the complete chord immediately. */
+static uint32_t chord_strum_begin_as(track_t *t, uint8_t *notes, uint32_t n, chord_strum_t *s, uint32_t vel,
+                                     uint32_t rate, uint32_t stroke, int melody);
 static uint32_t chord_strum_begin(track_t *t, uint8_t *notes, uint32_t n, chord_strum_t *s, uint32_t vel)
 {
+    return chord_strum_begin_as(t, notes, n, s, vel, (uint32_t)t->p[P_STRUM], (uint32_t)t->p[P_STROKE],
+                                t->p[P_CHRD] == CH_MELODY && !micro_scale(t));
+}
+/* chord_strum_begin with a sweep and direction of its own (SEQ > CHORDS: an entry's, chord_seq.c) */
+static uint32_t chord_strum_begin_as(track_t *t, uint8_t *notes, uint32_t n, chord_strum_t *s, uint32_t vel,
+                                     uint32_t rate, uint32_t stroke, int melody)
+{
     memset(s, 0, sizeof *s);
-    uint32_t rate = (uint32_t)t->p[P_STRUM];
     if (!rate || rate >= NELEM(N_STRUM) || n < 2u || t->p[P_AMODE]) return n;
-    uint32_t up = t->p[P_STROKE] == 1;
-    if (t->p[P_STROKE] == 2) up = chord_alternate[trk_index(t)]++ & 1u;
+    uint32_t up = stroke == 1;
+    if (stroke == 2) up = chord_alternate[trk_index(t)]++ & 1u;
     if (up) for (uint32_t i = 0; i < n / 2u; i++) {
         uint8_t x = notes[i]; notes[i] = notes[n - 1u - i]; notes[n - 1u - i] = x;
     }
-    if (!up && t->p[P_CHRD] == CH_MELODY && !micro_scale(t)) {
+    if (!up && melody) {
         /* The melody sounds on the press; DOWN/UP/ALT order its accompaniment.
          * Freeze that order here so later mode changes cannot delay the tune. */
         uint8_t melody = notes[n - 1u];

@@ -12,7 +12,7 @@
  *    the matrix of the channel's track (ch 1..4 the parts, others the selected track).
  * 4. cost: instructions per sample (kernel-counted) of the heaviest PHYS preset and of a 4-part mix with every
  *    slot of every part active, against the same with the matrix off; fails above MOD_COST_MAX.
- * 5. demos: LFO -> CUT, VEL -> AMP, MODW -> VIB, LFO -> TRIO PW, AT -> WHEEL DRV as WAVs in DEMO_DIR. */
+ * 5. demos: LFO -> CUT, VEL -> AMP and AT -> WHEEL DRV as WAVs in DEMO_DIR. */
 #define main hostsim_main
 #include "hostsim.c"
 #undef main
@@ -171,7 +171,7 @@ static void test_math(void)
     int32_t lfo;
     vmod_t m;
     voice_t *v;
-    uint32_t e_trio, k_pw;
+    uint32_t e_voice, k_vowl;
 
     /* per-track sources on per-voice destinations */
     fresh(HOST_SYNTH, 0);
@@ -253,8 +253,8 @@ static void test_math(void)
     /* clamping of the per-voice sums */
     fresh(HOST_SYNTH, 0);
     lfo_at(t, 32767);
-    for (k_pw = 0; k_pw < 4u; k_pw++)
-        slot(t, k_pw, MS_LFO, k_pw < 2u ? MD_CUT : MD_PITCH, 63);
+    for (k_vowl = 0; k_vowl < 4u; k_vowl++)
+        slot(t, k_vowl, MS_LFO, k_vowl < 2u ? MD_CUT : MD_PITCH, 63);
     trk_note_on(t, 120, 100);
     lfo_at(t, 32767);                              /* (a note-on restarts the LFO and its FADE) */
     mod_begin(t);
@@ -309,25 +309,25 @@ static void test_math(void)
     check("every per-block value restored", t->p[P_RESERVED33] == 64 && t->p[P_RESERVED34] == 64 && t->p[P_LRATE] == 100 && t->p[P_LD_PIT] == 0);
 
     /* an engine parameter: its descriptor's range */
-    e_trio = eng_by_name("TRIO");
-    k_pw = edit_by_label(e_trio, "PW", 7);
-    fresh(e_trio, 0);
+    e_voice = eng_by_name("VOICE");
+    k_vowl = edit_by_label(e_voice, "VOWL", 0);
+    fresh(e_voice, 0);
     lfo_at(t, 32767);
-    t->p[P_E0 + k_pw] = 100;
-    slot(t, 0, MS_LFO, MD_E1 + (int32_t)k_pw, 40);
+    t->p[P_E0 + k_vowl] = 100;
+    slot(t, 0, MS_LFO, MD_E1 + (int32_t)k_vowl, 40);
     mod_begin(t);
-    check("LFO -> TRIO PW: clamped to its range (0..127)", t->p[P_E0 + k_pw] == 127);
+    check("LFO -> VOICE VOWL: clamped to its range (0..127)", t->p[P_E0 + k_vowl] == 127);
     mod_end(t);
-    t->p[P_E0 + 1] = 0;                            /* INT2: -24..24 */
-    slot(t, 0, MS_MODW, MD_E1 + 1, -32);
+    t->p[P_E0 + 3] = 0;                            /* SHIFT: -12..12 */
+    slot(t, 0, MS_MODW, MD_E1 + 3, -32);
     t->mw = 127;
     mod_begin(t);
-    check("MODW -> E2 -32: half its range down (TRIO INT2 -24..24: -24)",
-          t->p[P_E0 + 1] == (((((127 * 258) * -32) >> 6) * (ENGINES[e_trio]->edit[1].max - ENGINES[e_trio]->edit[1].min)) >> 15) &&
-          t->p[P_E0 + 1] < -10);
+    check("MODW -> E4 -32: half its range down (VOICE SHIFT -12..12: -12)",
+          t->p[P_E0 + 3] == (((((127 * 258) * -32) >> 6) * (ENGINES[e_voice]->edit[3].max - ENGINES[e_voice]->edit[3].min)) >> 15) &&
+          t->p[P_E0 + 3] < -5);
     mod_end(t);
-    check("the engine parameters restored", t->p[P_E0 + k_pw] == 100 && t->p[P_E0 + 1] == 0);
-    check("DST names: E1..E8 by the engine's labels", str_eq(mod_dst_name(t, MD_E1 + (int32_t)k_pw), "PW") &&
+    check("the engine parameters restored", t->p[P_E0 + k_vowl] == 100 && t->p[P_E0 + 3] == 0);
+    check("DST names: E1..E8 by the engine's labels", str_eq(mod_dst_name(t, MD_E1 + (int32_t)k_vowl), "VOWL") &&
                                                           str_eq(mod_dst_name(t, MD_CUT), "CUT"));
 
     /* per-voice sources on a per-block destination: the latest note-on */
@@ -472,7 +472,7 @@ static void test_cost(void)
 {
     uint32_t e_phys = eng_by_name("PHYS"), pp = preset_by_name(e_phys, "BOWED METAL");
     uint8_t phys[NPART][3] = {{(uint8_t)e_phys, (uint8_t)pp, 8}}, idle[NPART][3] = {{0}};
-    uint8_t mix[NPART][3] = {{ENGI_FM6, 0, 8}, {2, 0, 8}, {(uint8_t)e_phys, (uint8_t)pp, 4}, {6, 0, 4}};
+    uint8_t mix[NPART][3] = {{ENGI_FM6, 0, 8}, {2, 0, 8}, {(uint8_t)e_phys, (uint8_t)pp, 4}, {5, 0, 4}};
     double c_idle, c0, c1, m0, m1;
     if (!instr_now()) {
         printf("mod: cost: no instruction counter on this host (proc_pid_rusage), skipped\n");
@@ -486,7 +486,7 @@ static void test_cost(void)
     printf("mod: cost: PHYS %s (plays 4 voices): %.0f -> %.0f instructions / sample with 4 slots (+%.0f, +%.1f %% of "
            "the part over the idle mix %.0f)\n", eng_preset(ENGINES[e_phys], pp)->name, c0, c1, c1 - c0,
            (c1 - c0) * 100 / (c0 - c_idle), c_idle);
-    printf("mod: cost: 4 parts (FM6 8 + PHASE 8 + PHYS 4 + TRIO 4 asked, the budget plays 8), every slot of "
+    printf("mod: cost: 4 parts (FM6 8 + PHASE 8 + PHYS 4 + VOICE 4 asked, the budget plays 8), every slot of "
            "every part active: %.0f -> %.0f (+%.1f %%)\n", m0, m1, (m1 - m0) * 100 / m0);
     check("cost: PHYS <=5%; four-track matrix overhead <=96 instructions/sample",
           (c1 - c0) * 100 / (c0 - c_idle) <= MOD_COST_MAX && m1 - m0 <= MOD_MIX_IPS_MAX);
@@ -548,41 +548,6 @@ static int demos(const char *dir)
         fclose(f);
         n++;
     }
-    /* MODW -> CUT: SID LEAD 6581, the mod wheel (CC1) opens its filter over 4 s */
-    e = eng_by_name("SID");
-    fresh(e, preset_by_name(e, "LEAD 6581"));
-    t->p[P_LRATE] = 70;
-    t->p[P_LD_PIT] = 0;
-    t->p[P_LFADE] = 0;
-    slot(t, 0, MS_MODW, MD_CUT, 12);
-    if ((f = demo_open(dir, "modw_vib", 5u * FS / CTL * CTL))) {
-        trk_note_on(t, 69, 100);
-        for (k = 0; k < 4u * FS / CTL; k++) {
-            if (k % 32u == 0u)
-                pkt(0xB0, 1, k * 127u / (4u * FS / CTL));
-            demo_blocks(f, 1);
-        }
-        trk_note_off(t, 69);
-        demo_blocks(f, FS / CTL);
-        fclose(f);
-        n++;
-    }
-    /* LFO -> TRIO PW: TRIO ARP LEAD's pulse width swept by a triangle LFO */
-    e = eng_by_name("TRIO");
-    fresh(e, preset_by_name(e, "ARP LEAD"));
-    t->p[P_LRATE] = 45;
-    t->p[P_LWAVE] = 1;
-    t->p[P_AMODE] = 0;
-    t->p[P_VOICE] = V_POLY;
-    slot(t, 0, MS_LFO, MD_E1 + (int32_t)edit_by_label(e, "PW", 7), 40);
-    if ((f = demo_open(dir, "lfo_trio_pw", 5u * FS / CTL * CTL))) {
-        trk_note_on(t, 57, 100);
-        demo_blocks(f, 4u * FS / CTL);
-        trk_note_off(t, 57);
-        demo_blocks(f, FS / CTL);
-        fclose(f);
-        n++;
-    }
     /* AT -> WHEEL DRV: an organ chord, channel aftertouch pushes the drive up and down */
     e = eng_by_name("WHEEL");
     fresh(e, 0);
@@ -605,8 +570,8 @@ static int demos(const char *dir)
         fclose(f);
         n++;
     }
-    printf("mod: %u demos in %s (lfo_cut, vel_amp, modw_vib, lfo_trio_pw, at_wheel_drv)\n", n, dir);
-    return n == 5u;
+    printf("mod: %u demos in %s (lfo_cut, vel_amp, at_wheel_drv)\n", n, dir);
+    return n == 3u;
 }
 
 int main(int argc, char **argv)

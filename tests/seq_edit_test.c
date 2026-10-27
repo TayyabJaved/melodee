@@ -234,10 +234,10 @@ static int test_step_modifiers(void)
     bad += check("final SELECT detent on MIDI release sets length before advancing", step_note_length(t, 4) == 3 && ui.cursor == 7);
     turn(EN_SELECT, 1);
     {
-        int paged = cur_page()->graph != GR_ROLL && ui.cursor == 7;
+        int paged = str_eq(cur_page()->title, "CHORDS") && ui.cursor == 7;
         turn(EN_SELECT, -1); turn(EN_K1, 1);
         bad += check("SELECT turns the page, not the notes; KNOB 1 reaches empty steps (BPM untouched)",
-                     paged && cur_page()->graph == GR_ROLL && ui.cursor == 8 && song.g[G_BPM] == bpm);
+                     paged && str_eq(cur_page()->title, "NOTES") && ui.cursor == 8 && song.g[G_BPM] == bpm);
     }
     cursor_set(4); frame(); step_t before[NSTEP]; memcpy(before, t->step, sizeof before);
     turn(EN_PRESET, 10);

@@ -988,6 +988,8 @@ static void notes_place(void)
 
 static void step_edit(uint32_t slot, int32_t steps)
 {
+    if (cseq_edit(slot, steps))                         /* (SEQ > CHORDS: ui_chords.c) */
+        return;
     if (slot == 0u) {                                   /* KNOB 1: the notes one by one, the steps (empty ones too) */
         if (!ui.entry_open) {
             if (cur_page()->graph == GR_ROLL && !grid_on()) {if(bulk.on||ui.note_move||ui.note_copy)step_move_edit(steps);else notes_step_jog(steps);}
@@ -1166,7 +1168,15 @@ static void edit_param(uint32_t slot, int32_t steps)
     if(pg->scope==SC_GLOBAL && vp>=song.g+G_MFXTYPE && vp<=song.g+G_MFX3TYPE &&
        ((uint32_t)(vp-song.g)-G_MFXTYPE)%FX_PARAMS==0u){
         uint32_t flags=motion_guard();shared_fx_select(song.g,((uint32_t)(vp-song.g)-G_MFXTYPE)/FX_PARAMS,v);motion_unguard(flags);
-    }else *vp = (int16_t)v;
+    } else if (TSEL->eng_req == ENGI_DRUM && vp == &TSEL->p[P_E0] && *vp != v) {
+        /* 808 and 909 use different engine-state layouts. Stop the old kit and drop its allocation before the
+         * audio interrupt sees the new value; turning farther right at 909 remains a no-op. */
+        fm1_irq_off();
+        panic_req |= (uint8_t)(1u << song.sel);
+        *vp = (int16_t)v;
+        eng_state_clear(song.sel);
+        fm1_irq_on();
+    } else *vp = (int16_t)v;
     if (pg->scope == SC_GEN) {                           /* (a copy of the generator's value: written back there) */
         gn_page_put(pg->id[slot], v);
         return;
@@ -1559,12 +1569,15 @@ static void seq_entry_notes(const uint8_t *n, uint32_t cnt)
     track_t *t = TSEL;
     step_t *st = &t->step[ui.cursor];
     uint32_t i, j;
-    if (!cnt)
+    if (!cnt || (cnt == 1u && cseq_entry_root(n[0])))  /* (SEQ > CHORDS: a MIDI note, ui_chords.c) */
         return;
     if (!ui.entry_open) {
         step_history.cursor_before = ui.cursor;
         ui.entry_open = 1;
-        if (!settings_chord_add) st->n = 0;
+        if (!settings_chord_add) {
+            st->n = 0;
+            st->note[1] = st->note[2] = st->note[3] = 0;   /* (a chord entry's settings: chord_seq.c) */
+        }
         st->flags &= (uint8_t)~SF_RECORDED;
         st->time = ST_NOTE;
     }
@@ -1657,6 +1670,10 @@ static void seq_entry(uint32_t pressed)
         note = kb_map(t, k);
         if (note == KB_SILENT)
             continue;
+        if (cseq_entry_root(note)) {                    /* (SEQ > CHORDS: the entry's note, ui_chords.c) */
+            last_note = (uint8_t)note;
+            continue;
+        }
         seq_entry_notes(ch, chord_make(t, note, ch, &r, &mask));   /* (CHRD OFF, a kit: the note alone) */
         last_note = (uint8_t)note;
     }
@@ -2120,6 +2137,7 @@ static void ui_input(void)
         momentary.active=momentary.count=momentary.native=0;pressed&=~(1u<<panel.btn[B_OCTUP]);ui_message("KEPT");
     }
     nav_keep();                                         /* (F#5 keeps it too: ui_nav.c) */
+    cseq_frame();                                       /* (SEQ > CHORDS: the keys' chord, ui_chords.c) */
     uint32_t bank_notes = notes;
     uint32_t home = btn_hold(&ui.home_t0, B_HOME, now, 1);
     uint32_t rec = btn_hold(&ui.rec_t0, B_REC, now, !ui.menu && !ui.confirm && !name_on());   /* held: MIXER */
@@ -2580,6 +2598,7 @@ static void ui_input(void)
             if (!ui.home && cur_page()->graph == GR_PATGRID && total)
                 preset_pick_touch();
         }
+    } else if (s && cseq_preset(s)) {                   /* SEQ > CHORDS: the step (ui_chords.c) */
     } else if (s && !ui.home && cur_page()->graph == GR_ROLL && !grid_on()) {
         ui.note_zoom = (uint8_t)clamp((int32_t)ui.note_zoom + s, 0, 4);
         ui.force = 1;
@@ -2757,3 +2776,4 @@ timeout:
     ui_message("SETUP CANCELLED");
 }
 #include "ui_nav.c"                             /* ours: header and navigation (task.md) */
+#include "ui_chords.c"                          /* ours: SEQ > CHORDS, the chord sequencer */

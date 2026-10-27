@@ -101,6 +101,10 @@ static int nav_preset(int32_t s)                       /* PRESETS on an engine's
 static void nav_chip(const page_t *pg, char *b)
 {
     char t[16];
+    if (cseq_page()) {                                  /* SEQ > CHORDS: the step too (ui_chords.c) */
+        cseq_chip(b);
+        return;
+    }
     if (pg->scope != SC_TRACK || pg->fam != FAM_LFO || pg->graph == GR_MOD)
         return;
     str_cpy(t, str_eq(b, "LFO DEST") ? "DEST" : b, sizeof t);

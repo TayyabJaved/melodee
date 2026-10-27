@@ -218,8 +218,11 @@ static void notes_follow(const track_t *t)
         if (source == NSTEP || (seq_steps(t)[source].flags & SF_RECORDED)) continue;
         uint32_t at = recording_prefix(t, period, si);
         if (at < a || at >= b) continue;
-        for (uint32_t j = 0; j < seq_steps(t)[source].n; j++) {
-            int32_t note = seq_steps(t)[source].note[j];
+        uint8_t cn[CHORD_MAX];
+        int32_t co[CHORD_MAX];
+        uint32_t cnt = cseq_roll(t, &seq_steps(t)[source], cn, co, period);   /* (an entry: its chord, ui_chords.c) */
+        for (uint32_t j = 0; j < cnt; j++) {
+            int32_t note = cn[j];
             if (note < lo) lo = note;
             if (note > hi) hi = note;
         }
@@ -305,14 +308,20 @@ static void graph_recorded_notes(const track_t *t, uint16_t c)
         const step_t *st = &seq_steps(t)[source];
         int32_t x = notes_x(recording_prefix(t, period, si), a, b);
         int32_t xe = notes_x(recording_prefix(t, period, si + 1u), a, b);
-        for (uint32_t j = 0; j < st->n; j++) {
-            int32_t y = pr_row_y(st->note[j]);
-            int selected = (bulk.on&&bulk_has(source)) || (chosen >= RECORD_MAX && source == selected_start && (j == notes_manual_slot(st) || (st->n > 1u && ui.hot_t && (ui.hot_col == 2u || ui.hot_col == 3u))));
+        uint8_t cn[CHORD_MAX];
+        int32_t co[CHORD_MAX];
+        uint32_t cnt = cseq_roll(t, st, cn, co, period);   /* (an entry: its chord, each string's onset: ui_chords.c) */
+        for (uint32_t j = 0; j < cnt; j++) {
+            int32_t y = pr_row_y(cn[j]);
+            int selected = (bulk.on&&bulk_has(source)) || (chosen >= RECORD_MAX && source == selected_start && (j == notes_manual_slot(st) || cnt > st->n || (st->n > 1u && ui.hot_t && (ui.hot_col == 2u || ui.hot_col == 3u))));
             /* (a note tied on: no gap at its column's end, one bar) */
             int32_t lead = source == si ? 2 : 0, cont = si + 1u < end && pr_src(t, si + 1u, step_pattern_len(t)) == source;
-            uint16_t nc = c == T_THEME ? PR_OCT_C(st->note[j]) : c;
+            int32_t x0 = x + lead + (source == si && co[j] ? co[j] * (16 * PR_CW) / (int32_t)(b - a) : 0);
+            uint16_t nc = c == T_THEME ? PR_OCT_C(cn[j]) : c;
+            if (x0 < PR_X0) x0 = PR_X0;
+            if (x0 > xe - 2) x0 = xe - 2;
             if (y < PR_Y0 || y >= bottom) { cv_rect(x + 1, y < PR_Y0 ? PR_Y0 : bottom - 1, xe - x - 1, 1, nc); continue; }
-            cv_rect(x + lead, y + 1, xe - x - lead - (cont ? 0 : 1), PR_RH - 2, selected ? T_ACCENT : nc);
+            cv_rect(x0, y + 1, xe - x0 - (cont ? 0 : 1), PR_RH - 2, selected ? T_ACCENT : nc);
             if (selected) cv_frame(x + (source == si ? 1 : 0), y, xe - x - (source == si ? 2 : 0), PR_RH, T_TEXT);
             uint32_t next = (si + 1u) % step_pattern_len(t);
             const step_t *ns = &seq_steps(t)[next];
@@ -814,8 +823,8 @@ static uint32_t graph_signature(void) { return graph_sig(1); }
 static const char *eng_abbr(const char *name)
 {
     static const char *const A[][2] = {{"PROPHET", "P5"},
-                                       {"PHASE", "PHAS"}, {"CZ-1", "CZ-1"}, {"SID", "SID"},
-                                       {"SAMPLE", "SMPL"}, {"VOICE", "VOCL"}, {"TRIO", "TRIO"}, {"WHEEL", "WHEL"},
+                                       {"PHASE", "PHAS"}, {"CZ-1", "CZ-1"},
+                                       {"SAMPLE", "SMPL"}, {"VOICE", "VOCL"}, {"-", "-"}, {"WHEEL", "WHEL"},
                                        {"GRAIN", "GRAN"}, {"PHYS", "PHYS"}, {"DRUM", "DRUM"},
                                        {"NOISE", "NOIS"}, {"FM6", "FM6"}, {"SLICE", "SLCE"}};
     uint32_t i;

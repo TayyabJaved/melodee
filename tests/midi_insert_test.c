@@ -102,7 +102,7 @@ static uint64_t verb_tail(uint32_t engine, uint32_t release)
 }
 static void verb(void)
 {
-    const uint32_t engines[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, 3u};
+    const uint32_t engines[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ};
     for (uint32_t k = 0; k < NELEM(engines); k++) {
         uint64_t short_tail = verb_tail(engines[k], 10), long_tail = verb_tail(engines[k], 100);
         printf("MIDIVerb %s tail: %llu -> %llu\n", ENGINES[engines[k]]->name, (unsigned long long)short_tail, (unsigned long long)long_tail);

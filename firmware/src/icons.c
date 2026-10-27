@@ -172,8 +172,6 @@ static uint32_t param_icon(const param_desc_t *d, int32_t v)
         return ICON_LFO_WAVE;                 /* "WAVE" is also the oscillator wave */
     if (d == &TP[P_ARATE])
         return ICON_DIVISION;                 /* arp RATE is a note division, not Hz */
-    if (d->names == N_TRIO_MODE)
-        return ICON_CUTOFF;                   /* TRIO's MODE is the filter type, not the arp mode */
 #if MELODEE_LEGACY_EXTRAS
     if (d->names == N_NOISE_MODE)
         return ICON_NOISE;                    /* NOISE's MODE is the source; its CLK the register clock */
@@ -214,8 +212,8 @@ static uint32_t mod_dst_icon(const track_t *t, int32_t d)
 static uint32_t engine_icon(const char *name)
 {
     static const icon_map_t M[] = {
-        {"PHASE", ICON_PHASE}, {"SID", ICON_BITS},
-        {"SAMPLE", ICON_SAMPLE}, {"VOICE", ICON_MOUTH}, {"TRIO", ICON_TRIO}, {"WHEEL", ICON_DRAWBAR},
+        {"PHASE", ICON_PHASE},
+        {"SAMPLE", ICON_SAMPLE}, {"VOICE", ICON_MOUTH}, {"WHEEL", ICON_DRAWBAR},
         {"SLICE", ICON_SLICE},
         {"GRAIN", ICON_GRAIN},
         {"PHYS", ICON_PHYS},

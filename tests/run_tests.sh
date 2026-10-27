@@ -8,7 +8,7 @@
 #   SOUND=only tests/run_tests.sh    the sound tests alone
 #   UI=renders tests/run_tests.sh    UI screenshots only (build/ui_new), for the web manual
 # Sound tests: the regression suite, the DSP render and TRACKS, and every test of an engine's or an effect's rendered
-#   signal (native fp32, Prophet, SPEAKER, MOD, SLICER, the FX layer, REVERB, DELAY, MOD / SPREAD, CZ, SID,
+#   signal (native fp32, Prophet, SPEAKER, MOD, SLICER, the FX layer, REVERB, DELAY, MOD / SPREAD, CZ,
 #   CZ-1 knobs, PHYS, DRUM, NOISE, FM6, the dual-core pairing). The rest (storage, UI, MIDI, USB, editor, web) always runs.
 # Each test (its compile and its runs) is a job; PARALLEL=n jobs run at once (default: the CPU count; 1: one by one).
 # A job's output goes to build/host/log/<n>.log and is printed in the order of this file as the jobs end; the
@@ -66,9 +66,6 @@
 #                   Melodee's targets, the controls' directions, no clipping, DC, retriggers, the hat choke, the
 #                   kick on a small speaker; the DRUM engine (src/eng_drum.c): its key map, the 8 lanes together,
 #                   one hit per lane, the choke between lanes; the cost per voice; demos in build/drum_demo/.
-# DRUM SID (tests/drum_sid_test.c): KIT SID (src/drum_sid.c): one 6581 on one voice, its three voices taken by
-#                   the hits, frame programs at PAL frames, DIGI on $D418 and its effect on the voices ringing,
-#                   the filter for the routed drums, levels next to the 808; demos in build/sid_kit_demo/.
 # DRUM KITS (tests/drum_kits_test.c): KIT CR78 (src/drum_cr78.c) and KIT FM (src/drum_fm.c) on the lanes of
 #                   src/drum_lanes.c: every drum alone, one voice, a lane struck again without a step, the hat choke,
 #                   a recorded length, kit switches, the knobs' directions, levels next to the 808, no wrapped
@@ -372,7 +369,7 @@ if core && [ $TABLES = 1 ]; then
     t "song punch: timed master FX, repeats, live overrides, edits and persistence" song_punch_test -O1 $FW
     t "compressed pattern pool: dense capacity, prepared switches and state-machine oracle" pattern_pool_test -O1 $FW
     t "16 x 128 shared pool: old dense capacity, atomic exhaustion and switching" pattern_capacity_test -O1 $FW
-    t "recording/performance tools and legacy migrations" performance_tools_test -O1 $FW
+    t "recording/performance tools and legacy migrations" performance_tools_test -O1 -DMELODEE_LEGACY_EXTRAS=1 $FW
     t "momentary snapshots: parameter IDs and native patch union restore exactly" ui_momentary_test -O1 $FW
     t "USB/TRS clock, bend, sustain, ownership and panic recovery" midi_control_test -O1 $FW
     t "MIDI panel knobs: profiles, native edits, encoder modes and bounded foreground dispatch" midi_knob_test -O1 $FW
@@ -445,7 +442,7 @@ if sound && [ $TABLES = 1 ]; then
         -DMELODEE_LEGACY_EXTRAS=1 -O2 $FW -- "$OUT/phys_test" build/phys_demo
     t "paired FM6/Prophet voices: serial/concurrent sample equality and eight-voice allocation" dual_core_test \
         -O2 $FW -pthread
-    t "audio: 1296 ordered engine assignments, releases, controls and concurrent PCM parity" audio_matrix_test -O2 $FW -pthread
+    t "audio: 625 ordered engine assignments, releases, controls and concurrent PCM parity" audio_matrix_test -O2 $FW -pthread
     t "CZ-1: every knob changes a full tone; the dim ones leave INIT and factory tones bit for bit" cz1_knob_test -O2 $FW
     t "native fp32: independent numerical references, exact pitch, quiet signals and fractional envelopes" synth_fpu_test \
         -O2 $FW
@@ -463,9 +460,7 @@ if sound && [ $TABLES = 1 ]; then
     t "capture allocation with the overview pitch index" capture_alloc_index:capture_alloc_test -O2 \
         -UMELODEE_RECORD_INDEX -DMELODEE_RECORD_INDEX=1 $FW -- "$OUT/capture_alloc_index" 400 nocost
     t "routing rebuild probes: full-state parity and rejected steady/changing costs" mod_churn_bench -O2 $FW
-    t "SID filter output: exact full state across models/waves/stacks/modes and costs" sid_filter_test -O2 $FW
     t "808/909 metal preparation: exact pitches, states and steady/changing costs" drum_prepare_test -O2 $FW
-    t "SID drum kernel: original PCM/state through digi, controls, steals and releases" drum_sid_fast_test -O2 $FW
     t "CZ native window: exact phase kernel and full renderer through live edits" cz_window_test -O2 $FW
     t "FM6 zero-level preparation: exact state and static/changing costs" fm6_prepare_test -O2 $FW
     t "Prophet zero-wheel: exact shared state and static/changing cost" prophet_fast_test -O2 $FW
@@ -476,12 +471,9 @@ if sound && [ $TABLES = 1 ]; then
     t "master output: final volume, held notes/punch tails, exact ramps and dry-pass cost" master_output_test -O2 $FW
     t "CZ: oscillator boundaries, native rate/target envelopes and independent lines" phase_test \
         -DMELODEE_LEGACY_EXTRAS=1 -O2 $FW
-    t "SID: oscillator/LFSR/register semantics, revisions and 32 factory presets" sid_test -O2 $FW
     job phys_ref
     t "DRUM: 808 instruments, velocity, hat choke, release, eight lanes and shared voice budget" drum_test -O2 $FW -- \
         "$OUT/drum_test" build/drum_demo
-    t "DRUM SID: one 6581 on one voice, frame programs, DIGI on \$D418, filter routing, levels" drum_sid_test -O2 $FW -- \
-        "$OUT/drum_sid_test" build/sid_kit_demo
     t "DRUM CR78/FM: eight lanes on one voice, retriggers, choke, length, knobs, levels, corners" drum_kits_test -O2 $FW -- \
         "$OUT/drum_kits_test" build/drum_kits_demo
     t "NOISE: colour slopes, key-tracked filter and clock, META period, DC, clipping, retrigger, cost, demos" noise_test \
