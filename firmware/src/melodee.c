@@ -42,7 +42,7 @@
 #define MELODEE_ID "FM-1_900"    /* package identity (build.py: the .fwsc marker string) */
 #endif
 #ifndef MELODEE_KEY_NAV
-#define MELODEE_KEY_NAV 0        /* F5 / G5 held: black keys press the panel buttons (hal/fm1_input.h) */
+#define MELODEE_KEY_NAV 0        /* F5 / G5 / F#5 held: black keys press the panel buttons (hal/fm1_input.h) */
 #endif
 #ifndef MELODEE_VERSION
 #if MELODEE_KEY_NAV

@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Kerem Kilic (Ellic Studio) */
-/* Host test of the M1 / M2 key layer in hal/fm1_input.h (MELODEE_KEY_NAV): debounced key edges through fm1__key.
+/* Host test of the M1 / M2 / M3 key layer in hal/fm1_input.h (MELODEE_KEY_NAV): debounced key edges through fm1__key.
  * Checked: off, every key plays as before; F5 / G5 + the six black keys F#4 .. F#5 press FX SCL ENV LFO EDIT GLO /
- * HOME SAVE ARP SEQ PLAY REC, G5 + C#4 / D#4 OCT- / OCT+, with one press and one release edge, never a note
- * (F5 + C#4 / D#4: notes); a release matches its press
+ * HOME SAVE ARP SEQ PLAY REC, F#5 (M3, alone) + C#5 / D#5 OCT- / OCT+, with one press and one release edge, never a
+ * note (C#4 / D#4: notes); F#5 keeps a momentary edit while one is on; a release matches its press
  * whatever the modifiers do in between; M1 + M2 mute new keys; a note held before a modifier keeps sounding;
  * a panel button and its key merge into one press; disarming or remapping with a key down releases what it pressed. */
 #include <stdint.h>
@@ -15,13 +15,16 @@ static uint32_t host_now;
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
 #include "../firmware/hal/fm1_input.h"
 
-enum { M1 = 24, M2 = 26 };
-static const uint8_t TRIG[FM1_NAV_N] = {13, 15, 17, 20, 22, 25, 8, 10};
-static const uint8_t MAP[2][FM1_NAV_N] = {{2, 3, 4, 5, 6, 7, 0xFF, 0xFF},
-                                          {8, 9, 10, 11, 12, 13, 0, 1}};      /* panel.c PANEL_DEFAULT */
-static const uint8_t ALT[2][FM1_NAV_N] = {{7, 6, 5, 4, 3, 2, 0xFF, 0xFF}, {13, 12, 11, 10, 9, 8, 1, 0}};
-static const char *const NAME[2][FM1_NAV_N] = {{"FX", "SCL", "ENV", "LFO", "EDIT", "GLO", "", ""},
-                                               {"HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"}};
+enum { M1 = 24, M2 = 26, M3 = 25 };
+static const uint8_t MODS[FM1_NAV_ROWS] = {M1, M2, M3};
+static const uint8_t TRIG[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};
+static const uint8_t MAP[FM1_NAV_ROWS][FM1_NAV_N] = {{2, 3, 4, 5, 6, 7}, {8, 9, 10, 11, 12, 13},
+                                                     {0xFF, 0xFF, 0xFF, 0, 1, 0xFF}};   /* panel.c PANEL_DEFAULT */
+static const uint8_t ALT[FM1_NAV_ROWS][FM1_NAV_N] = {{7, 6, 5, 4, 3, 2}, {13, 12, 11, 10, 9, 8},
+                                                     {0xFF, 0xFF, 0xFF, 1, 0, 0xFF}};
+static const char *const NAME[FM1_NAV_ROWS][FM1_NAV_N] = {{"FX", "SCL", "ENV", "LFO", "EDIT", "GLO"},
+                                                          {"HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"},
+                                                          {"", "", "", "OCT-", "OCT+", ""}};
 
 static int fails;
 static int check(const char *what, int ok)
@@ -89,7 +92,7 @@ int main(void)
 
     reset(MAP);
     for (n = 0, ok = 1; n < 27u; n++) {
-        if (n == M1 || n == M2)
+        if (n == M1 || n == M2 || n == M3)
             continue;
         down(n);
         take();
@@ -99,13 +102,13 @@ int main(void)
     }
     check("armed, no modifier: every other key plays", ok);
 
-    for (r = 0; r < 2u; r++)
+    for (r = 0; r < FM1_NAV_ROWS; r++)
         for (i = 0; i < FM1_NAV_N; i++) {
             uint32_t b = 1u << MAP[r][i];
             if (MAP[r][i] == 0xFF)
                 continue;
             reset(MAP);
-            down(r ? M2 : M1);
+            down(MODS[r]);
             ok = quiet();
             down(TRIG[i]);
             take();
@@ -115,48 +118,106 @@ int main(void)
             up(TRIG[i]);
             take();
             ok &= !pressed && released == b && !fm1_in.buttons && !fm1_in.notes && !noted;
-            up(r ? M2 : M1);
+            up(MODS[r]);
             ok &= quiet();
             snprintf(what, sizeof what, "M%u + trigger %u: %s pressed and released once, no note", r + 1u, i + 1u,
                      NAME[r][i]);
             check(what, ok);
         }
 
-    reset(MAP);
-    down(M1);
-    for (i = 6, ok = 1; i < FM1_NAV_N; i++) {
-        down(TRIG[i]);
-        take();
-        ok &= fm1_in.notes == 1u << TRIG[i] && noted == 1u << TRIG[i] && !fm1_in.buttons && !pressed;
-        up(TRIG[i]);
-        take();
-        ok &= !fm1_in.notes && !released;
+    for (r = 0, ok = 1; r < FM1_NAV_ROWS; r++) {
+        static const uint8_t OLD[2] = {8, 10};          /* C#4 D#4: OCT- OCT+ with M2 once */
+        reset(MAP);
+        down(MODS[r]);
+        for (i = 0; i < 2u; i++) {
+            down(OLD[i]);
+            take();
+            ok &= fm1_in.notes == 1u << OLD[i] && noted == 1u << OLD[i] && !fm1_in.buttons && !pressed;
+            up(OLD[i]);
+            take();
+            ok &= !fm1_in.notes && !released;
+        }
+        up(MODS[r]);
+        ok &= quiet();
     }
-    up(M1);
-    ok &= quiet();
-    check("M1 + C#4 / D#4: notes (OCT- / OCT+ are M2's only)", ok);
+    check("M1 / M2 / M3 + C#4 / D#4: notes (OCT- / OCT+ are M3 + C#5 / D#5)", ok);
 
     reset(MAP);
-    down(M2);
-    down(TRIG[6]);
-    down(TRIG[7]);
+    down(M3);
+    down(TRIG[3]);
+    down(TRIG[4]);
     take();
     ok = pressed == 3u && fm1_in.buttons == 3u && !fm1_in.notes;
-    up(M2);
-    up(TRIG[6]);
+    up(M3);
+    up(TRIG[3]);
     take();
     ok &= released == 1u && fm1_in.buttons == 2u;
-    up(TRIG[7]);
+    up(TRIG[4]);
     take();
     ok &= released == 2u && !fm1_in.buttons;
-    check("M2 + C#4 + D#4: OCT- and OCT+ held together, each released by its own key", ok);
+    check("M3 + C#5 + D#5: OCT- and OCT+ held together, each released by its own key", ok);
 
     reset(MAP);
     down(M1);
-    ok = quiet();
+    down(M3);
+    take();
+    ok = pressed == 1u << MAP[0][5] && !fm1_in.notes && fm1_nav.mod == 1u << M1;
+    up(M3);
+    up(M1);
+    take();
+    ok &= released == 1u << MAP[0][5] && !fm1_in.buttons;
+    check("F#5 with M1 held: GLO, not M3", ok);
+
+    reset(MAP);
+    down(M3);
+    down(M1);
+    take();
+    ok = fm1_nav.mod == 1u << M3 && fm1_in.notes == 1u << M1 && noted == 1u << M1 && !fm1_in.buttons;
+    down(TRIG[3]);
+    take();
+    ok &= pressed == 1u << MAP[2][3] && fm1_nav.mod == 1u << M3;
+    up(TRIG[3]);
+    up(M1);
+    take();
+    ok &= !fm1_in.notes && !fm1_in.buttons;
+    down(M2);
+    take();
+    ok &= fm1_nav.mod == 1u << M3 && fm1_in.notes == 1u << M2;
+    up(M2);
+    up(M3);
+    take();
+    ok &= quiet();
+    check("M3 held: F5 and G5 are keys (notes), not M1 / M2; C#5 still OCT-", ok);
+
+    reset(MAP);
+    fm1_input_nav_keep(1);
+    down(M3);
+    take();
+    ok = fm1_nav.keep && !fm1_nav.mod && !pressed && !noted && !fm1_in.notes;
+    up(M3);
+    ok &= quiet();
+    fm1_nav.keep = 0;
+    down(M1);
+    down(M3);
+    take();
+    ok &= fm1_nav.keep && !pressed && !noted;
+    up(M3);
     up(M1);
     ok &= quiet();
-    check("a modifier alone: no note, no button", ok);
+    fm1_input_nav_keep(0);
+    down(M3);
+    up(M3);
+    ok &= quiet();
+    check("a momentary edit on: F#5 keeps it (alone or with M1 held), no note, no button; off: M3 again", ok);
+
+    for (r = 0, ok = 1; r < FM1_NAV_ROWS; r++) {
+        reset(MAP);
+        down(MODS[r]);
+        ok &= quiet();
+        up(MODS[r]);
+        ok &= quiet();
+    }
+    check("a modifier alone (F5, G5, F#5): no note, no button", ok);
 
     reset(MAP);
     down(M2);

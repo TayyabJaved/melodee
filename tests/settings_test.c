@@ -20,7 +20,8 @@ static int p5_favorite_set(uint32_t slot,int on,int factory){(void)slot;(void)on
 static void fm1_led_key(unsigned k, int on) { (void)k; (void)on; }
 static int fm1_enc_take(unsigned k) { (void)k; return 0; }
 #if MELODEE_KEY_NAV
-#define FM1_NAV_N 8u
+#define FM1_NAV_N 6u
+#define FM1_NAV_ROWS 3u
 static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }
 #endif
 static void lcd_sync(void) {}

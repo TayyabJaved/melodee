@@ -193,3 +193,19 @@ static void nav_head_chip(char *chip)                  /* (ui_draw.c draw_head, 
     chip[i] = 0;
 }
 
+
+/* M1 / M2 / M3 (MELODEE_KEY_NAV): F#5 keeps a momentary edit (LFO held, a knob turned), as OCT+ does; the HAL routes it
+ * so while one is on (hal/fm1_input.h fm1_input_nav_keep) */
+static void nav_keep(void)                             /* (ui_input.c, each pass: by OCT+'s KEPT) */
+{
+#if MELODEE_KEY_NAV
+    fm1_input_nav_keep(momentary.active);
+    if (fm1_nav.keep) {
+        fm1_nav.keep = 0;
+        if (momentary.active) {
+            momentary.active = momentary.count = momentary.native = 0;
+            ui_message("KEPT");
+        }
+    }
+#endif
+}
