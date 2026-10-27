@@ -344,6 +344,33 @@ static int test_held_gestures(void)
     return bad;
 }
 
+static int chord_preview_turn(uint32_t knob)
+{
+    audition_request = 0;
+    turn(knob, 1);
+    return audition_request != 0;
+}
+
+static int test_chord_preview(void)
+{
+    int bad = 0;
+    track_t *t = edit_setup();
+    settings_preview = 1;
+    put_note(t, 0, 60, 1);
+    go_title("CHORDS"); frame();
+    bad += check("CHORDS: NOTE edit previews the entry", chord_preview_turn(EN_K1));
+    bad += check("CHORDS: CHORD edit previews all generated notes", chord_preview_turn(EN_K2) && audition_count >= 3u);
+    bad += check("CHORDS: VOICE edit previews the new voicing", chord_preview_turn(EN_K3));
+    bad += check("CHORDS: STRUM edit previews the chord", chord_preview_turn(EN_K4));
+    go_title("CHORDS 2"); frame();
+    bad += check("CHORDS 2: DIR edit previews the entry", chord_preview_turn(EN_K1));
+    bad += check("CHORDS 2: VEL edit previews the entry", chord_preview_turn(EN_K2));
+    bad += check("CHORDS 2: LENGTH edit previews the entry", chord_preview_turn(EN_K3));
+    bad += check("CHORDS 2: NUDGE edit previews the entry", chord_preview_turn(EN_K4));
+    settings_preview = 0;
+    return bad;
+}
+
 static int test_compact_history(void)
 {
     int bad = 0, exact = 1;
@@ -383,7 +410,7 @@ static int test_compact_history(void)
 int main(void)
 {
     int bad = test_note_edits() + test_entry_history() + test_midi_entry() + test_record_timing() + test_step_modifiers() +
-              test_held_gestures() + test_compact_history();
+              test_held_gestures() + test_chord_preview() + test_compact_history();
     printf("sequencer editing: %s\n", bad ? "FAILED" : "all passed");
     return bad != 0;
 }
