@@ -209,9 +209,12 @@ static void drum_pads(void)
                         if (n == MPC_PAD_NOTES[k][p]) want = notes[kit == DK_909][p];
                     assert(midi_map(t, n) == want);
                 }
-                /* Native keys retain their chromatic drum map and bank octave. */
-                for (uint32_t key = 0; key < 27u; key++)
-                    assert(kb_map(t, key) == (uint32_t)clamp(29 + 12 * oct + (int32_t)key, 0, 127));
+                /* Native keys match the pattern grid's first eight black lane keys. */
+                for (uint32_t key = 0; key < 27u; key++) {
+                    uint32_t place = key_place(key);
+                    uint32_t want = key_black(key) && place < NLANE ? DRUM_LANE_NOTE[place] : KB_SILENT;
+                    assert(kb_map(t, key) == want);
+                }
             }
             for (uint32_t q = Q_OFF; q < Q_MPC; q++) {
                 t->p[P_QUANT] = (int16_t)q;

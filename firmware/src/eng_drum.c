@@ -434,10 +434,17 @@ static void drum_render_into(track_t *t,voice_t *v,int32_t *out,uint32_t n,const
 static void drum_render(track_t *t,voice_t *v,int32_t *out,uint32_t n,const vmod_t *m)
 { drum_render_into(t,v,out,n,m,&dr_scratch,t->p); }
 
-/* the GM drum map, the first C (key 7) is the kick (C2, 36) */
+/* Match the pattern grid: its first eight black keys play the eight drum lanes. */
 static int32_t drum_keys(const track_t *t, uint32_t k)
 {
-    return clamp(29 + 12 * input_octave(t) + (int32_t)k, 0, 127);
+    uint32_t i, place = 0;
+    int black = (int)((0x54Au >> ((k + 5u) % 12u)) & 1u);
+    (void)t;
+    if (!black)
+        return 255;
+    for (i = 0; i < k; i++)
+        place += (0x54Au >> ((i + 5u) % 12u)) & 1u;
+    return place < NLANE ? DRUM_LANE_NOTE[place] : 255;
 }
 
 /* {KIT, TUNE, TONE, DECY, SNAP, ACC, KICK, DRV}; every kit suggests the BEAT pattern (GM notes) */

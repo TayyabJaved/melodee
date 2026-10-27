@@ -22,7 +22,7 @@
  *              keys 1..8 select the lane (and only they play), 9 held = ACC, 10 / 11 the page; KNOB 1..4 STEP
  *              LANE HIT ACC; the key LEDs (hits, the playhead inverted, the lane, ACC, the page keys); a step's
  *              GM notes shown on their lanes and made the lane's own by an edit; live recording into the grid
- *              (lane keys on the grid, GM keys elsewhere; other GM drums as notes; no TIE holds); 12 BEAT from
+ *              (the same black lane keys everywhere; other GM drums over MIDI as notes; no TIE holds); 12 BEAT from
  *              PATTERNS fills the grid (undo); sound loads keep it, and other engines play it as GM notes.
  *   ROLL       the rolling digits of the card values and the header BPM: strips only, the last frame static,
  *              direction, retarget, the snaps (fast turn, names, shape, page, track, palette, force).
@@ -1378,20 +1378,20 @@ static int test_grid(void)
     keyboard_block();
     ok &= t->step[7].time == ST_REST && !t->rh_n;
     bad += check("REC on the grid: lane keys round to the nearest step, no TIE holds", ok);
-    /* live recording elsewhere (HOME): the GM keys; a lane's note a hit, another GM drum a note */
+    /* Live recording on HOME uses the same black lane keys as the grid. */
     go_home();
     frame();
     t->seq_idx = 9;
     t->seq_pos = 0;
-    fm1_in.notes = (1u << 7) | (1u << 13) | (1u << 6);   /* C 36 KICK, F# 42 HAT CL, E 35 (a kick 2 st down) */
+    fm1_in.notes = (1u << key_at(1, DV_KICK)) | (1u << key_at(1, DV_HATC));
     keyboard_block();
     fm1_in.notes = 0;
     keyboard_block();
-    ok = !song.grid && t->step[9].hit == ((1u << DV_KICK) | (1u << DV_HATC)) && t->step[9].n == 1 && t->step[9].note[0] == 35 &&
+    ok = !song.grid && t->step[9].hit == ((1u << DV_KICK) | (1u << DV_HATC)) && !t->step[9].n &&
          step_lanes(&t->step[9]) == ((1u << DV_KICK) | (1u << DV_HATC));
     song.rec = 0;
     song.playing = 0;
-    bad += check("REC on HOME: GM keys quantised into the grid (35 a note on the KICK lane)", ok);
+    bad += check("REC on HOME: black lane keys match the pattern grid", ok);
     /* a 16-step BEAT as GM notes into the DRUM track: the grid (step_to_grid) */
     demo_pat16(t, DEMO_BEAT);
     ok = t->p[P_SLEN] == 16 && lane_steps(t, DV_KICK) == ((1u << 0) | (1u << 6) | (1u << 8) | (1u << 11)) &&
@@ -3784,8 +3784,8 @@ static int test_key_lights(void)
     set_engine_of(TSEL, ENGI_DRUM);
     frame(); ui_leds();
     for (k = 0, ok = 1; k < 27u; k++)
-        ok &= key_light(14u + k) == 1u;
-    bad += check("a DRUM kit: every key glows", ok);
+        ok &= key_light(14u + k) == (key_black(k) && key_place(k) < NLANE ? 1u : 0u);
+    bad += check("a DRUM kit: its eight black lane keys glow", ok);
     settings_lights = LIGHTS_OFF;
     frame(); ui_leds();
     for (k = 0, ok = 1; k < 27u; k++)
@@ -3795,7 +3795,8 @@ static int test_key_lights(void)
     bad += check("LIGHTS OFF: no glow, keys or buttons (as Felucca 1.0)", ok);
     settings_lights = LIGHTS_FULL;
     frame(); ui_leds();
-    bad += check("LIGHTS FULL: the dim plane every frame", fm1_led_dim_mask[0] == 0u && key_light(14u) == 1u);
+    bad += check("LIGHTS FULL: the dim plane every frame", fm1_led_dim_mask[0] == 0u &&
+                 key_light(14u + key_at(1, 0)) == 1u && !key_light(14u + key_at(0, 0)));
     {   /* kept with the settings */
         persist_t p = {0};
         p.magic = PERSIST_MAGIC; p.panel = panel;
