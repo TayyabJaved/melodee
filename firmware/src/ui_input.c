@@ -2550,6 +2550,7 @@ static void ui_input(void)
     } else if (s && !ui.home && cur_page()->graph == GR_ROLL && !grid_on()) {
         ui.note_zoom = (uint8_t)clamp((int32_t)ui.note_zoom + s, 0, 4);
         ui.force = 1;
+    } else if (s && nav_preset(s)) {                    /* an engine's envelopes / LFO: the next one (ui_nav.c) */
     } else if (s && sec_on()) {                         /* an engine in sections: the next / previous one (FM6's
                                                          * operators are sections: ui_sections.c) */
         sec_turn(s);

@@ -337,13 +337,18 @@ and incremental redraws when the state ends or the selected track changes (`test
   EG LVL, PITCH EG, PITCH LV; CZ-1 each line's pitch, wave and amp envelope) and the track ADSR hides; LFO visits
   theirs first (P5 LFO, WHEEL; FM LFO; CZ VIBRATO), then the track LFO (it modulates any engine through LFO DEST
   and is the matrix's LFO) and MOD. SID (its ADSR: the chip's rates), DRUM, SLICE keep the track's.
+- **One home per page** (this fork, 2026-10-26; `firmware/src/ui_nav.c`): those envelope and LFO pages are ENV's and
+  LFO's only, not EDIT's. SELECT walks the lit button's pages (ENV on the CZ-1: all five pages of each envelope;
+  PRESETS or ENV again: the next envelope), the lit button never changes as it does, EDIT pressed there goes to
+  EDIT. The header names a page by its full title (P5 LFO, C1 PIT R1-4), and the track LFO's as TRACK LFO,
+  TRACK LFO 2, TRACK DEST, so the two LFOs are told apart on every engine.
 - Defaults (Kerem, 2026-10-10): OCT+ (tapped, or held about 0.7 s) opens a page's own sheet; CHANCE lives in
   the note / hit sheets (its page retired, Kerem 2026-10-10); a picker closes ST_KNOB_MS after the last turn or on OCT-.
 
 ## Sound pages, fast (R7: mock/r7_sound_nav)
 
-- **Sections**: an engine's pages in sections (Prophet: Osc, Mixer, Filter, Amp, Mod, LFO, Wheel, Voice; FM6:
-  Algorithm, OP1-OP6, Pitch, LFO, Controls; CZ-1 ..). PRESETS jumps a section (to its last-used page), SELECT turns the
+- **Sections**: an engine's pages in sections (Prophet: Osc, Mixer, Filter, Mod, Voice; FM6: Algorithm, OP1-OP6,
+  Controls; CZ-1 ..; this fork: without the envelope and LFO pages, which are ENV's and LFO's). PRESETS jumps a section (to its last-used page), SELECT turns the
   pages (on across the sections). The sections as tabs under the header, the pages of one as the header's dots.
 - **The map**: EDIT pressed on an EDIT page: a row a section, a tile a page (FM6: operators x their pages); KNOB 1 (or
   SELECT) moves to the next page of the category, KNOB 2 to the next category (its last-used page), one per detent,

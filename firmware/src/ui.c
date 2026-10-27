@@ -246,8 +246,8 @@ static const char *const *native_titles(uint32_t fam)
 {
     static const char *const P5_ENV[] = {"P5 FLT ENV", "P5 AMP ENV", "P5 ENV MOD", 0};
     static const char *const FM_ENV[] = {"EG RATE", "EG LVL", "PITCH EG", "PITCH LV", 0};
-    static const char *const CZ_ENV[] = {"C1 PIT R1-4", "C1 WAV R1-4", "C1 AMP R1-4", "C2 PIT R1-4", "C2 WAV R1-4",
-                                         "C2 AMP R1-4", 0};
+    static const char *const CZ_ENV[] = {"C1 PIT ", "C1 WAV ", "C1 AMP ", "C2 PIT ", "C2 WAV ",   /* (each its five */
+                                         "C2 AMP ", 0};                                     /* pages: ui_nav.c) */
     static const char *const P5_LFO[] = {"P5 LFO", "P5 WHEEL", 0};
     static const char *const FM_LFO[] = {"FM LFO", 0};
     static const char *const CZ_LFO[] = {"CZ VIBRATO", 0};
@@ -258,6 +258,12 @@ static const char *const *native_titles(uint32_t fam)
         return e == ENGI_PROPHET ? P5_LFO : e == ENGI_FM6 ? FM_LFO : e == ENGI_CZ ? CZ_LFO : 0;
     return 0;
 }
+/* ui_nav.c (ours): a page's button, SELECT's and PRESETS' pages, the header's name */
+static uint32_t nav_owner(uint32_t i);
+static void nav_scroll(int32_t dir);
+static uint8_t nav_next_group(uint32_t fam, const uint8_t *pg, uint32_t n, uint32_t k, int32_t dir);
+static int nav_preset(int32_t s);
+static void nav_chip(const page_t *pg, char *b);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);
@@ -533,17 +539,7 @@ static void note_name(char *b, uint32_t n)
 /* SELECT: the open section's pages, both ways (wraps; pages the track does not show skipped) */
 static void page_scroll(int32_t dir)
 {
-    uint32_t fam = cur_page()->fam, n, i = ui.page;
-    for (n = 0; n < NPAGES; n++) {
-        i = (i + (dir > 0 ? 1u : NPAGES - 1u)) % NPAGES;
-        if (PAGES[i].fam == fam && page_visible(i))
-            break;
-    }
-    if (i == ui.page)
-        return;
-    ui.page = (uint8_t)i;
-    ui.fam_last[fam] = ui.page;
-    page_entered();
+    nav_scroll(dir);                                    /* (the lit button's pages: ui_nav.c) */
 }
 
 /* the pages a family's button visits, in order: ENV / LFO on an engine with its own (native_titles) its pages
@@ -573,16 +569,16 @@ static void open_family(uint32_t fam)
         for (k = 0; k < n && pg[k] != ui.page; k++) {}
         if (!n)
             return;
-        ui.page = !ui.home && k < n ? pg[(k + 1u) % n]                 /* again: the next one; from elsewhere the */
+        ui.page = !ui.home && k < n ? nav_next_group(fam, pg, n, k, 1) /* again: the next one; from elsewhere the */
                   : native_page(ui.fam_last[fam], fam) && fam_has(fam, ui.fam_last[fam]) ? ui.fam_last[fam] : pg[0];
                                                                         /* engine's page last used, else its first */
     } else if (fam == FAM_FX && (ui.home || ui.page != page_first(FAM_FX))) {
         ui.page = (uint8_t)page_first(FAM_FX);        /* FX: the track's rack (from its slots and SHARED too); */
-    } else if (!ui.home && cur_page()->fam == fam) {   /* same button again: next page (FX: on from its rack) */
+    } else if (!ui.home && nav_owner(ui.page) == fam) {   /* same button again: next page (FX: on from its rack) */
         uint32_t n, i = ui.page;
         for (n = 0; n < NPAGES; n++) {
             i = (i + 1u) % NPAGES;
-            if (PAGES[i].fam == fam && page_visible(i)) break;
+            if (nav_owner(i) == fam && page_visible(i)) break;
         }
         ui.page = (uint8_t)i;
     } else if (fam == FAM_SAVE) {
@@ -591,7 +587,7 @@ static void open_family(uint32_t fam)
             if (PAGES[i].graph == GR_USER) break;
         ui.page = (uint8_t)i;                         /* SAVE enters the sound save screen directly */
     } else {
-        ui.page = ui.fam_last[fam] && PAGES[ui.fam_last[fam]].fam == fam && page_visible(ui.fam_last[fam]) ? ui.fam_last[fam]
+        ui.page = ui.fam_last[fam] && nav_owner(ui.fam_last[fam]) == fam && page_visible(ui.fam_last[fam]) ? ui.fam_last[fam]
                                                                           : (uint8_t)page_first(fam);
     }
     ui.fam_last[fam] = ui.page;

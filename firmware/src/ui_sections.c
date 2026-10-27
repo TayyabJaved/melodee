@@ -56,7 +56,7 @@ static void sec_build(void)
     for (pass = 0; pass < 2u; pass++)
         for (i = 0; i < NPAGES; i++) {
             const char *nm;
-            if (PAGES[i].fam != FAM_EDIT || !page_visible(i))
+            if (nav_owner(i) != FAM_EDIT || !page_visible(i))   /* (an engine's envelopes / LFO: ENV's, LFO's) */
                 continue;
             if (PAGES[i].scope == SC_FMOP) {            /* the operators: a section each, on their first page */
                 if (pass || (sec.n && sec.op[sec.n - 1u]))
@@ -100,7 +100,7 @@ static uint32_t sec_of(uint32_t i)                      /* page i's section (an 
 /* sections to show: an EDIT page of an engine with more than one */
 static int sec_on(void)
 {
-    if (ui.home || cur_page()->fam != FAM_EDIT)
+    if (ui.home || nav_owner(ui.page) != FAM_EDIT)
         return 0;
     sec_build();
     return sec.n > 1u;
@@ -112,7 +112,7 @@ static void sec_go(uint32_t k)                          /* to section k: the pag
     if (k >= sec.n)
         return;
     p = sec.last[k];
-    if (PAGES[p].fam != FAM_EDIT || !page_visible(p))
+    if (nav_owner(p) != FAM_EDIT || !page_visible(p))
         p = sec.first[k];
     if (sec.op[k])
         fm6_opsel = (uint8_t)(sec.op[k] - 1u);
@@ -193,7 +193,7 @@ static uint32_t smap_pages(uint32_t r, uint8_t *pg)     /* section r's pages (an
 {
     uint32_t i, n = 0;
     for (i = 0; i < NPAGES && n < 8u; i++) {
-        if (PAGES[i].fam != FAM_EDIT || !page_visible(i))
+        if (nav_owner(i) != FAM_EDIT || !page_visible(i))
             continue;
         if (sec.op[r] ? PAGES[i].scope == SC_FMOP : PAGES[i].scope != SC_FMOP && str_eq(sec_rule(i, 0), sec.name[r]))
             pg[n++] = (uint8_t)i;

@@ -185,6 +185,7 @@ static void head_chip_text(char *b)
     } else {
         const char *t = pg->scope == SC_ENGINE ? ENGINES[e]->page_title[pg->id[0] != P_E0] : pg->title;
         str_cpy(b, t, 16);
+        nav_chip(pg, b);                                /* (TRACK LFO ..: ui_nav.c) */
     }
 }
 /* the page's place in its family: a dot a page, the page's a pill in the track's colour (no room: "3/12") */

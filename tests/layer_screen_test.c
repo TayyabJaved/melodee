@@ -146,9 +146,9 @@ static void test_map_encoder_reads(void)
     for (uint32_t i = 0; i < NELEM(roles); i++)
     for (int32_t dir = -1; dir <= 1; dir += 2) {
         reset_controls(); set_engine_of(TSEL, ENGI_FM6); fm6_opsel = 2;
-        go_title("EG RATE"); frame(); press(B_EDIT);
+        go_title(dir > 0 ? "OUT" : "SCALE"); frame(); press(B_EDIT);   /* (FREQ OUT SCALE CURVE: EG RATE, LVL ENV's) */
         uint32_t row = smap.row, col = smap.col, role = roles[i], page = ui.page;
-        assert(smap.on && row >= 2u && row + 2u < sec.n && col == 2u);
+        assert(smap.on && row >= 2u && row + 2u < sec.n && col == (dir > 0 ? 1u : 2u));
         memset(map_takes, 0, sizeof map_takes);
         map_inject_role = role; map_inject = dir; map_watch = 1;
         turn(role, dir);                             /* scan ISR publishes another detent just after the read */
