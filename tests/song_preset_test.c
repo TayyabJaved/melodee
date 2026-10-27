@@ -77,7 +77,7 @@ static void playback(void)
 }
 static void native_and_persistence(void)
 {
-    const uint32_t engines[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, ENGI_DRUM, 3};
+    const uint32_t engines[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, ENGI_DRUM};
     for (uint32_t j = 0; j < NELEM(engines); j++) {
         setup(3); uint32_t id = choose(1, engines[j], 1);
         song_sound_t expected = *song_sound_get(id);

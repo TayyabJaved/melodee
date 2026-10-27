@@ -16,9 +16,9 @@ import os
 import re
 import sys
 
-FUNCS = ["phase_render", "sid_render", "cz_native_render", "cz_native_wave", "formant_render",
+FUNCS = ["phase_render", "cz_native_render", "cz_native_wave", "formant_render",
          "trio_render", "trio_pass", "wheel_render", "wheel_block",
-         "phys_render", "drum_render", "dsk_render", "noise_render", "fm6_render", "p5_samples", "p5_mod_samples", "px_modal_block", "px_modal_run", "px_memb_block",
+         "phys_render", "drum_render", "noise_render", "fm6_render", "p5_samples", "p5_mod_samples", "px_modal_block", "px_modal_run", "px_memb_block",
          "px_string_excite", "px_string_run", "px_symp_run",
          "dr_bd", "dr_sd", "dr_tom", "dr_rs", "dr_cl", "dr_cp", "dr_ma", "dr_metal", "dr_cb", "dr_cy", "dr_hat", "dr8_run",   # drum_808.c
          "drum_source", "drum_limit", "drum_color", "dr_metal_tune",
@@ -37,7 +37,6 @@ OPTIONAL = {}                   # built only with an option, not in BUDGET: abse
 # combined budget, so moving work into a helper cannot weaken the existing guard.
 EXTRACTED = {
     "cz_native_wave": ("cz_native_wave_window4",),
-    "sid_render": ("sid_render_into",),
     "drum_render": ("drum_render_into",),
     "dr8_run": ("dr8_run_into",),
     "fm6_render": ("fm6_run", "fm6_run_into", "fm6_op_mark1", "fm6_op_modern_flat", "fm6_output", "fm6_join"),

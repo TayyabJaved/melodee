@@ -17,7 +17,7 @@ TARGETS = ("windows-x64", "macos-arm64", "macos-x64", "linux-x64")
 # Build switches the release workflow sets (release.yml, firmware job); unlisted ones keep their defaults.
 BUILD_FLAGS = {"MELODEE_DUAL_CORE": 1, "MELODEE_CORE1_FALLBACK": 0, "MELODEE_RAM_AUDIO": 1, "MELODEE_CACHE_RAM": 1,
                **{f"MELODEE_{name}": 1 for name in ("MOD_CACHE", "CONTROL_FAST", "MIX_FAST", "FX_DORMANT",
-                  "RECORD_INDEX", "PROPHET_FAST", "PANEL_FAST", "FM6_FAST", "CZ_FAST", "DRUM_FAST", "SID_FAST",
+                  "RECORD_INDEX", "PROPHET_FAST", "PANEL_FAST", "FM6_FAST", "CZ_FAST", "DRUM_FAST",
                   "CAPTURE_FAST")}}
 
 

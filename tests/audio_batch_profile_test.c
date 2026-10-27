@@ -76,7 +76,7 @@ int main(void)
     scenario(1,1);scenario(0,1);scenario(1,0);
     dense_group();
     ghost_cost_split();
-    const uint32_t ids[]={AP_PROPHET,AP_FM6,AP_CZ,AP_SID,AP_808,AP_909};
+    const uint32_t ids[]={AP_PROPHET,AP_FM6,AP_CZ,AP_808,AP_909};
     for(uint32_t k=0;k<sizeof ids/sizeof ids[0];k++)engine_split(ids[k]);
     int32_t out[CTL]={0};uint32_t value=1;online=join_ok=1;advances=0;
     for(uint32_t k=0;k<AUDIO_BATCH_JOBS+3u;k++)audio_batch_push(render,&value,sizeof value,out,CTL,AP_PROPHET);

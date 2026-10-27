@@ -213,7 +213,7 @@ static int property_edits_and_mixed_patterns(void)
     track_t *t=clash_setup();
     recorded_note_t original[3];memcpy(original,recording,sizeof original);
     uint32_t count=0;for(uint32_t p=0;p<NPAGES;p++)if(PAGES[p].fam==FAM_SEQ&&PAGES[p].scope==SC_STEP)count++;
-    int bad=check("sequence navigation exposes exactly one note editor",count==1&&str_eq(cur_page()->title,"NOTES"));
+    int bad=check("sequence navigation exposes NOTES and two chord editors",count==3&&str_eq(cur_page()->title,"NOTES"));
     turn(EN_K1,1);uint32_t selected=notes_selected(t);
     turn(EN_K2,3);
     bad+=check("PITCH edits only the highlighted hit and keeps exact timing",selected==1&&recorded_note(&recording[1])==67&&recording[1].on==original[1].on&&recording[1].duration==original[1].duration&&!memcmp(&original[0],&recording[0],sizeof original[0])&&!memcmp(&original[2],&recording[2],sizeof original[2]));

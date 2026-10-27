@@ -185,7 +185,7 @@ static void notes_preview(void)
     else {
         uint32_t at=step_note_start(TSEL,ui.cursor);
         if(at<NSTEP) { const step_t *st=&TSEL->step[at];
-            if(pg->graph==GR_ROLL && st->n) { nn[count]=st->note[notes_manual_slot(st)];vv[count++]=st->vel?st->vel:96; }
+            if(pg->graph==GR_ROLL && st->n && !(count=cseq_heard(st,nn,vv))) { nn[count]=st->note[notes_manual_slot(st)];vv[count++]=st->vel?st->vel:96; }   /* (an entry: ui_chords.c) */
             else for(uint32_t i=0;i<st->n;i++){nn[count]=st->note[i];vv[count++]=st->vel?st->vel:96;}
             if(drum_track(TSEL))for(uint32_t i=0;i<NLANE;i++)if(step_lanes(st)&(1u<<i)){nn[count]=DRUM_LANE_NOTE[i];vv[count++]=(step_accents(st)&(1u<<i))?127:96;}
         }

@@ -747,6 +747,7 @@ static uint32_t hum_vel(const track_t *t, uint32_t vel)
     return (uint32_t)clamp((int32_t)vel + (int32_t)(rng() % (2u * s + 1u)) - (int32_t)s, 1, 127);
 }
 
+#include "chord_seq.c"                          /* SEQ > CHORDS: steps that play chords */
 /* Start only this tone's ownership before input_on: note-triggered recording can
  * re-enter seq_advance(0). Shared tones retain the existing single-note policy. */
 static void key_chord_tone(uint32_t k, track_t *t)
@@ -761,8 +762,9 @@ static void key_chord_tone(uint32_t k, track_t *t)
 
 static void key_on(uint32_t k, track_t *t)
 {
-    uint32_t n = chord_build(t, kb_note[k], kb_chord[k]);
-    n = chord_strum_begin(t, kb_chord[k], n, &kb_strum[k], 100);
+    uint32_t n = cseq_key(t, kb_note[k], kb_chord[k], &kb_strum[k]);   /* (SEQ > CHORDS shown: chord_seq.c) */
+    if (!n)
+        n = chord_strum_begin(t, kb_chord[k], chord_build(t, kb_note[k], kb_chord[k]), &kb_strum[k], 100);
     kb_chn[k] = 0;
     /* Publish pending work after the first tone: input_on may start transport. */
     for (uint32_t i = 0; i < n; i++) key_chord_tone(k, t);
@@ -799,6 +801,7 @@ static void midi_chord_tone(mchord_t *m)
  * sequencer here gives the recorder the actual onset, even in batched clocks. */
 static uint32_t chord_strum_next(uint32_t limit)
 {
+    limit = cseq_next(limit);                       /* (an entry's strings, its nudge) */
     for (uint32_t k = 0; kb_strum_pending && k < 27u; k++) if (kb_strum_pending & (1u << k)) {
         uint32_t due = chord_strum_due(&kb_strum[k], kb_chn[k], 0);
         if (due < limit) limit = due;
@@ -1136,6 +1139,7 @@ static __attribute__((noinline)) void seq_step(track_t *t, const step_t *s, uint
         seq_release(t);
         return;
     }
+    if ((m = cseq_notes(t, s, nn, vv, vel, &sk)) == 0)   /* (a chord entry: its chord, chord_seq.c) */
     for (i = 0; i < s->n && i < 4u; i++, m++) {
         nn[m] = s->note[i];
         vv[m] = (uint8_t)vel;
@@ -1174,6 +1178,7 @@ static __attribute__((noinline)) void seq_step(track_t *t, const step_t *s, uint
 static void seq_grid_tick(track_t *t, uint32_t n)
 {
     uint32_t period, len;
+    cseq_tick(t, n);                                /* (chord entries: strings, nudges) */
     if (t->seq_n && !t->seq_hold) {
         if (t->seq_off <= n)
             seq_release(t);
@@ -1255,7 +1260,8 @@ static void seq_grid_tick(track_t *t, uint32_t n)
                 for (uint32_t count = 0; count < len && seq_steps(t)[j].time == ST_TIE; count++) j = (j + len - 1u) % len;
                 if (seq_steps(t)[j].time == ST_NOTE) seq_step(t, &seq_steps(t)[j], period, skip);
             }
-            seq_step(t, s, step_gate(s) ? step_samples(t, period, t->seq_idx) : period, skip);
+            if (!cseq_hold(t, s, period))         /* (an entry's nudge: chord_seq.c) */
+                seq_step(t, s, step_gate(s) ? step_samples(t, period, t->seq_idx) : period, skip);
             if (starting && chain.running) chain.seek_samples[trk_index(t)] = 0;
         }
     }
