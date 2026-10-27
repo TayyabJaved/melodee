@@ -18,6 +18,8 @@ static void nav_ble_toasts(void)
 }
 #endif
 
+static void nav_say_section(const char *name);
+
 /* ENV, LFO and EDIT: one home per page (task.md 2). An engine's own envelope and LFO pages (ui.c native_titles:
  * Prophet, FM6, CZ-1) are ENV's and LFO's only: SELECT walks the lit button's pages, EDIT's sections leave them out,
  * EDIT pressed there goes to EDIT, PRESETS jumps an envelope (CZ-1's: five pages each) */
@@ -83,6 +85,8 @@ static int nav_preset(int32_t s)                       /* PRESETS on an engine's
     ui.page = nav_next_group(fam, pg, n, k, s);
     ui.fam_last[fam] = ui.page;
     page_entered();
+    if (nav_group(fam, ui.page))                        /* ("Pitch 1", "Wave 1", "Wheel"; a track page: its name) */
+        nav_say_section(sec_rule(ui.page, 0));
     return 1;
 }
 /* the header's name for a page: the track LFO's say whose they are (TRACK LFO, TRACK LFO 2, TRACK DEST), next to
@@ -156,4 +160,18 @@ static int32_t nav_head_pos(int32_t x)                 /* (ui_draw.c draw_head) 
         return x;
     cv_text_on(x + 6, ty_y(H_HEAD / 2, TY_LB), TY_LB, b, T_MID, T_BG);
     return x + 6 + w;
+}
+
+/* PRESETS jumping a section (EDIT) or an envelope (ENV, LFO): the header shows the section's name for about half a
+ * second in place of the page's (ui_sections.c sec_turn, nav_preset) */
+#define NAV_SECTION_FRAMES 33u                         /* (ui_draw: a frame each 15 ms at most) */
+static void nav_say_section(const char *name)
+{
+    char b[24];
+    uint32_t i;
+    for (i = 0; name[i] && i + 1u < sizeof b; i++)
+        b[i] = name[i] >= 'a' && name[i] <= 'z' ? (char)(name[i] - 32) : name[i];
+    b[i] = 0;
+    ui_message(b);
+    ui.msg_t = NAV_SECTION_FRAMES;
 }

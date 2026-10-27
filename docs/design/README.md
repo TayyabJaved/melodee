@@ -352,7 +352,8 @@ and incremental redraws when the state ends or the selected track changes (`test
 ## Sound pages, fast (R7: mock/r7_sound_nav)
 
 - **Sections**: an engine's pages in sections (Prophet: Osc, Mixer, Filter, Mod, Voice; FM6: Algorithm, OP1-OP6,
-  Controls; CZ-1 ..; this fork: without the envelope and LFO pages, which are ENV's and LFO's). PRESETS jumps a section (to its last-used page), SELECT turns the
+  Controls; CZ-1 ..; this fork: without the envelope and LFO pages, which are ENV's and LFO's). This fork: a PRESETS
+  jump shows the section's name in the header for about half a second in place of the page's (`ui_nav.c`). PRESETS jumps a section (to its last-used page), SELECT turns the
   pages (on across the sections). The sections as tabs under the header, the pages of one as the header's dots.
 - **The map**: EDIT pressed on an EDIT page: a row a section, a tile a page (FM6: operators x their pages); KNOB 1 (or
   SELECT) moves to the next page of the category, KNOB 2 to the next category (its last-used page), one per detent,
