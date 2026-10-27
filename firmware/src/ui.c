@@ -286,6 +286,7 @@ static void nav_scroll(int32_t dir);
 static uint8_t nav_next_group(uint32_t fam, const uint8_t *pg, uint32_t n, uint32_t k, int32_t dir);
 static int nav_preset(int32_t s);
 static void nav_chip(const page_t *pg, char *b);
+static int32_t nav_head_pos(int32_t x);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);
