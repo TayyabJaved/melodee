@@ -27,6 +27,7 @@ static void blank(project_t *a)
         memcpy(a->fm6[k], FM6_INIT, FM6_PACKED);
     }
     a->magic = PROJ_MAGIC; a->size = sizeof *a; a->parts = NPART; a->phys = PROJ_PHYS;
+    for (uint32_t k = 0; k < PROJ_TRK; k++) proj_shape_default(a->shape[k]);
     chain_legacy_defaults(&a->chain);
     a->sum = proj_sum(a);
 }
@@ -41,7 +42,7 @@ int main(void)
     bad += check("FUN16 fits its record", sizeof(project_store_t) == PROJ_STORE_SIZE);
 
     {   /* Reconstruct the prior raw layout independently of RAM bitfields. */
-        static uint8_t old[sizeof(project_t)-sizeof(((project_t *)0)->gen)+RECORD_MAX];blank(&q);   /* (before gen[]) */
+        static uint8_t old[sizeof(project_t)-sizeof(((project_t *)0)->gen)-sizeof(((project_t *)0)->shape)+RECORD_MAX];blank(&q);   /* (before gen[], shape[]) */
         q.recording[0]=(recorded_note_t){.on=65535, .duration=49321, .note7=127, .vel=91, .owner=255, .step=255, .pitch=-24, .length=1};
         uint32_t at=__builtin_offsetof(project_t,recording),tail=__builtin_offsetof(project_t,pattern);
         memcpy(old,&q,at);

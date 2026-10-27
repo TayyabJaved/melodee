@@ -354,6 +354,9 @@ if core && [ $TABLES = 1 ]; then
     t "microtonal: catalogue, layouts, note ownership, recordings and rendered pitch" microtonal_test -O2 $FW
     t "scale picker: families, favorites, empty lists, shared settings and navigation" scale_picker_test -O1 $FW
     t "chord keys: diatonic and fixed chords, voicings, MONO root, releases, recording, ARP, MIDI IN, kits" chord_test $FW
+    t "SHAPE arp: the rhythm (ON steps play the next note, OFF rest), keys and pages, wide/narrow records" arp_shape_seq_test -O1 -DMELODEE_USB_AUDIO=1 $FW
+    t "SHAPE arp (the -nav build): M3 held, the white keys edit the steps" nav_shape:arp_shape_seq_test -O1 -DMELODEE_USB_AUDIO=1 -DMELODEE_KEY_NAV=1 $FW
+    t "SHAPE arp through the FLASH path: SHP1 streamed, new song defaults, reload" arp_shape_stream_test -O1 $FW
     t "generators (gen.c from Tessera): seeds replay, TURING lock, EUCLID hits, MARKOV range, the Grids map" gen_test
     t "Pattern sheet: Euclid and its turn, Double, Half, their limits and undo" seq_tools_test -O1 $FW
     t "ARP > GEN: generator steps, scale, seeds, ATLAS lanes, REC / Print, the project's 'G' block, removal, page" gen_track_test -O1 $FW

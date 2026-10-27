@@ -471,8 +471,14 @@ static void ui_leds(void)
         c |= slice_leds();                              /* SLICES: and the keys of the selected slice */
 #endif
     nav_leds(nl, &c, &play);                            /* (M1 / M2 / M3 held: their map, ui_nav.c) */
+    uint32_t whites = 0;
+    if (shape_edit_on()) {                              /* ARP > SHAPE, M3 / OCT- held: the white keys show its steps */
+        uint32_t lit = shape_leds(&whites);
+        c = (c & ~whites) | lit;
+    }
     for (k = 0; k < 27u; k++) {
-        uint32_t lv = play ? play_key_led(TSEL, k) : KL_OFF;   /* playing: the layout, MIDI's notes too (LIGHTS) */
+        uint32_t lv = play && !((whites >> k) & 1u) ? play_key_led(TSEL, k) : KL_OFF;   /* playing: the layout, MIDI's
+                                                                                         * notes too (LIGHTS) */
         led_put(nl, 14u + k, (int)(((c >> k) & 1u) || lv == KL_ON));
         led_put(nd, 14u + k, lv == KL_DIM && lights != LIGHTS_OFF);
         led_put(nb, 14u + k, (int)((pdim >> k) & 1u));  /* the patterns holding something: selectable, so lit with
@@ -1391,6 +1397,22 @@ static uint32_t oct_taps(uint32_t pressed, int here)
     tap &= ~(uint32_t)oct_eat;
     oct_eat &= (uint8_t)now;
     return tap;
+}
+/* ARP > SHAPE, M3 / OCT- held (keys_mode 3): a white key turns its step of the page ON or OFF (arp_shape.c) */
+static void shape_keys(uint32_t notes)
+{
+    uint32_t k = song.sel % NTRK, steps = shape_steps(k), key, s;
+    for (key = 0; key < 27u; key++) {
+        if (!((notes >> key) & 1u) || key_black(key)) continue;
+        s = shape_page() * 16u + key_place(key);
+        if (s >= steps) continue;
+        fm1_irq_off();
+        shape.mask[k] ^= (uint64_t)1 << s;
+        fm1_irq_on();
+        ui.force = 1;
+    }
+    if (notes && ((fm1_in.buttons >> panel.btn[B_OCTDN]) & 1u))
+        oct_eat |= 1u;                                  /* (OCT- held for it: its release is no octave) */
 }
 
 /* SEQ step entry, acid style: the keys pressed together (POLY: up to 4 notes, MONO:
@@ -2565,7 +2587,8 @@ static void ui_input(void)
     if (pattern_keys_on() || ui.pat_key) {
         seq_midi_events(0);
     } else if (song.grid) {
-        if (!seq_erase_active(TSEL)) grid_keys(notes);
+        if (song.grid == 3u) shape_keys(notes);         /* (ARP > SHAPE) */
+        else if (!seq_erase_active(TSEL)) grid_keys(notes);
         else seq_midi_events(0);
     } else if (song.seq_mode && cur_page()->graph == GR_ROLL) {   /* NOTES */
         if (live_rec_sel() || song.playing) {           /* armed: the keys and MIDI record live; playing: they only */
@@ -2599,6 +2622,8 @@ static void ui_input(void)
                 preset_pick_touch();
         }
     } else if (s && cseq_preset(s)) {                   /* SEQ > CHORDS: the step (ui_chords.c) */
+    } else if (s && shape_page_on()) {                  /* ARP > SHAPE: the page of steps the keys edit */
+        shape_page_turn(s);
     } else if (s && !ui.home && cur_page()->graph == GR_ROLL && !grid_on()) {
         ui.note_zoom = (uint8_t)clamp((int32_t)ui.note_zoom + s, 0, 4);
         ui.force = 1;

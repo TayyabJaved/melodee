@@ -61,6 +61,7 @@ typedef struct {
     char name[PROJ_NAME_LEN];                  /* the project's name: upper-case ASCII 32..126, 0-padded; "" = none */
     uint16_t user[PROJ_TRK];                    /* shared slot + 1; sound remains embedded independently */
     uint8_t gen[PROJ_TRK][GN_SAVE];             /* ARP > GEN (gen_track.c gn_save); all 0: none, MODE OFF */
+    uint8_t shape[PROJ_TRK][SHAPE_BYTES];       /* ARP > SHAPE (arp_shape.c shape_pack); on flash: a wide bank record's SHP1 */
     uint32_t sum;
 } __attribute__((may_alias)) project_t;
 /* The four formerly reserved runtime bytes keep Prophet user-slot origins.
@@ -164,6 +165,8 @@ static uint8_t proj_free = 0xFFu;            /* the pool's free sectors (proj_sp
 #endif
 
 static uint32_t proj_hash(const void *p, uint32_t n) { return fnv(2166136261u, p, n); }
+static void proj_shape_default(uint8_t *raw) { shape_raw_default(raw); }
+static int proj_shape_valid(const uint8_t *raw) { return shape_raw_valid(raw); }
 static uint32_t proj_sum(const project_t *p) { return proj_hash(p, sizeof *p - 4u); }
 static int proj_ok(const project_t *q)
 {
@@ -196,9 +199,11 @@ static int proj_import_note10(project_t *q,const uint8_t *b,uint32_t n)
         q->recording[i]=v;
     }
     uint32_t tail=__builtin_offsetof(project_t,pattern),old=at+RECORD_MAX*10u,gen=__builtin_offsetof(project_t,gen);
-    /* Forward byte copy also supports an in-place shrinking import. Those snapshots predate gen[]: none, MODE OFF */
+    /* Forward byte copy also supports an in-place shrinking import. Those snapshots predate gen[] (none, MODE OFF)
+     * and shape[] (the default SHAPE patterns) */
     for(uint32_t i=0;i<gen-tail;i++)((uint8_t *)q)[tail+i]=b[old+i];
     memset(q->gen,0,sizeof q->gen);
+    for(uint32_t k=0;k<PROJ_TRK;k++)proj_shape_default(q->shape[k]);
     q->size=sizeof *q;q->sum=proj_sum(q);return proj_ok(q);
 }
 /* FUN18 / FUN17 / FUN16 or a project_t (host RAM slots) -> q; 0 = not a project. */
@@ -208,9 +213,11 @@ static int proj_import(project_t *q, const void *b, int n)
         return proj_unpack(q, b) && proj_fn_none(q);
     if (n == (int)sizeof *q && proj_ok((const project_t *)b)) {
         memcpy(q, b, sizeof *q);
+        for (uint32_t k = 0; k < PROJ_TRK; k++) if (!proj_shape_valid(q->shape[k])) proj_shape_default(q->shape[k]);
+        q->sum = proj_sum(q);
         return 1;
     }
-    if(n==(int)(sizeof *q-sizeof q->gen+RECORD_MAX))return proj_import_note10(q,b,(uint32_t)n);
+    if(n==(int)(sizeof *q-sizeof q->gen-sizeof q->shape+RECORD_MAX))return proj_import_note10(q,b,(uint32_t)n);   /* (before gen[] and shape[]) */
     return 0;
 }
 static int proj_fn_none(project_t *q)          /* a record without FM6 function settings: Dexed's */
@@ -399,6 +406,7 @@ static int proj_unpack(project_t *q, const uint8_t *b)
         68u + PROJ_TRK * (np - (magic==0x46554E44u?PROJ_FX_FIELDS:0u) + 2u + NSTEP * ((magic==PROJ_MAGIC || magic==PROJ_CUT_MAGIC || magic==PROJ_PRE_HP_MAGIC || magic==0x46554E46u || magic==0x46554E45u)?8u:9u)) + sizeof q->chain + sizeof q->motion > end)
         return 0;
     memset(q, 0, sizeof *q); q->magic = PROJ_MAGIC; q->size = sizeof *q;
+    for (t = 0; t < PROJ_TRK; t++) proj_shape_default(q->shape[t]);
     memcpy(q->g,b+8,2u*PROJ_GLOBALS);
     for(i=G_MFXTYPE;i<G_COUNT;i++)q->g[i]=GP[i].def;
     if(magic==PROJ_MAGIC || magic==PROJ_CUT_MAGIC || magic==PROJ_PRE_HP_MAGIC || magic==0x46554E46u){
@@ -738,8 +746,10 @@ static void project_capture(project_t *p)
             p->pattern[i] = t->pattern;
             memcpy(p->t[i].step, t->step, sizeof t->step);
             if (src < GN_TRACKS && gn[src].mode) gn_save(src, p->gen[i]);   /* (its generator moves with it; OFF: none) */
+            shape_pack(src, p->shape[i]);              /* (ARP > SHAPE moves with it too) */
         } else {                                        /* the place left empty: its power-on sound, no steps */
             uint32_t e = trk_def_engine(i);
+            proj_shape_default(p->shape[i]);
             p->t[i].engine = (uint8_t)e;
             p->t[i].preset = PROJ_DEF_SOUND;
             for (uint32_t j = 0; j < P_COUNT; j++)
@@ -998,6 +1008,7 @@ static int project_restore_runtime(const project_t *input)
         proj_steps(t->step);
         pattern_commit(t);
         gn_load(k, p->gen[k]);                          /* (none saved: MODE OFF) */
+        shape_unpack(k, p->shape[k]);                   /* (ARP > SHAPE; a bad one: the default) */
         {   /* the project's own FM6 patch */
             uint8_t v[FP_SIZE + 1u];
             fm6_unpack(p->fm6[k], v);
@@ -1347,6 +1358,7 @@ static void project_new_blank(void)
     chain_defaults(&chain_config);
     pattern_init();
     for (k = 0; k < GN_TRACKS; k++) gn_defaults(k);  /* (no generators) */
+    for (k = 0; k < NTRK; k++) shape_default(k);     /* (the default SHAPE patterns) */
     fm1_irq_on();
     for (i = 0; i < G_COUNT; i++)
         song.g[i] = GP[i].def;

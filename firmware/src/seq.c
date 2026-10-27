@@ -277,7 +277,8 @@ static volatile uint8_t seq_hush;
 static const step_t SEQ_HUSH_STEP = {.time = ST_REST};
 static void arp_step(track_t *t, uint32_t n, uint32_t gate_n)
 {
-    uint32_t period, cnt, list[64], len = 0, i, j, o;
+    uint32_t period, cnt, list[64], len = 0, i, j, o, k = trk_index(t);
+    uint32_t shaped = (uint32_t)t->p[P_AMODE] == AM_SHAPE, mode = shaped ? shape_mode(k) : (uint32_t)t->p[P_AMODE];
     int32_t sw;
     if (t->arp_note) {
         if (t->arp_off <= gate_n)
@@ -294,20 +295,26 @@ static void arp_step(track_t *t, uint32_t n, uint32_t gate_n)
     sw = t->p[P_ASWING] * (int32_t)period / 250;
     t->arp_pos += n;
     for (;;) {
-        if (t->arp_pos < period + (uint32_t)((t->arp_idx & 1u) ? sw : -sw) && t->arp_pos != 0xFFFFFFF + n)
+        uint32_t odd = (shaped ? shape.tick[k] : t->arp_idx) & 1u;   /* (SHAPE swings its steps, rests too) */
+        if (t->arp_pos < period + (uint32_t)(odd ? sw : -sw) && t->arp_pos != 0xFFFFFFF + n)
             return;
-        if (t->arp_pos >= 0xFFFFFFFu)
+        if (t->arp_pos >= 0xFFFFFFFu) {
             t->arp_pos = 0;
-        else if (midi_sync_active)
-            t->arp_pos -= period + (uint32_t)((t->arp_idx & 1u) ? sw : -sw);
+            shape.tick[k] = 0xFFFFFFFFu;                /* (a new chord: SHAPE from its first step) */
+        } else if (midi_sync_active)
+            t->arp_pos -= period + (uint32_t)(odd ? sw : -sw);
         else
             t->arp_pos = 0;
+        if (shaped && !shape_on(k, ++shape.tick[k])) {   /* SHAPE: a step OFF rests, the order stays (arp_shape.c) */
+            if (!midi_sync_active) return;
+            continue;
+        }
         /* build the note list: held notes (sorted or as played) over OCT octaves */
         len = 0;
         for (i = 0; i < t->nheld; i++)
             list[i] = t->held[i];
         cnt = t->nheld;
-        if (!t->p[P_AORDER])
+        if (!t->p[P_AORDER] || shaped)
             for (i = 1; i < cnt; i++)
                 for (j = i; j > 0 && list[j - 1] > list[j]; j--) {
                     uint32_t x = list[j];
@@ -323,9 +330,9 @@ static void arp_step(track_t *t, uint32_t n, uint32_t gate_n)
                     list[len++] = clamp((int32_t)list[i] + 12 * (int32_t)o, 0, 127);
                 }
         if (!len) return;
-        if (t->p[P_AMODE] == 6) { list[0] = t->held[t->nheld - 1u]; len = 1; } /* REPEAT: last played note, no octave traversal */
+        if (mode == 6) { list[0] = t->held[t->nheld - 1u]; len = 1; } /* REPEAT: last played note, no octave traversal */
         t->arp_idx++;
-        switch (t->p[P_AMODE]) {
+        switch (mode) {
         case 2:
             j = len - 1u - t->arp_idx % len;
             break;
@@ -343,7 +350,7 @@ static void arp_step(track_t *t, uint32_t n, uint32_t gate_n)
         }
         if (t->arp_note)
             arp_off(t);
-        if ((uint32_t)(rng() & 127u) <= (uint32_t)t->p[P_APROB]) {
+        if (shaped || (uint32_t)(rng() & 127u) <= (uint32_t)t->p[P_APROB]) {
             t->arp_note = (uint8_t)list[j];
             t->arp_off = period * (uint32_t)t->p[P_AGATE] / 128u;
             if (rec_on(t))
@@ -873,6 +880,8 @@ static void keyboard_block(void)
             }
             if (song.grid == 2u)                  /* NAME / pattern selection: keys belong to the UI */
                 kb_note[k] = KB_SILENT;
+            else if (song.grid == 3u)             /* ARP > SHAPE, M3 / OCT- held: the white keys are its steps */
+                kb_note[k] = key_black(k) ? (uint8_t)kb_map(&trk[kb_trk[k]], k) : KB_SILENT;
             else if (song.grid)                   /* the DRUM grid: a lane key plays its lane, the rest are the UI's */
                 kb_note[k] = key_black(k) && key_place(k) < NLANE ? DRUM_LANE_NOTE[key_place(k)] : KB_SILENT;
             else
