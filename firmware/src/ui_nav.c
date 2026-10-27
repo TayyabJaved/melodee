@@ -221,3 +221,31 @@ static int nav_rec_cell(const step_t *st) { return (st->flags & SF_RECORDED) != 
 static void nav_dview_v(char *b) { str_cpy(b, nav_drum_roll ? "Notes" : "Grid", 8); }
 static void nav_dview_turn(int32_t s) { nav_drum_roll = (uint8_t)(s > 0); ui.force = 1; }
 static void nav_dview(void) { nav_dview_turn(!nav_drum_roll); }   /* (OCT+: the other view) */
+
+/* M1 / M2 / M3 held (MELODEE_KEY_NAV): the keys light their map, the modifier and its black keys, and the panel buttons
+ * light the ones those keys press (M1: FX .. GLO, M2: HOME .. REC, M3: OCT- OCT+), in place of the usual lights, until
+ * it is let go (ui_input.c ui_leds) */
+static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
+{
+#if MELODEE_KEY_NAV
+    uint32_t mod = fm1_nav.mod, r, i, b;
+    if (!mod || (mod & (mod - 1u)))                     /* (none, or two: keys do nothing) */
+        return;
+    for (r = 0; r < FM1_NAV_ROWS && mod != 1u << FM1_NAV_MOD[r]; r++)
+        ;
+    if (r == FM1_NAV_ROWS)
+        return;
+    for (b = 0; b < 14u; b++)                           /* (led_put only lights: the button plane cleared) */
+        if (led_pos[b] != 0xFFu)
+            nl[led_pos[b] >> 3] &= (uint8_t)~(1u << (led_pos[b] & 7u));
+    *keys = mod;
+    *play = 0;
+    for (i = 0; i < FM1_NAV_N; i++)
+        if (fm1_nav.row[r][i] < 14u) {
+            *keys |= 1u << FM1_NAV_KEY[i];
+            led_put(nl, fm1_nav.row[r][i], 1);
+        }
+#else
+    (void)nl; (void)keys; (void)play;
+#endif
+}

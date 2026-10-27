@@ -389,6 +389,39 @@ static int test_drum_grid(void)
     return bad;
 }
 
+#if MELODEE_KEY_NAV
+static int lit(uint32_t id) { return led_get(fm1_led, id); }   /* (14 + k: key k) */
+static int test_modifier_lights(void)
+{
+    int bad = 0;
+    ui_power_on();
+    go_title("ARP"); frame();
+    ui_leds();                                          /* (its led_pos_init first, then a map of our own: the host's */
+    for (uint32_t k = 0; k < 41u; k++)                  /* FM1_KEYMAP is empty; as ui_test.c test_key_lights) */
+        led_pos[k] = (uint8_t)((k % FM1_NCOL) << 3 | (1u + k / FM1_NCOL));
+    panel_nav(1);                                       /* (the rows, from panel.c's table) */
+    fm1_nav.mod = 1u << 24; ui_leds();                  /* M1 (F5) held */
+    bad += check("M1 held: F5 and its six black keys lit, no other key",
+                 lit(14 + 24) && lit(14 + 13) && lit(14 + 15) && lit(14 + 17) && lit(14 + 20) && lit(14 + 22) && lit(14 + 25) &&
+                 !lit(14 + 0) && !lit(14 + 26) && !lit(14 + 8));
+    bad += check("..the buttons they press lit (FX .. GLO), the others dark (ARP's page light too)",
+                 lit(panel.btn[B_FX]) && lit(panel.btn[B_GLO]) && lit(panel.btn[B_LFO]) && !lit(panel.btn[B_HOME]) &&
+                 !lit(panel.btn[B_ARP]) && !lit(panel.btn[B_OCTUP]));
+    fm1_nav.mod = 1u << 26; ui_leds();                  /* M2 (G5) */
+    bad += check("M2 held: HOME .. REC lit, FX dark", lit(panel.btn[B_HOME]) && lit(panel.btn[B_REC]) && lit(panel.btn[B_ARP]) &&
+                 !lit(panel.btn[B_FX]) && lit(14 + 26) && lit(14 + 13));
+    fm1_nav.mod = 1u << 25; ui_leds();                  /* M3 (F#5) */
+    bad += check("M3 held: F#5, C#5 and D#5 lit, OCT- and OCT+ lit, nothing else",
+                 lit(14 + 25) && lit(14 + 20) && lit(14 + 22) && !lit(14 + 13) && lit(panel.btn[B_OCTDN]) &&
+                 lit(panel.btn[B_OCTUP]) && !lit(panel.btn[B_FX]) && !lit(panel.btn[B_HOME]));
+    fm1_nav.mod = (1u << 24) | (1u << 26); ui_leds();
+    bad += check("two modifiers: the usual lights (keys do nothing then)", lit(panel.btn[B_ARP]) && !lit(panel.btn[B_FX]));
+    fm1_nav.mod = 0; ui_leds();
+    bad += check("let go: the usual lights again (ARP's page)", lit(panel.btn[B_ARP]) && !lit(panel.btn[B_FX]) && !lit(14 + 24));
+    return bad;
+}
+#endif
+
 int main(void)
 {
     int bad = 0;
@@ -405,6 +438,7 @@ int main(void)
     bad += test_drum_grid();
 #if MELODEE_KEY_NAV
     bad += test_f5_keep();
+    bad += test_modifier_lights();
 #endif
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;

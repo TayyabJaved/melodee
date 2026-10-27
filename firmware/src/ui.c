@@ -295,6 +295,7 @@ static int nav_rec_cell(const step_t *st);
 static void nav_dview_v(char *b);
 static void nav_dview_turn(int32_t s);
 static void nav_dview(void);
+static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);

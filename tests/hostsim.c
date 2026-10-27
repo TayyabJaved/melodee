@@ -35,8 +35,12 @@ static struct { volatile uint32_t notes, buttons; } fm1_in;
 #if MELODEE_KEY_NAV
 #define FM1_NAV_N 6u
 #define FM1_NAV_ROWS 3u
-static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }   /* (the layer itself: key_nav_test.c) */
-static struct { uint8_t keep_on, keep; } fm1_nav;                          /* (F#5 keeps a momentary edit) */
+static const uint8_t FM1_NAV_MOD[FM1_NAV_ROWS] = {24, 26, 25};
+static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};
+static struct { uint32_t mod; uint8_t keep_on, keep, row[FM1_NAV_ROWS][FM1_NAV_N]; } fm1_nav;   /* (the layer itself:
+                                                                           * key_nav_test.c; its rows, the keep) */
+static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N])
+{ for (uint32_t r = 0; btn && r < FM1_NAV_ROWS; r++) for (uint32_t i = 0; i < FM1_NAV_N; i++) fm1_nav.row[r][i] = btn[r][i]; }
 static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }
 #endif
 /* Serial host fixtures retain their established admission policy. Dedicated

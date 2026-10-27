@@ -470,6 +470,7 @@ static void ui_leds(void)
     if (!ui.layer && !ui.menu && !name_on() && slice_page_on())
         c |= slice_leds();                              /* SLICES: and the keys of the selected slice */
 #endif
+    nav_leds(nl, &c, &play);                            /* (M1 / M2 / M3 held: their map, ui_nav.c) */
     for (k = 0; k < 27u; k++) {
         uint32_t lv = play ? play_key_led(TSEL, k) : KL_OFF;   /* playing: the layout, MIDI's notes too (LIGHTS) */
         led_put(nl, 14u + k, (int)(((c >> k) & 1u) || lv == KL_ON));
