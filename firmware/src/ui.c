@@ -150,6 +150,7 @@ static struct {
                                                     * (ui_patterns.c) */
     uint8_t preset_audition;     /* Patterns' temporary preset picker; navigation cancels it */
     uint8_t cursor;              /* SEQ: step being edited (STEP page KNOB 1 moves it) */
+    uint8_t shape_page;          /* ARP > SHAPE: the 16 steps the white keys edit (PRESETS) */
     uint16_t note_pick;          /* NOTES: event index + 1; zero chooses the first hit */
     uint8_t erase_gesture, erase_owner; /* an EDIT press captures one track/bank until released */
     uint32_t erase_generation, erase_transport;
@@ -450,6 +451,43 @@ static void step_clear(step_t *st)
     st->vel = 0;
     st->hit = st->acc = 0;
     st->probability = 0;
+}
+
+/* ------------------------------------------------------- SHAPE arp --- */
+/* ARP > MODE SHAPE (arp_shape.c) on the ARP page: the strip of steps (ui_pages.c pv_arp); M3 (the -nav build) or OCT-
+ * held, the 16 white keys are the steps of the page PRESETS picks, lit where ON, a tap turns one ON or OFF
+ * (ui_input.c shape_keys); otherwise the keys play */
+static int shape_page_on(void)                         /* (the ARP page: not ARP 2, GEN) */
+{
+    return !ui.home && !ui.menu && !ui.confirm && cur_page()->graph == GR_ARP && TSEL->p[P_AMODE] == AM_SHAPE;
+}
+static int shape_edit_on(void)
+{
+    uint32_t held = (fm1_in.buttons >> panel.btn[B_OCTDN]) & 1u;
+#if MELODEE_KEY_NAV
+    held |= (fm1_nav.mod >> FM1_NAV_MOD[2]) & 1u;
+#endif
+    return held && shape_page_on();
+}
+static uint32_t shape_pages(void) { return (shape_steps(song.sel) + 15u) / 16u; }
+static uint32_t shape_page(void) { return ui.shape_page % shape_pages(); }
+static void shape_page_turn(int32_t s)
+{
+    ui.shape_page = (uint8_t)clamp((int32_t)shape_page() + (s > 0 ? 1 : -1), 0, (int32_t)shape_pages() - 1);
+    ui.force = 1;
+}
+/* the white keys while editing (all 16 in *whites: their layout lights step aside) -> those of steps ON */
+static uint32_t shape_leds(uint32_t *whites)
+{
+    uint32_t k, lit = 0, steps = shape_steps(song.sel), s;
+    *whites = 0;
+    for (k = 0; k < 27u; k++) {
+        if (key_black(k)) continue;
+        *whites |= 1u << k;
+        s = shape_page() * 16u + key_place(k);
+        if (s < steps && shape_on(song.sel, s)) lit |= 1u << k;
+    }
+    return lit;
 }
 
 /* ------------------------------------------------------- the DRUM grid --- */

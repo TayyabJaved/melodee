@@ -530,11 +530,43 @@ static void pv_filter(int32_t cut, int32_t res, int32_t h)
     }
 }
 /* which picture: 3 a filter (cut: its knob), 4 FM6's chart, 0 the scope */
-/* ARP (mock/r6_pages ARP): the notes it plays, a block a step (16 at most): the keys held (else C3 E3 G3) over OCT
- * octaves in MODE's order, low to high bottom to top; the notes and the octaves at the top. OFF: dim */
+/* ARP > MODE SHAPE (arp_shape.c): the page of steps the white keys edit, 16 cells: ON a filled block, OFF a dot, the step
+ * playing framed; under them every fourth step's number; over them how to edit (and the page: "2/4") */
+static void pv_shape(int32_t h)
+{
+    uint32_t k = song.sel % NTRK, steps = shape_steps(k), base = shape_page() * 16u, i, playing = 0xFFFFFFFFu;
+    int32_t cw = 13, x0 = 16, y = h / 2 - 11;
+    char b[24];
+    if (TSEL->nheld && shape.tick[k] != 0xFFFFFFFFu) playing = shape.tick[k] % steps;
+#if MELODEE_KEY_NAV
+    str_cpy(b, "HOLD M3: KEYS = STEPS", sizeof b);
+#else
+    str_cpy(b, "HOLD OCT-: KEYS = STEPS", sizeof b);
+#endif
+    cv_free_text(12, 6, TY_LB, b, shape_edit_on() ? T_TEXT : T_MID, T_PANEL, PV_PANEL_W - 60);
+    if (shape_pages() > 1u) {
+        fmt_int(b, (int32_t)shape_page() + 1);
+        str_cpy(b + str_len(b), "/", 2);
+        fmt_int(b + str_len(b), (int32_t)shape_pages());
+        cv_text_r(PV_PANEL_W - 12, 6, TY_LB, b, T_MID, T_PANEL);
+    }
+    for (i = 0; i < 16u && base + i < steps; i++) {
+        int32_t x = x0 + (int32_t)i * cw;
+        if (shape_on(k, base + i))
+            cv_rrect(x, y, cw - 3, 22, 3, base + i == playing ? T_TEXT : T_THEME, T_PANEL);
+        else
+            cv_rect(x + (cw - 3) / 2 - 1, y + 10, 3, 3, (i & 3u) ? T_DIM : T_MID);
+        if (base + i == playing) cv_frame(x - 2, y - 2, cw + 1, 26, T_ACCENT);
+        if (!(i & 3u)) {
+            fmt_int(b, (int32_t)(base + i) + 1);
+            cv_text_on(x, y + 30, TY_LB, b, T_MID, T_PANEL);
+        }
+    }
+}
 static void pv_arp(int32_t h)
 {
     static const uint8_t DEF[3] = {48, 52, 55};
+    if (TSEL->p[P_AMODE] == AM_SHAPE) { pv_shape(h); return; }
     const track_t *t = TSEL;
     uint8_t base[16], seq[16];
     uint32_t nb = t->nheld ? t->nheld : 3u, n = 0, o, i, j, oct = (uint32_t)clamp(t->p[P_AOCT], 1, 4), mode = (uint32_t)t->p[P_AMODE];

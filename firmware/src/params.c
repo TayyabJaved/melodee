@@ -2,10 +2,11 @@
  * Copyright (C) 2026 Kerem Kilic (Ellic Studio)
  * Portions Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Parameter descriptors, formatting and the page table. */
+#include "arp_shape.c"                                  /* ARP > MODE SHAPE (ours) */
 static const char *const N_LSYNC[] = {"OFF", "4BAR", "2BAR", "1/1", "1/2", "1/4", "1/8", "8T", "1/16", "16T", "1/32"};
 static const uint8_t LSYNC_DIV[11] = {0, 9, 8, 7, 6, 0, 1, 4, 2, 5, 3};
 static const char *const N_LWAVE[] = {"SIN", "TRI", "SAW", "SQR", "S&H"};
-static const char *const N_AMODE[] = {"OFF", "UP", "DN", "UPDN", "RND", "ORD", "REPEAT"};
+static const char *const N_AMODE[] = {"OFF", "UP", "DN", "UPDN", "RND", "ORD", "REPEAT", "SHAPE"};
 static const char *const N_DIV[] = {"1/4", "1/8", "1/16", "1/32", "8T", "16T", "1/2", "1/1", "2BAR", "4BAR"};
 static const char *const N_RECQ[] = {"OFF", "1/4", "1/8", "1/16", "1/32", "8T", "16T", "1/2", "1/1", "2BAR", "4BAR"};
 static const char *const N_LTRIG[] = {"NOTE", "FREE"};
@@ -904,6 +905,18 @@ static const param_desc_t *page_desc(const page_t *pg, uint32_t slot, int16_t **
         drumch_cell = settings_drumch;                   /* (as BOOT) */
         *valp = &drumch_cell;
         return global_desc(id);
+    }
+    if (pg->scope == SC_TRACK && pg->fam == FAM_ARP && TSEL->p[P_AMODE] == AM_SHAPE &&
+        (id == P_APROB || id == P_AORDER)) {               /* ARP 2 in SHAPE: STEPS, DIR (arp_shape.c; PROB ORD kept) */
+        static const char *const N_SHAPE_DIR[] = {"UP", "DN", "UPDN", "RND"};
+        static const param_desc_t shape_desc[2] = {
+            {"DIR", F_ENUM, 0, SD_N - 1, SD_UP, N_SHAPE_DIR, 0},
+            {"STEPS", F_STEPS, 1, SHAPE_STEPS, SHAPE_DEF_STEPS, 0, 0},
+        };
+        uint32_t k = (uint32_t)(TSEL - trk) % NTRK, c = id == P_APROB;
+        (void)shape_steps(k);
+        *valp = &shape.ctrl[k][c];
+        return &shape_desc[c];
     }
     if (pg->scope == SC_TRACK && id >= P_FXMIX && id <= P_FX3CHAR) {
         uint32_t base = P_FXTYPE + (id - P_FXTYPE) / FX_PARAMS * FX_PARAMS;

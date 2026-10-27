@@ -303,10 +303,10 @@ static int kits(void)
     reset();
     song.sel = 3;                                                  /* the DRUM track */
     d->p[P_CHRD] = CH_DIA7;
-    key_down(K_C4);
+    key_down(1u);                                                  /* (F#3: a drum track's keys are the lanes' black keys) */
     bad += check("DRUM: CHRD ignored (one hit per key)", chord_build(d, 36, out) == 1u && out[0] == 36 &&
-                 kb_chn[K_C4] == 1u && mo_w == 1u);
-    key_up(K_C4);
+                 kb_chn[1] == 1u && mo_w == 1u);
+    key_up(1u);
     midi(0x93, 38, 100);
     bad += check("  MIDI IN on the DRUM track: one hit, no chord kept", !mchord[0].id);
     midi(0x83, 38, 0);
