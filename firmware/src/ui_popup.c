@@ -214,7 +214,8 @@ static void nt_quantize(void){ui.note_copy=ui.note_move=0;note_quantize(RECORD_U
 static const sheet_row_t SHEET_PATTERN[] = {{"Quantize",nt_quantize_v,nt_quantize_grid,nt_quantize,0},
     {"Double", seqt_double_v, 0, seqt_double, 0}, {"Half", seqt_half_v, 0, seqt_half, 0},
     {"Euclid", seqt_hits_v, seqt_hits_turn, seqt_euclid, 0}, {"Euclid turn", seqt_rot_v, seqt_rot_turn, seqt_euclid, 0},
-    {"Clear pattern", 0, 0, 0, CF_CLEAR_SEQ}, {"Clear motion", 0, 0, 0, CF_CLEAR_MOTION}};
+    {"Clear pattern", 0, 0, 0, CF_CLEAR_SEQ}, {"Clear motion", 0, 0, 0, CF_CLEAR_MOTION},
+    {"Drum view", nav_dview_v, nav_dview_turn, nav_dview, 0}};   /* (last: drum tracks only, ui_nav.c) */
 /* SHARED's (its rack, its slots): the routing (one chain, or each slot its own send from every track), clearing them */
 static void sh_route_v(char *b) { str_cpy(b, song.g[G_FXMODE] ? "Split" : "Chain", 8); }
 static void sh_route_turn(int32_t s) { song.g[G_FXMODE] = (int16_t)(s > 0); ui.force = 1; }
@@ -397,7 +398,7 @@ static void page_sheet_open(void)
     case 3:
         str_cpy(nm, "T1", sizeof nm);
         nm[1] = (char)('1' + song.sel % NTRK);
-        sheet_open("Pattern", nm, SHEET_PATTERN, NELEM(SHEET_PATTERN));
+        sheet_open("Pattern", nm, SHEET_PATTERN, NELEM(SHEET_PATTERN) - (drum_track(TSEL) ? 0u : 1u));
         break;
     case 4: {                                           /* "Pattern 3", "T2" */
         char t[12] = "Pattern ";

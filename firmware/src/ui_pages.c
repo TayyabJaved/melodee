@@ -473,8 +473,11 @@ static void pv_grid(int32_t h)
             }
             if (step_lanes(st) & b) {
                 uint16_t col = (step_accents(st) & b) ? T_TEXT : T_KNOB(l);   /* (each lane a colour) */
-                cv_rrect(x, y + 2, 9, 13, 3, col, row);
-                if (pick && step_sound_note(t, st, sound) < 0)
+                if (nav_rec_cell(st))                   /* (a recorded hit: a short bar, ui_nav.c) */
+                    cv_rrect(x, y + 5, 9, 7, 3, col, row);
+                else
+                    cv_rrect(x, y + 2, 9, 13, 3, col, row);
+                if (pick && !nav_rec_cell(st) && step_sound_note(t, st, sound) < 0)
                     cv_rrect(x + 2, y + 4, 5, 9, 2, row, col);
             } else
                 cv_disc(x + 4, y + 8, i % 4u == 0u || sel ? 4 : 3, i % 4u == 0u || sel ? T_MID : T_DIM, 0);

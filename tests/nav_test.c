@@ -328,6 +328,67 @@ static int test_f5_keep(void)                           /* F#5 keeps a momentary
 }
 #endif
 
+static void sheet_hold(void)                            /* OCT+ held: the page's sheet */
+{
+    btn_down(B_OCTUP);
+    for (uint32_t f = 0; f < 50u; f++) frame();
+    btn_up(B_OCTUP); frame();
+}
+static void sheet_pick(const char *label)               /* the sheet open, KNOB 2 to the row, OCT+ */
+{
+    uint32_t i, n;
+    if (pop.on != POP_SHEET) sheet_hold();
+    for (i = 0; i < pop.n && !str_eq(pop.rows[i].label, label); i++)
+        ;
+    for (n = 0; n < 16u && pop.sel < i && pop.sel + 1u < pop.n; n++) turn(EN_K2, 1);
+    press(B_OCTUP);
+}
+static int sheet_has(const char *label)                 /* the open sheet has that row */
+{
+    for (uint32_t i = 0; pop.on == POP_SHEET && i < pop.n; i++)
+        if (str_eq(pop.rows[i].label, label)) return 1;
+    return 0;
+}
+static int test_drum_grid(void)
+{
+    int bad = 0;
+    uint32_t snare = 1;
+    track_t *t;
+    ui_power_on();
+    stop_transport();
+    set_engine_of(TSEL, ENGI_DRUM);
+    t = TSEL;
+    nav_drum_roll = 0;
+    grid_hit(t, 0, 0, 1);                               /* programmed: kick on 1 and 5 */
+    grid_hit(t, 4, 0, 1);
+    t->step[8].time = ST_NOTE; t->step[8].hit = (uint8_t)(1u << snare);   /* recorded: a snare on 9 */
+    t->seq_idx = 8; t->seq_pos = 0;
+    bad += check("(fixture: a recorded snare hit)", recording_note(t, DRUM_LANE_NOTE[snare], 100, 8) && notes_have_recording(t));
+    go_title("NOTES"); frame();
+    bad += check("drum NOTES with a recording: still the grid (Grid, the default)", grid_on());
+    bad += check("..programmed hits a full cell, the recorded one a short bar (its step a recorded view)",
+                 (step_lanes(&t->step[0]) & 1u) && !nav_rec_cell(&t->step[0]) &&
+                 (step_lanes(&t->step[8]) & (1u << snare)) && nav_rec_cell(&t->step[8]));
+    sheet_hold();
+    bad += check("the pattern sheet on a drum track: Drum view (Grid) its last row",
+                 pop.on == POP_SHEET && sheet_has("Drum view") && str_eq(pop.rows[pop.n - 1u].label, "Drum view"));
+    sheet_pick("Drum view");
+    frame();
+    bad += check("..Drum view to Notes: the piano roll (timing edits of recorded hits)", nav_drum_roll && !grid_on());
+    if (pop.on) press(B_OCTDN);
+    sheet_pick("Drum view");
+    frame();
+    bad += check("..again: the grid", !nav_drum_roll && grid_on());
+    if (pop.on) press(B_OCTDN);
+    go_home();
+    set_engine_of(TSEL, ENGI_PROPHET);
+    go_title("NOTES"); frame();
+    sheet_hold();
+    bad += check("a synth track's pattern sheet: no Drum view", pop.on == POP_SHEET && !sheet_has("Drum view"));
+    if (pop.on) press(B_OCTDN);
+    return bad;
+}
+
 int main(void)
 {
     int bad = 0;
@@ -341,6 +402,7 @@ int main(void)
     bad += test_page_position();
     bad += test_section_name();
     bad += test_no_save_in_edit();
+    bad += test_drum_grid();
 #if MELODEE_KEY_NAV
     bad += test_f5_keep();
 #endif

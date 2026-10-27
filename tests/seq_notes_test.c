@@ -94,6 +94,7 @@ static int loop_drums_and_playback(void)
     raw_begin();t=&trk[0];set_engine_of(t,ENGI_DRUM);t->engine=t->eng_req;
     seq_advance(600);input_on(t,36,100);input_on(t,38,115);seq_advance(300);input_off(t,36);input_off(t,38);
     seq_advance(900);input_on(t,36,90);seq_advance(300);input_off(t,36);seq_stop();song.rec=0;
+    nav_drum_roll=1;                                    /* (Drum view: Notes, the roll: ui_nav.c; the grid by default) */
     go_page(GR_ROLL);cursor_set(0);frame();notes_cycle(2); frame();press(B_EDIT);
     bad+=check("drum deletion preserves repeated kicks and other lane hits",
                !recording[2].vel&&recording[0].vel&&recording[1].vel&&(t->step[0].hit&(1u<<drum_lane(36)))&&(t->step[0].hit&(1u<<drum_lane(38))));
@@ -271,12 +272,14 @@ static int dense_selection_and_protection(void)
     t->step[2].time=ST_NOTE;t->step[2].n=1;t->step[2].note[0]=75;t->step[2].flags=SF_RECORDED;frame();
     step_t overview=t->step[2];turn(EN_K2,1);turn(EN_K3,1);
     bad+=check("an overview cell with no event onset cannot overwrite a recording",!memcmp(&overview,&t->step[2],sizeof overview)&&!memcmp(saved,recording,sizeof saved));
+    nav_drum_roll=0;
     return bad;
 }
 
 static int drum_recording_layout(void)
 {
     raw_begin();track_t *t=&trk[0];set_engine_of(t,ENGI_DRUM);t->engine=t->eng_req;
+    nav_drum_roll=1;                                    /* (Drum view: Notes, the roll: ui_nav.c; the grid by default) */
     go_page(GR_ROLL);frame();seq_advance(600);input_on(t,36,100);seq_advance(100);input_off(t,36);frame();
     int bad=check("the first recorded drum hit keeps live lane-key mapping and the grid",grid_on()&&song.grid==1u);
     seq_advance(500);input_on(t,38,100);seq_advance(100);input_off(t,38);frame();
@@ -284,6 +287,8 @@ static int drum_recording_layout(void)
     bad+=check("a live drum EDIT tap consumes release without deleting the overview",recording_active(t,0)&&!memcmp(&first,&recording[0],sizeof first)&&!seq_erase_active(t));
     seq_stop();song.rec=0;frame();
     bad+=check("stopping drum recording reveals precise note editing in the same page",!grid_on()&&!song.grid&&cur_page()->graph==GR_ROLL&&notes_selected(t)<RECORD_MAX);
+    nav_drum_roll=0;frame();
+    bad+=check("..with Drum view Grid (the default): the grid, its recorded hits in it",grid_on());
     return bad;
 }
 

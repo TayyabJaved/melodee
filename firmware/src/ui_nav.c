@@ -209,3 +209,15 @@ static void nav_keep(void)                             /* (ui_input.c, each pass
     }
 #endif
 }
+
+/* Drum tracks: NOTES is the grid, programmed and recorded hits together (task: option A). Upstream switched to the
+ * piano roll once a pattern held a recording, where programmed hits do not show. A recorded hit (its step a view of
+ * timed notes, SF_RECORDED) is a short bar, a programmed one a full cell. Editing a recorded cell on the grid makes that
+ * step programmed (ui.c grid_hit); a hit's pitch, length and sound: DRUM HIT. The pattern sheet's "Drum view" (drum
+ * tracks only, its last row) brings the roll back for timing edits: Notes */
+static uint8_t nav_drum_roll __attribute__((section(".pool")));   /* 0 Grid (the power-on default), 1 Notes */
+static int nav_drum_notes(void) { return nav_drum_roll; }      /* (ui.c grid_on) */
+static int nav_rec_cell(const step_t *st) { return (st->flags & SF_RECORDED) != 0; }   /* (the grids' cells) */
+static void nav_dview_v(char *b) { str_cpy(b, nav_drum_roll ? "Notes" : "Grid", 8); }
+static void nav_dview_turn(int32_t s) { nav_drum_roll = (uint8_t)(s > 0); ui.force = 1; }
+static void nav_dview(void) { nav_dview_turn(!nav_drum_roll); }   /* (OCT+: the other view) */

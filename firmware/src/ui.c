@@ -279,6 +279,11 @@ static int32_t nav_head_pos(int32_t x);
 static void nav_say_section(const char *name);
 static void nav_head_chip(char *chip);
 static void nav_keep(void);
+static int nav_drum_notes(void);
+static int nav_rec_cell(const step_t *st);
+static void nav_dview_v(char *b);
+static void nav_dview_turn(int32_t s);
+static void nav_dview(void);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);
@@ -442,7 +447,7 @@ static void step_clear(step_t *st)
  * steps: the grid shows a step's notes on their lanes (eng_drum.c step_lanes) and an edit makes the lane its
  * own (grid_own). Live recording on a DRUM track writes hits (seq.c rec_note) */
 static int notes_have_recording(const track_t *t);
-static int grid_on(void) { return !ui.home && !ui.menu && !ui.confirm && (cur_page()->graph == GR_ROLL || cur_page()->graph == GR_DRUMHIT) && drum_track(TSEL) && (cur_page()->scope==SC_DRUMHIT || !notes_have_recording(TSEL) || (song.playing && (song.rec & (1u << song.sel)))); }   /* (NOTES, DRUM HIT) */
+static int grid_on(void) { return !ui.home && !ui.menu && !ui.confirm && (cur_page()->graph == GR_ROLL || cur_page()->graph == GR_DRUMHIT) && drum_track(TSEL) && (cur_page()->scope==SC_DRUMHIT || !nav_drum_notes() || !notes_have_recording(TSEL) || (song.playing && (song.rec & (1u << song.sel)))); }   /* (NOTES, DRUM HIT; the roll: ui_nav.c Drum view) */
 
 /* black key place p (seq.c key_place) held, 0 = not */
 static int black_held(uint32_t p)
