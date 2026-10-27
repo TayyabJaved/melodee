@@ -245,6 +245,28 @@ static int test_page_position(void)
     return bad;
 }
 
+static int test_section_name(void)
+{
+    int bad = 0;
+    uint32_t f;
+    ui_power_on();
+    set_engine_of(TSEL, ENGI_PROPHET);
+    go_title("P5 FILTER");
+    ui.msg_t = 0;
+    turn(EN_PRESET, 1);
+    head();
+    bad += check("EDIT: PRESETS to the next section: its name (MOD) in the header", msg_is("MOD") && head_has("MOD"));
+    bad += check("..for about half a second", ui.msg_t > 20u && ui.msg_t <= NAV_SECTION_FRAMES);
+    for (f = 0; f < NAV_SECTION_FRAMES + 2u; f++) frame();
+    head();
+    bad += check("..then the page's name again (POLYMOD)", !ui.msg_t && head_has("POLYMOD"));
+    set_engine_of(TSEL, ENGI_CZ);
+    open_family(FAM_ENV);
+    turn(EN_PRESET, 1);
+    bad += check("CZ-1 ENV: PRESETS to the next envelope: WAVE 1", msg_is("WAVE 1"));
+    return bad;
+}
+
 int main(void)
 {
     int bad = 0;
@@ -256,6 +278,7 @@ int main(void)
     bad += test_edit_button();
     bad += test_cz_envelopes();
     bad += test_page_position();
+    bad += test_section_name();
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;
 }

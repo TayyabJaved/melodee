@@ -131,6 +131,7 @@ static void sec_turn(int32_t s)                         /* PRESETS on an EDIT pa
     uint32_t k = sec_of(ui.page);
     sec_note();
     sec_go((uint32_t)clamp((int32_t)k + (s > 0 ? 1 : -1), 0, (int32_t)sec.n - 1));
+    nav_say_section(sec.name[sec_of(ui.page)]);         /* (its name over the page's, briefly: ui_nav.c) */
 }
 /* page i's name without its engine's prefix, in capitals ("P5 FLT ENV" -> "FLT ENV", "FM LFO 2" -> "LFO 2", "C1 PIT
  * R1-4" -> "R1-4"; EDIT 1 / 2: the engine's page titles, "OSC") */
