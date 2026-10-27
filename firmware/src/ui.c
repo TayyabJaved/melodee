@@ -278,6 +278,7 @@ static void nav_chip(const page_t *pg, char *b);
 static int32_t nav_head_pos(int32_t x);
 static void nav_say_section(const char *name);
 static void nav_head_chip(char *chip);
+static void nav_keep(void);
 static int native_page(uint32_t i, uint32_t fam)       /* page i: one of fam's native pages (a prefix of its title) */
 {
     const char *const *t = native_titles(fam);

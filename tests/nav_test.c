@@ -300,6 +300,34 @@ static int test_no_save_in_edit(void)
     return bad;
 }
 
+#if MELODEE_KEY_NAV
+static int test_f5_keep(void)                           /* F#5 keeps a momentary edit (the HAL's routing: key_nav_test) */
+{
+    int bad = 0;
+    uint32_t f;
+    int16_t before, *vp = 0;
+    ui_power_on();
+    set_engine_of(TSEL, ENGI_PROPHET);
+    go_home(); frame();
+    home_param(0, &vp);                                 /* (Stage's KNOB 1: the Prophet's CUTOFF) */
+    before = *vp;
+    frame();
+    bad += check("no momentary edit: F#5 is not armed as keep (M3)", !fm1_nav.keep_on);
+    btn_down(B_LFO);
+    for (f = 0; f < 5u; f++) frame();
+    turn(EN_K1, 3);
+    frame();
+    bad += check("LFO held, a knob turned: a momentary edit, F#5 armed as keep", momentary.active && fm1_nav.keep_on);
+    fm1_nav.keep = 1;                                   /* (F#5 pressed: hal/fm1_input.h) */
+    frame();
+    bad += check("..F#5: KEPT", msg_is("KEPT") && !momentary.active && !fm1_nav.keep);
+    btn_up(B_LFO);
+    for (f = 0; f < 3u; f++) frame();
+    bad += check("..LFO let go: the new value stays", *vp != before && !fm1_nav.keep_on);
+    return bad;
+}
+#endif
+
 int main(void)
 {
     int bad = 0;
@@ -313,6 +341,9 @@ int main(void)
     bad += test_page_position();
     bad += test_section_name();
     bad += test_no_save_in_edit();
+#if MELODEE_KEY_NAV
+    bad += test_f5_keep();
+#endif
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;
 }

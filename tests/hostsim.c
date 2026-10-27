@@ -33,8 +33,11 @@ __attribute__((constructor)) static void host_dsp_tables(void) { dsp_tables_init
 #define __attribute__(x)
 static struct { volatile uint32_t notes, buttons; } fm1_in;
 #if MELODEE_KEY_NAV
-#define FM1_NAV_N 8u
+#define FM1_NAV_N 6u
+#define FM1_NAV_ROWS 3u
 static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }   /* (the layer itself: key_nav_test.c) */
+static struct { uint8_t keep_on, keep; } fm1_nav;                          /* (F#5 keeps a momentary edit) */
+static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }
 #endif
 /* Serial host fixtures retain their established admission policy. Dedicated
  * resident/dual-core tests select the target policy explicitly. */
