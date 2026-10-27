@@ -2087,6 +2087,7 @@ static void ui_input(void)
     if(momentary.active && (pressed&(1u<<panel.btn[B_OCTUP]))){
         momentary.active=momentary.count=momentary.native=0;pressed&=~(1u<<panel.btn[B_OCTUP]);ui_message("KEPT");
     }
+    nav_keep();                                         /* (F#5 keeps it too: ui_nav.c) */
     uint32_t bank_notes = notes;
     uint32_t home = btn_hold(&ui.home_t0, B_HOME, now, 1);
     uint32_t rec = btn_hold(&ui.rec_t0, B_REC, now, !ui.menu && !ui.confirm && !name_on());   /* held: MIXER */

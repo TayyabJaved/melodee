@@ -241,12 +241,14 @@ static void fm1_input_init(void)
 }
 
 #if MELODEE_KEY_NAV
-/* F5 / G5 held (M1 / M2): black keys press the top / bottom row of panel buttons (M2: OCT- OCT+ too). A key's
- * route is chosen at its press and undone at its release; both modifiers held: new keys do nothing. Armed by
- * fm1_input_nav */
-#define FM1_NAV_N 8u
-static const uint8_t FM1_NAV_MOD[2] = {24, 26};                                /* F5 M1, G5 M2 */
-static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25, 8, 10}; /* F#4 G#4 A#4 C#5 D#5 F#5 C#4 D#4 */
+/* F5 / G5 / F#5 held (M1 / M2 / M3): black keys press panel buttons, M1 the top row, M2 the bottom row, M3 OCT- and
+ * OCT+ (C#5, D#5). F#5 is M3 only when pressed alone: with M1 / M2 held it is their GLO / REC. A key's route is
+ * chosen at its press and undone at its release; two modifiers held: new keys do nothing. While a momentary edit is
+ * on (fm1_input_nav_keep), F#5 keeps it instead (fm1_nav.keep). Armed by fm1_input_nav */
+#define FM1_NAV_N 6u
+#define FM1_NAV_ROWS 3u
+static const uint8_t FM1_NAV_MOD[FM1_NAV_ROWS] = {24, 26, 25};                 /* F5 M1, G5 M2, F#5 M3 */
+static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};       /* F#4 G#4 A#4 C#5 D#5 F#5 */
 #ifdef __ELF__
 #define FM1_NAV_POOL __attribute__((section(".pool")))   /* zeroed at boot; off the full .bss bank */
 #else
@@ -255,7 +257,8 @@ static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25, 8, 10}; /
 static volatile struct {
     uint32_t mod, held, mute, btn;   /* modifier keys down, keys routed to a button, keys ignored, buttons pressed */
     uint8_t to[27];                  /* each routed key's button */
-    uint8_t on, row[2][FM1_NAV_N];   /* armed; matrix button ids, M1 row then M2 row; >= 14: none (a note) */
+    uint8_t on, keep_on, keep;       /* armed; a momentary edit on (F#5 keeps it); F#5 pressed for it */
+    uint8_t row[FM1_NAV_ROWS][FM1_NAV_N];   /* matrix button ids, M1 M2 M3 rows; >= 14: none (a note) */
 } fm1_nav FM1_NAV_POOL;
 
 /* arm the layer with the matrix buttons of its rows, 0: off (keys already routed still release). No lock: the
@@ -264,11 +267,12 @@ static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N])
 {
     uint32_t r, i;
     fm1_nav.on = 0;
-    for (r = 0; btn && r < 2u; r++)
+    for (r = 0; btn && r < FM1_NAV_ROWS; r++)
         for (i = 0; i < FM1_NAV_N; i++)
             fm1_nav.row[r][i] = btn[r][i];
     fm1_nav.on = btn != 0;
 }
+static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }   /* (main loop) */
 #define FM1__NOTES fm1_in.keys
 #define FM1__BUTTONS fm1_in.panel
 
@@ -282,7 +286,7 @@ static void fm1__buttons(void)
 
 static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a note */
 {
-    uint32_t bit = 1u << k, m1 = 1u << FM1_NAV_MOD[0], m2 = 1u << FM1_NAV_MOD[1], i;
+    uint32_t bit = 1u << k, m1 = 1u << FM1_NAV_MOD[0], m2 = 1u << FM1_NAV_MOD[1], m3 = 1u << FM1_NAV_MOD[2], i;
     if (!down) {
         if (fm1_nav.held & bit) {
             fm1_nav.held &= ~bit;
@@ -299,17 +303,22 @@ static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a 
     }
     if (!fm1_nav.on)
         return 0;
-    if (bit & (m1 | m2)) {
+    if (bit == m3 && fm1_nav.keep_on) {                  /* a momentary edit: F#5 keeps it */
+        fm1_nav.keep = 1;
+        fm1_nav.mute |= bit;
+        return 1;
+    }
+    if ((bit & (m1 | m2)) || (bit == m3 && !(fm1_nav.mod & (m1 | m2)))) {
         fm1_nav.mod |= bit;
         return 1;
     }
-    if ((fm1_nav.mod & (m1 | m2)) == (m1 | m2)) {
+    if (fm1_nav.mod & (fm1_nav.mod - 1u)) {             /* two modifiers */
         fm1_nav.mute |= bit;
         return 1;
     }
     for (i = 0; fm1_nav.mod && i < FM1_NAV_N; i++)
         if (k == FM1_NAV_KEY[i]) {
-            fm1_nav.to[k] = fm1_nav.row[(fm1_nav.mod & m2) != 0u][i];
+            fm1_nav.to[k] = fm1_nav.row[fm1_nav.mod & m1 ? 0 : fm1_nav.mod & m2 ? 1 : 2][i];
             if (fm1_nav.to[k] >= 14u)
                 return 0;
             fm1_nav.held |= bit;
