@@ -84,6 +84,107 @@ static int test_ble_toasts(void)
 }
 #endif
 
+/* SELECT once round fam's pages from the button: every page fam's, the button lit; back where it started */
+static int walk(uint32_t fam, uint32_t *n_out, const char **first)
+{
+    uint32_t start, n = 0, ok = 1;
+    open_family(fam);
+    start = ui.page;
+    if (first) *first = cur_page()->title;
+    do {
+        ok &= nav_owner(ui.page) == fam && cur_fam() == fam;
+        turn(EN_SELECT, 1);
+        n++;
+    } while (ui.page != start && n < 64u);
+    *n_out = n;
+    return ok && n < 64u;
+}
+static int test_pages_one_home(void)
+{
+    static const uint32_t ENG[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, 3u, ENGI_DRUM};
+    static const char *const NM[] = {"Prophet", "FM6", "CZ-1", "SID", "DRUM"};
+    int bad = 0;
+    char what[96];
+    for (uint32_t e = 0; e < 5u; e++) {
+        uint32_t n, i, ok = 1;
+        const char *first;
+        ui_power_on();
+        set_engine_of(TSEL, ENG[e]);
+        snprintf(what, sizeof what, "%s: ENV + SELECT round: its pages only, ENV lit", NM[e]);
+        bad += check(what, walk(FAM_ENV, &n, &first) && n >= 1u);
+        snprintf(what, sizeof what, "%s: LFO + SELECT round: LFO lit, the track LFO and MOD last", NM[e]);
+        bad += check(what, walk(FAM_LFO, &n, &first) && n >= 4u);
+        go_home();
+        snprintf(what, sizeof what, "%s: EDIT + SELECT round: never an envelope or LFO page, EDIT lit", NM[e]);
+        bad += check(what, walk(FAM_EDIT, &n, &first));
+        for (i = 0; i < NPAGES; i++)                    /* no section holds an envelope / LFO page */
+            if (page_visible(i) && nav_owner(i) != FAM_EDIT && PAGES[i].fam == FAM_EDIT) {
+                ui.page = (uint8_t)i; ui.home = 0;
+                ok &= !sec_on();
+            }
+        snprintf(what, sizeof what, "%s: the engine's envelope / LFO pages are in no section", NM[e]);
+        bad += check(what, ok);
+    }
+    return bad;
+}
+static int test_edit_button(void)
+{
+    int bad = 0;
+    ui_power_on();
+    set_engine_of(TSEL, ENGI_PROPHET);
+    open_family(FAM_LFO);
+    press(B_EDIT);
+    bad += check("Prophet: LFO, then EDIT: an EDIT page, EDIT lit, no map",
+                 nav_owner(ui.page) == FAM_EDIT && cur_fam() == FAM_EDIT && !smap.on);
+    press(B_EDIT);
+    bad += check("..EDIT again: the section map", smap.on);
+    press(B_EDIT);
+    bad += check("..again: closed", !smap.on);
+    open_family(FAM_ENV);
+    head();
+    bad += check("ENV on the Prophet: the header says P5 FLT ENV (no section shortening)", head_has("P5 FLT ENV"));
+    open_family(FAM_LFO);
+    head();
+    bad += check("LFO on the Prophet: P5 LFO", head_has("P5 LFO"));
+    go_title("LFO");
+    head();
+    bad += check("the track LFO: TRACK LFO", head_has("TRACK LFO"));
+    go_title("LFO DEST");
+    head();
+    bad += check("..its destinations: TRACK DEST", head_has("TRACK DEST"));
+    go_title("MOD");
+    head();
+    bad += check("..MOD stays MOD", head_has("MOD"));
+    return bad;
+}
+static int test_cz_envelopes(void)
+{
+    int bad = 0;
+    ui_power_on();
+    set_engine_of(TSEL, ENGI_CZ);
+    open_family(FAM_ENV);
+    bad += check("CZ-1: ENV opens Line 1's pitch envelope", str_eq(cur_page()->title, "C1 PIT R1-4"));
+    turn(EN_SELECT, 1);
+    bad += check("..SELECT: its next page (R5-8), ENV lit", str_eq(cur_page()->title, "C1 PIT R5-8") && cur_fam() == FAM_ENV);
+    turn(EN_PRESET, 1);
+    bad += check("..PRESETS: the next envelope (wave)", str_eq(cur_page()->title, "C1 WAV R1-4"));
+    turn(EN_PRESET, -1);
+    bad += check("..PRESETS back: the pitch envelope's first page", str_eq(cur_page()->title, "C1 PIT R1-4"));
+    turn(EN_SELECT, 1);
+    open_family(FAM_ENV);
+    bad += check("..ENV again from R5-8: the next envelope", str_eq(cur_page()->title, "C1 WAV R1-4"));
+    go_home();
+    set_engine_of(TSEL, ENGI_FM6);
+    open_family(FAM_ENV);
+    {
+        uint32_t op = fm6_opsel;
+        turn(EN_PRESET, 1);
+        bad += check("FM6: PRESETS on EG RATE picks the next operator", fm6_opsel == (op + 1u) % 6u &&
+                     str_eq(cur_page()->title, "EG RATE"));
+    }
+    return bad;
+}
+
 int main(void)
 {
     int bad = 0;
@@ -91,6 +192,9 @@ int main(void)
     bad += test_ble_header();
     bad += test_ble_toasts();
 #endif
+    bad += test_pages_one_home();
+    bad += test_edit_button();
+    bad += test_cz_envelopes();
     printf(bad ? "nav: %d FAILED\n" : "nav: all ok\n", bad);
     return bad != 0;
 }
