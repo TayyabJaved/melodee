@@ -15,7 +15,7 @@
 #pragma GCC diagnostic pop
 
 /* ------------------------------------------------------- the devices --- */
-enum { KBD, HUB, STICK, NDEV };
+enum { KBD, HUB, STICK, HUB2, HUB3, NDEV };
 typedef struct {
     uint8_t addr, cfg, alt, present, in_default;
     uint8_t cls, mps0;
@@ -72,6 +72,8 @@ static void devices_init(void)
     dev[KBD] = (dev_t_){.present = 1, .cls = 0, .mps0 = 64, .cfgd = kbd_cfg, .cfglen = kbd_cfg_len};
     dev[HUB] = (dev_t_){.present = 1, .cls = 9, .mps0 = 64, .cfgd = hub_cfg, .cfglen = 25, .ports = 4};
     dev[STICK] = (dev_t_){.present = 1, .cls = 0, .mps0 = 8, .cfgd = stick_cfg, .cfglen = 32};
+    dev[HUB2] = (dev_t_){.present = 1, .cls = 9, .mps0 = 64, .cfgd = hub_cfg, .cfglen = 25, .ports = 4};
+    dev[HUB3] = (dev_t_){.present = 1, .cls = 9, .mps0 = 64, .cfgd = hub_cfg, .cfglen = 25, .ports = 4};
     root = -1;
     dflt = 0;
 }
@@ -606,7 +608,7 @@ static void test_failed_probe(void)
     host_on(); assert(!enumerate()); uh.msg = 0;
     ep0_timeout = 1;                                  /* configured hub stops answering without line drop */
     for (int k = 0; k < 30; k++) { fm1_ms += 20; uh_task(fm1_ms); }
-    assert(!uh.hub_addr && root_resets == 1);
+    assert(!uh.hub[0].addr && root_resets == 1);
     requests = setup_requests;
     idle_hub(600);
     assert(setup_requests == requests);
@@ -840,6 +842,75 @@ static void test_audio_midi_device(void)
     printf("USB host: audio+MIDI device, %u-byte configuration walked as it arrives: OK\n", n);
 }
 
+/* Two hub chips in one case: the second on the first's last port, the keyboard on the second. */
+static void cascade(void)
+{
+    connect(HUB);                                       /* port 1: the stick */
+    dev[HUB].port_dev[3] = 0;
+    dev[HUB].port_dev[4] = HUB2 + 1;
+    dev[HUB2].port_dev[2] = KBD + 1;
+}
+
+static void test_cascaded_hub(void)
+{
+    cascade();
+    host_on();
+    assert(enumerate() && uh.msg == UH_MSG_MIDI);
+    uh.msg = 0;
+    assert(dev[HUB].addr == 1 && dev[STICK].addr == 2 && dev[HUB2].addr == 5 && dev[KBD].addr == 10);
+    assert(uh.dev == 10 && common[0] == 10 && dev[HUB2].cfg == 1 && dev[KBD].cfg == 1);
+    assert(uh.hub[0].addr == 1 && uh.hub[1].addr == 5 && uh.hub[1].port == 4 && uh.hub[1].ports == 4);
+    push_packet(0x643C9009u);
+    poll_n(4);
+    assert(mi_w - mi_r == 1 && midi_in_q[mi_r % MQ] == 0x643C9009u);
+    mi_r = mi_w;
+
+    /* The keyboard goes from the second hub: lost, the tree is walked again, then the idle poll of the second
+     * hub's ports finds it on replug without another bus reset. */
+    assert(midi_track_emit(0x643c9009u)); usb_poll();
+    dev[HUB2].port_dev[2] = 0;
+    dev[HUB2].port_en[2] = 0;
+    dev[KBD].present = 0;
+    for (uint32_t k = 0; k < UH_MAX_ERRORS; k++) { regs[1][17] = 4; usb_poll(); }
+    assert(uh.fault);
+    uh_task(fm1_ms); assert(uh.msg == UH_MSG_LOST); uh.msg = 0;
+    assert(!enumerate() && uh.msg == UH_MSG_NOMIDI && root_resets == 2);
+    uh.msg = 0;
+    assert(uh.hub[1].addr == 5 && dev[HUB2].addr == 5);
+    for (int k = 0; k < 100; k++) { fm1_ms += 20; uh_task(fm1_ms); assert(!uh.msg); }
+    dev[KBD].present = 1;
+    dev[HUB2].port_dev[2] = KBD + 1;
+    dev[HUB2].port_chg[2] |= 1;
+    assert(enumerate() && uh.msg == UH_MSG_MIDI && root_resets == 2 && dev[KBD].addr == 10);
+    uh.msg = 0;
+    uh.want = 0; uh_task(fm1_ms); uh.msg = 0;
+
+    /* The second hub unplugged from the first while idle: its state goes, nothing is probed there. */
+    cascade();
+    dev[HUB2].port_dev[2] = 0;
+    host_on();
+    assert(!enumerate() && uh.hub[1].addr == 5);
+    uh.msg = 0;
+    dev[HUB].port_dev[4] = 0;
+    dev[HUB].port_en[4] = 0;
+    dev[HUB].port_chg[4] |= 1;
+    dev[HUB2].present = 0;
+    for (int k = 0; k < 100; k++) { fm1_ms += 20; uh_task(fm1_ms); }
+    assert(!uh.hub[1].addr && uh.hub[0].addr == 1 && !dev[HUB].port_chg[4] && root_resets == 1 && !uh.msg);
+    uh.want = 0; uh_task(fm1_ms); uh.msg = 0;
+
+    /* A hub on the second hub is one level too many: passed over, never configured. */
+    cascade();
+    dev[HUB2].port_dev[2] = 0;
+    dev[HUB2].port_dev[1] = HUB3 + 1;
+    dev[HUB3].port_dev[1] = KBD + 1;
+    host_on();
+    assert(!enumerate() && uh.msg == UH_MSG_NOMIDI);
+    assert(dev[HUB3].addr == 9 && !dev[HUB3].cfg && !dev[KBD].seen_probe);
+    uh.want = 0; uh_task(fm1_ms); uh.msg = 0;
+    puts("USB host: a hub on a hub's port (two chips in one case): addresses, events, replug, unplug, depth limit: OK");
+}
+
 static void test_device_mode_untouched(void)
 {
     /* with the host off, usb_poll is the device driver and uh_task does nothing */
@@ -870,6 +941,7 @@ int main(void)
     test_host_output(1);
     test_endpoint_selection();
     test_audio_midi_device();
+    test_cascaded_hub();
     puts("USB host: all OK");
     return 0;
 }
