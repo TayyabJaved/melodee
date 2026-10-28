@@ -51,7 +51,8 @@
 # INPUT (tests/input_test.c): the key / button debounce of hal/fm1_input.h against the TIMER5 scan and bouncing
 #                   contacts: a press within 2 scans (<= 2.3 ms), one note per bouncy press, no early or hanging
 #                   release, stray samples ignored, fast repeats, the encoders' detents. tests/key_nav_test.c: the
-#                   MELODEE_KEY_NAV layer (F5 / G5 + six black keys press the panel buttons, never a note).
+#                   MELODEE_KEY_NAV layer (F5 / G5 + six black keys press the panel buttons, never a note), built in
+#                   by default: every test compiles with it unless MELODEE_KEY_NAV=0.
 # USB audio (tests/usb_audio_*): the descriptors of every build (MIDI only, CDC, USB audio) as a host parses them
 #                   (usb_audio_desc_test.py); the rings against clock drift, packet bounds and recovery
 #                   (usb_audio_test.c); the endpoint driver against a model SIE: SET_INTERFACE, feedback, capture
@@ -88,7 +89,8 @@ PY="${PYTHON:-python3}"                           # (as build.sh: the Python wit
 [ "$(uname -s)" = Darwin ] && export DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-/opt/homebrew/lib:/usr/local/lib:/usr/lib}"
 OUT=build/host
 LOG=$OUT/log
-CC="${CC:-cc} -O1 -ffp-contract=off -Wall -Wno-unused-function"
+# the firmware's default: M1 / M2 / M3 built in (melodee.c); MELODEE_KEY_NAV=0 tests/run_tests.sh tests without it
+CC="${CC:-cc} -O1 -ffp-contract=off -Wall -Wno-unused-function -DMELODEE_KEY_NAV=${MELODEE_KEY_NAV:-1}"
 FW="-w -Ibuild/gen -Ifirmware/src"
 P5=build/prophet5/Prophet-5+10-Factory-Programs-ReadMe1.03
 SOUND=${SOUND:-1}
@@ -355,7 +357,7 @@ if core && [ $TABLES = 1 ]; then
     t "scale picker: families, favorites, empty lists, shared settings and navigation" scale_picker_test -O1 $FW
     t "chord keys: diatonic and fixed chords, voicings, MONO root, releases, recording, ARP, MIDI IN, kits" chord_test $FW
     t "SHAPE arp: the rhythm (ON steps play the next note, OFF rest), keys and pages, wide/narrow records" arp_shape_seq_test -O1 -DMELODEE_USB_AUDIO=1 $FW
-    t "SHAPE arp (the -nav build): M3 held, the white keys edit the steps" nav_shape:arp_shape_seq_test -O1 -DMELODEE_USB_AUDIO=1 -DMELODEE_KEY_NAV=1 $FW
+    t "SHAPE arp (M1/M2/M3 built in): M3 held, the white keys edit the steps" nav_shape:arp_shape_seq_test -O1 -DMELODEE_USB_AUDIO=1 -DMELODEE_KEY_NAV=1 $FW
     t "SHAPE arp through the FLASH path: SHP1 streamed, new song defaults, reload" arp_shape_stream_test -O1 $FW
     t "generators (gen.c from Tessera): seeds replay, TURING lock, EUCLID hits, MARKOV range, the Grids map" gen_test
     t "Pattern sheet: Euclid and its turn, Double, Half, their limits and undo" seq_tools_test -O1 $FW

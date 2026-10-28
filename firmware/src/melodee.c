@@ -42,13 +42,14 @@
 #define MELODEE_ID "FM-1_900"    /* package identity (build.py: the .fwsc marker string) */
 #endif
 #ifndef MELODEE_KEY_NAV
-#define MELODEE_KEY_NAV 0        /* F5 / G5 / F#5 held: black keys press the panel buttons (hal/fm1_input.h) */
+#define MELODEE_KEY_NAV 1        /* F5 / G5 / F#5 held: black keys press the panel buttons (hal/fm1_input.h); built in
+                                  * (one package, build/melodee.fwsc); 0: upstream's keyboard, version "-nonav" */
 #endif
 #ifndef MELODEE_VERSION
 #if MELODEE_KEY_NAV
-#define MELODEE_VERSION "v1.6.0-rc.6-nav"
-#else
 #define MELODEE_VERSION "v1.6.0-rc.6" /* shown in the menu, the console and the editor; build.py --release X.Y[.Z] */
+#else
+#define MELODEE_VERSION "v1.6.0-rc.6-nonav"
 #endif
 #endif
 #if MELODEE_OTA && !MELODEE_FLASH

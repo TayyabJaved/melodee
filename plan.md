@@ -48,7 +48,8 @@ In this order.
 
 ### 2.1 Device pass
 
-On the nav build (`build/melodee-nav.fwsc`, `v1.6.0-rc.4-nav`). Recovery steps: DEV.md "Installing on the FM-1".
+On `build/melodee.fwsc`, the one build (M1/M2/M3 built in since 2026-10-28; before, the separate `-nav` package).
+Recovery steps: DEV.md "Installing on the FM-1".
 
 - [ ] M1/M2 rows, OCT- / OCT+; calibration (OCT- + OCT+ at power-on) still works
 - [ ] Humanize LOW / HIGH on keys, chords and MIDI IN
@@ -102,8 +103,8 @@ arena is 1.1 KB smaller than upstream's (it was 7.6 KB before steps 1 and 2). Th
 
 ### 3.2 Flash per feature
 
-Flash is the limit for new features: **6.3 KB** is left in the app slot (6.0 KB in the nav build), shared with
-upstream's growth.
+Flash is the limit for new features: **21.2 KB** is left in the app slot (2026-10-28, the one build with M1/M2/M3 and
+the song sections), shared with upstream's growth.
 
 | Feature | Flash |
 | --- | ---: |
@@ -186,5 +187,5 @@ are copied byte-identical; new generators come from there.
 
 ### Releases
 
-Our builds carry our own identity (`v1.6.0-rc.4` / `-nav`), never upstream's. Release packages come only from the
+Our build carries our own identity (`v1.6.0-rc.5`; `-nonav` for the comparison build without M1/M2/M3), never upstream's. Release packages come only from the
 attested workflow (AGENTS.md "Releases").

@@ -724,7 +724,7 @@ section page: KNOB k sets track k's pattern there, SELECT its length (AUTO: the 
 A section plays for its length: shorter patterns loop, longer ones are cut, every track restarts at each column.
 **REC** launches the picked section live: every track switches together on the next bar, then at the end of the
 launched section. PLAY runs the arrangement and the final column stops. STOP returns to the patterns selected
-before SONG. Project saves and complete backups include every bank and the arrangement: FBKP, its song block and the
+before SONG. **Step by step, with pictures:** [docs/song-guide](docs/song-guide/README.md). Project saves and complete backups include every bank and the arrangement: FBKP, its song block and the
 sections' SEC1 block (older firmware refuses a record with SEC1; older records load, their rows made into sections). If a song is too dense to fit, **PROJECT FULL** refuses the save and preserves the previous saved copy. All
 banks can be filled in working memory; a fully dense eight-track song exceeds a saved project’s capacity.
 
@@ -1297,7 +1297,7 @@ them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)
   pitch, length and sound are on **DRUM HIT**. For precise timing edits of recorded hits, hold OCT+ for the pattern
   sheet and set **Drum view** to **Notes** (the piano roll; programmed hits do not show there), back to **Grid** the
   same way. It starts as Grid at power-on.
-- **Keyboard shortcuts (the `-nav` build):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
+- **Keyboard shortcuts (built in):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
   ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+. While M3 is
   held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). While one is held, its keys and
   the buttons they press light up. Momentary edits:
@@ -1321,7 +1321,7 @@ them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)
   next note of the chord you hold, an OFF step is a rest (the next ON step carries on with the next note). On ARP 2,
   STEPS (1–64, 16 at first) and DIR (UP, DN, UPDN, RND) take the places of PROB and ORD; OCT, RATE, GATE, SWING and
   HOLD are the arp's. It starts with every step ON, so it plays as UP until you add rests. On the ARP page the keys
-  play as always; hold **M3** (F#5, the `-nav` build) or **OCT−** and the 16 white keys are steps 1–16 of the page
+  play as always; hold **M3** (F#5) or **OCT−** and the 16 white keys are steps 1–16 of the page
   shown (PRESETS turns the page): tap one to turn it on or off, the ON steps light up. The screen shows the steps and
   the one playing. The other modes are unchanged, and switching keeps both settings. A song with its own shape saves
   it; such a song needs this firmware to load.

@@ -7,7 +7,7 @@ Branch: tj/1.6.0-rc.5
 
 ARP > MODE SHAPE, as the user redefined it on 2026-10-27: not WaveLoop's 8-row SHAYPE any more, but a rhythm for the
 arp. Each step (STEPS 1..64) is ON or OFF; an ON step plays the next held note in DIR's order (UP DN UPDN RND), an OFF
-step rests and does not use up a note. The keyboard always plays; holding M3 (F#5, -nav build) or OCT- on the ARP page
+step rests and does not use up a note. The keyboard always plays; holding M3 (F#5) or OCT- on the ARP page
 turns the 16 white keys into steps 1..16 of the page PRESETS shows (tap toggles, ON steps light). The old modes stay.
 
 ## Current State
@@ -18,19 +18,20 @@ turns the 16 white keys into steps 1..16 of the page PRESETS shows (tap toggles,
   from our rc.4 build still load with their shapes, the dense FBKK fallback loads defaults.
 - Tests: full host suite passes, standard and `CC="cc -DMELODEE_KEY_NAV=1"`.
 - Sizes: image 551,792 B (nav 552,392 B), 25.4 KB under 577,248; bank 96,856 B (1.4 KB left); pool +1,100 B over
-  upstream; audio arena 97,568 B. build/melodee-nav.fwsc is current (v1.6.0-rc.5-nav).
+  upstream; audio arena 97,568 B. (Since 2026-10-28 there is one package, build/melodee.fwsc, with M1/M2/M3 built
+  in; current sizes: DEV.md "Memory".)
 
 ## What's Left
 
-1. Hardware pass (build/melodee-nav.fwsc): SHAPE plays as UP at first; hold M3, tap white keys, the lights; rests;
+1. Hardware pass (build/melodee.fwsc): SHAPE plays as UP at first; hold M3, tap white keys, the lights; rests;
    DIR; STEPS > 16 with PRESETS pages; the keyboard plays normally without M3; OCT- in the standard build; save/load.
 2. Push `tj/1.6.0-rc.5` (ask first).
 
 ## Context
 
 - Project: melodee, custom FM-1 (AC790x) firmware, /Users/tjaved/personal/melodee, branch tj/1.6.0-rc.5.
-- Build: ./build.sh; nav: MELODEE_KEY_NAV=1 ./build.sh, then cp build/melodee.fwsc build/melodee-nav.fwsc (the flashed
-  one). Host suite: tests/run_tests.sh, and CC="cc -DMELODEE_KEY_NAV=1" tests/run_tests.sh after a nav build.
+- Build: ./build.sh, one package with M1/M2/M3 built in (build/melodee.fwsc, the flashed one). Host suite:
+  tests/run_tests.sh (compiles with M1/M2/M3 too).
 - Attribution (AGENTS.md): new code is Kerem Kilic (Ellic Studio); arp_shape.c no longer holds Felucca code.
 
 ## Key Files

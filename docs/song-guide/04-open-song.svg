@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 488" width="940" height="488" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif">
+<rect x="0" y="0" width="940" height="488" rx="0" fill="#0E0C13"/>
+<defs><clipPath id="scr"><rect width="240" height="240" rx="6"/></clipPath></defs>
+<text x="28" y="36" font-size="12" fill="#7FE0FF" text-anchor="start" font-weight="700">STEP 4 OF 20  ·  SONG</text>
+<text x="28" y="68" font-size="26" fill="#F3EEF8" text-anchor="start" font-weight="700">Go to SONG</text>
+<g transform="translate(28 92) scale(1.5)"><g clip-path="url(#scr)"><rect x="0" y="0" width="240" height="240" rx="0" fill="#17141F"/><text x="8" y="19" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="500"></text><text x="232" y="19" font-size="12" fill="#F5A623" text-anchor="end" font-weight="600">SONG</text><rect x="9" y="31" width="54" height="34" rx="6" fill="none" stroke="#F5A623" stroke-width="1.2" stroke-dasharray="3 2"/><text x="36" y="54" font-size="18" fill="#F5A623" text-anchor="middle" font-weight="500">+</text><rect x="64" y="68" width="1" height="128" rx="0" fill="#2E2939"/><rect x="120" y="68" width="1" height="128" rx="0" fill="#2E2939"/><rect x="176" y="68" width="1" height="128" rx="0" fill="#2E2939"/><text x="8" y="216" font-size="10" fill="#9A93A8" text-anchor="start" font-weight="500">OCT+ adds what plays now</text><rect x="8" y="228" width="224" height="6" rx="3" fill="#221E2C"/></g><rect width="240" height="240" rx="6" fill="none" stroke="#3A3446"/></g>
+<rect x="39.5" y="136.5" width="85" height="55" rx="7" fill="none" stroke="#7FE0FF" stroke-width="2.2"/><circle cx="39.5" cy="136.5" r="11" fill="#7FE0FF"/><text x="39.5" y="141" font-size="12" fill="#17141F" text-anchor="middle" font-weight="700">1</text>
+<rect x="38" y="393" width="340" height="34" rx="7" fill="none" stroke="#7FE0FF" stroke-width="2.2"/><circle cx="38" cy="393" r="11" fill="#7FE0FF"/><text x="38" y="397.5" font-size="12" fill="#17141F" text-anchor="middle" font-weight="700">2</text>
+<text x="432" y="106" font-size="12" fill="#9A93A8" text-anchor="start" font-weight="700">DO THIS</text>
+<circle cx="442" cy="129" r="11" fill="#7FE0FF"/><text x="442" y="133.5" font-size="12" fill="#17141F" text-anchor="middle" font-weight="700">1</text>
+<text x="462" y="134" font-size="14" fill="#F3EEF8" xml:space="preserve">On PATTERNS, turn <tspan fill="#FFD27A" font-weight="700">SELECT</tspan> one page on: SONG.</text>
+<circle cx="442" cy="158" r="11" fill="#7FE0FF"/><text x="442" y="162.5" font-size="12" fill="#17141F" text-anchor="middle" font-weight="700">2</text>
+<text x="462" y="163" font-size="14" fill="#F3EEF8" xml:space="preserve">A new song is empty: one + card, "OCT+ adds</text><text x="462" y="186" font-size="14" fill="#F3EEF8" xml:space="preserve">what plays now".</text>
+<text x="432" y="223" font-size="12" fill="#9A93A8" text-anchor="start" font-weight="700">YOU SEE</text>
+<text x="432" y="247" font-size="13" fill="#C9C2D6" xml:space="preserve">SONG in the top right. Columns will appear left to right as</text><text x="432" y="269" font-size="13" fill="#C9C2D6" xml:space="preserve">you add sections.</text>
+<rect x="432" y="297" width="484" height="69" rx="8" fill="#1C1826" stroke="#2E2939" stroke-width="1"/><rect x="432" y="297" width="4" height="69" rx="2" fill="#F5A623"/>
+<text x="446" y="297" font-size="1" fill="#F3EEF8" text-anchor="start" font-weight="400"></text>
+<text x="446" y="321" font-size="12.5" fill="#C9C2D6" xml:space="preserve">A section is one part of the song: the pattern (or a rest)</text><text x="446" y="342.5" font-size="12.5" fill="#C9C2D6" xml:space="preserve">each track plays, and how long.</text>
+</svg>

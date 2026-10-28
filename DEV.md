@@ -209,26 +209,27 @@ Build options are environment variables such as `MELODEE_USB_HOST=0 ./build.sh`;
 
 ### M1/M2 key navigation (our mod)
 
-`MELODEE_KEY_NAV=1 ./build.sh` builds the keyboard navigation layer (version
-`v1.6.0-rc.5-nav`): M1 (F5), M2 (G5) and M3 (F#5, alone) with the black keys press panel buttons, and F#5 keeps a
+The keyboard navigation layer is built in: `./build.sh` makes **one package, `build/melodee.fwsc`**, with it and every
+other change of ours (`MELODEE_KEY_NAV` defaults to 1 in `firmware/src/melodee.c`; `MELODEE_KEY_NAV=0 ./build.sh` builds
+upstream's keyboard, version `-nonav`, for comparisons only). M1 (F5), M2 (G5) and M3 (F#5, alone) with the black keys
+press panel buttons, and F#5 keeps a
 momentary edit. While M3 is held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). Key mapping: [BUILDING.md → Build options](BUILDING.md#build-options); the code is in
 `firmware/hal/fm1_input.h` (`FM1_NAV_*`, three rows), the rows in `panel.c` `panel_nav()`, the keep in
 `ui_nav.c` `nav_keep()`. The host stand-ins for the HAL are in `tests/hostsim.c` and `tests/settings_test.c`.
 
-Save that package under its own name so `build/melodee.fwsc` stays the standard build, then
-install it:
+Build and install it as any change (until 2026-10-28 it was a separate `-nav` package, `build/melodee-nav.fwsc`; there is
+no second package now):
 
 ```sh
-MELODEE_KEY_NAV=1 ./build.sh && cp build/melodee.fwsc build/melodee-nav.fwsc
-tools/flash.sh build/melodee-nav.fwsc
+./build.sh && tools/flash.sh --no-build
 ```
 
 `flash.sh` with a package path installs that file without rebuilding. It works from
 Melodee, the official V15 or TransitFM1 (which answers as `FM-1_015`). Run
 `tools/flash.sh --info` first to check that the FM-1 is detected.
-`tests/key_nav_test.c` covers it on the host. To compile the rest of the host suite with
-the flag as well, run `CC="cc -DMELODEE_KEY_NAV=1" tests/run_tests.sh` after a flag-on
-build. Without the flag, the M1/M2 code is compiled out entirely.
+`tests/key_nav_test.c` covers it on the host, and `tests/run_tests.sh` compiles every test with it, as the firmware
+is built (`MELODEE_KEY_NAV=0 tests/run_tests.sh` after a `MELODEE_KEY_NAV=0` build tests without it). With the flag 0
+the M1/M2 code is compiled out entirely.
 
 ### Humanize velocity (our mod)
 
@@ -298,6 +299,8 @@ clock, a jam log taken with REC held). Ours is columns of **sections** A–Z (mo
   with it, `song_sections_normalize(1)` keeps the letters if they still describe the columns. `song_note` tells the
   UI (`ui_notices`) when held blocks restarted or the song was cut at 26 sections. The editor's BANK_SONG and SONG
   sets are converted the same way (`editor.c`).
+- **Guide:** [docs/song-guide](docs/song-guide/README.md), twenty step pictures and their page, written by
+  `tools/gen_song_guide.py` (drawings, not renders: change its steps with the controls; `--check` lists stale files).
 - **Tests:** `song_mode_test.c` (rewritten: lengths, rests, columns, adding, persistence, older songs),
   `song_preset_test.c`, `song_punch_test.c`, `ui_test.c` (live launch, the section page, SONG keys),
   `ui_render.c` (the scenes converted; `song_section` shows the section page), `editor_test.c`,
@@ -328,17 +331,17 @@ the link and prints the results as `ok` lines; any failure stops the build.
 ### Limits
 
 Measured on the standard build of `tj/1.6.0-rc.5` (1.6.0-rc.5 plus our stack with the song sections, 2026-10-28).
-The nav build is within a few hundred bytes of it.
+This is the one package, M1/M2/M3 included.
 The flash limit is not the 581,564 B app slot: the image must end before the commit-marker sector
 (`tools/fm1pkg_make.py` `BODY_MAX` 0x8C000 after the 3,808 B stub), 577,248 B in all. Earlier versions of this file
 measured against the slot and overstated the room by about 4.3 KB.
 
 | Region | Size | Used | Left | What lives there | When it is exceeded |
 | --- | ---: | ---: | ---: | --- | --- |
-| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 555,476 B | 21,772 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
+| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 556,068 B | 21,180 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
 | Low SRAM (`RAMTEXT`) | 32,512 B | 30,728 B | 1,784 B (to the arena) | code that runs while flash is busy, DSP kernels and tables | link fails |
-| **Bank** (`.data` + `.bss`) | 98,304 B | 96,776 B | **1,528 B** (to the arena) | ordinary globals | link fails: "region `RAM' overflowed" |
-| **Pool** region | 357,888 B | `.pool` 133,968 B, resident audio code, CPU1 stacks 4,096 B | arena 96,608 B | `.pool` buffers, audio code, then the audio working arena | build fails if the arena drops under 49,152 B or the pool's headroom under 8,192 B |
+| **Bank** (`.data` + `.bss`) | 98,304 B | 96,792 B | **1,512 B** (to the arena) | ordinary globals | link fails: "region `RAM' overflowed" |
+| **Pool** region | 357,888 B | `.pool` 134,032 B, resident audio code, CPU1 stacks 4,096 B | arena 96,320 B | `.pool` buffers, audio code, then the audio working arena | build fails if the arena drops under 49,152 B or the pool's headroom under 8,192 B |
 | Foreground stack | 12,288 B | 9,608 B deepest path + 2,048 B required margin | **632 B** | the main loop (UI, storage) | build's stack audit fails |
 | Interrupt stack | 6,144 B | 4,500 B (audio 2,972 + BLE 716 + timer 220 + fault 464 + 128) | 1,644 B | interrupts, nested | build's stack audit fails |
 | CPU1 stack | 3,072 B | 1,828 B + 768 B guard and margin | 476 B | the second core's renderer | build's stack audit fails |
@@ -412,7 +415,7 @@ since; re-measure before relying on a number.
 | `mb` | 1,720 | BLE MIDI | `midi_ble.c` |
 | `undo_sram` | 1,612 | undo levels | `ui.c` |
 
-**Ours:** `gn` (generators) 736 B and `fm1_nav` (M1/M2, nav builds only) 60 B, both in the pool; the song sections
+**Ours:** `gn` (generators) 736 B and `fm1_nav` (M1/M2) 60 B, both in the pool; the song sections
 grow `chain` and `chain_config` by 192 B each (a letter and a length per column) and `live` (12 B) is new, while
 upstream's `jam` (577 B) is gone. See the budget below.
 
@@ -426,14 +429,15 @@ nm -S -n build/melodee.elf | awk '$1>="01c20000" && $1<"01c77600" && $3 ~ /^[bBd
 
 ### Our footprint and budget
 
-What our stack adds on top of plain upstream (standard build; nav in brackets; 2026-10-28, with the song sections):
+What our stack adds on top of plain upstream (our one build, M1/M2/M3 included; without them, `MELODEE_KEY_NAV=0`,
+in brackets; 2026-10-28, with the song sections):
 
 | | Upstream 1.6.0-rc.5 | With our stack | Ours | Our budget |
 | --- | ---: | ---: | ---: | ---: |
-| Flash image | 543,112 B | 555,476 B | +12,364 B (+12,952 B) | 20,000 B |
-| Bank | 96,824 B | 96,776 B | −48 B (−32 B) | 64 B |
-| Pool (`.pool`) | 132,868 B | 133,968 B | +1,100 B (+1,164 B) | 4,096 B |
-| Audio arena | 92,448 B | 96,608 B | +4,160 B (+3,872 B) | |
+| Flash image | 543,112 B | 556,068 B | +12,956 B (+12,364 B) | 20,000 B |
+| Bank | 96,824 B | 96,792 B | −32 B (−48 B) | 64 B |
+| Pool (`.pool`) | 132,868 B | 134,032 B | +1,164 B (+1,100 B) | 4,096 B |
+| Audio arena | 92,448 B | 96,320 B | +3,872 B (+4,160 B) | |
 
 The SID and TRIO removal gives back about 16 KB of upstream's flash and its resident audio code (hence the larger
 arena); our features (generators, the chord sequencer, the pattern tools, SHAPE, the UI changes, M1/M2/M3) take about
@@ -445,7 +449,7 @@ The BLE fix is one line since upstream merged PR #90 in rc.5.
   removing upstream's jam log more than pays for them.
 - **Audio arena:** the song sections take 960 B of it: the section clock, live launch and section lengths run in the
   audio interrupt (`chain_tick`, `live_tick`, `chain_row_samples_of`), so they are resident audio code.
-- **Flash** limits new features: 21.8 KB is left (21.2 KB in the nav build) for upstream's growth and ours together.
+- **Flash** limits new features: 21.2 KB is left for upstream's growth and ours together.
   Prefer `static const` tables, short strings and small pictures (`pv_gen` alone is 1.8 KB), and reuse upstream
   helpers instead of copying them.
 - Before this setup, the generators were inlined into the sequencer tick: 6.9 KB of resident audio code, and `gn` in
@@ -600,13 +604,12 @@ git rebase --onto v1.6.0 v1.6.0-rc.5  # replay our commits onto the new release
 # for each conflict: edit the file, git add <file>, git rebase --continue
 # give up and start again: git rebase --abort
 
-./build.sh && tests/run_tests.sh
-MELODEE_KEY_NAV=1 ./build.sh && CC="cc -DMELODEE_KEY_NAV=1" tests/run_tests.sh
+./build.sh && tests/run_tests.sh            # one build, M1/M2/M3 included
 git push -u origin tj/1.6.0
 ```
 
 Then update `MELODEE_VERSION` in `firmware/src/melodee.c` to the new base (for example
-`v1.6.0` / `v1.6.0-nav`), build `build/melodee-nav.fwsc`, and test on the device.
+`v1.6.0`, and `v1.6.0-nonav` for the comparison build), build `build/melodee.fwsc`, and test on the device.
 
 To tidy the stack (squash a fix into its feature commit, reorder, reword):
 `git rebase -i <upstream tag>` on a branch nobody builds from yet.
@@ -667,7 +670,8 @@ onto 1.6.0-rc.4, with no conflict shown:
   - `draw_head()` in `ui_draw.c`: our page position is drawn right after the REC mark (`nav_head_pos`), the old
     page dots are not called (`head_pages` unused); a new item upstream adds to the header may need room from it
   - the momentary keep (`OCT+` in `ui_input.c`, `momentary` in `ui.c`): `nav_keep()` sits next to it
-  - `tests/nav_test.c` and `tests/key_nav_test.c` catch most of these: run both builds' suites
+  - `tests/nav_test.c` and `tests/key_nav_test.c` catch most of these (the suite builds with M1/M2/M3, as the
+    firmware does; `MELODEE_KEY_NAV=0 tests/run_tests.sh` also checks upstream's keyboard)
 
 Our host tests catch most of these; the RAM, flash and record checks fail the build itself.
 Still do a device pass for each new base. Upstream changes can affect timing, audio and
