@@ -16,7 +16,9 @@
  * PLAY and REC work in every layer (GLO + PLAY: RESTART); SAVE, HOME, SEQ and the other page buttons are swallowed. In SET
  * layers OCT± do not shift the octave: OCT- (on release, not with OCT+) puts back what the layer changed since it
  * opened. A HOLD key's effect lasts until the key is let go, the map with it. No layer in the menu, a dialog,
- * NAME or the UPDATE MODE countdown. A tap opens the button's page without a shortcut hint. */
+ * NAME or the UPDATE MODE countdown. A tap opens the button's page without a shortcut hint.
+ * GLO's tap (this fork, 2026-10-28): its main page is the layer itself, open until a button leaves it (no double tap);
+ * a tap there goes on to the mixer, then GLOBAL .. WEIGHTS 2, and after the last back to the main page (glo_main). */
 enum { LK_HOLD, LK_SET };
 typedef struct {
     uint8_t btn, kind, fam;            /* the button, HOLD / SET, the family whose first page KNOB 1..4 edit */
@@ -40,7 +42,7 @@ static struct {
     int16_t v[9];                      /* the values when it opened: GLO mutes, levels, BPM; SCL ROOT..TRN, CHRD VOIC */
     uint32_t solo;                     /* GLO: the keys held that solo */
     uint32_t tap[4];                   /* GLO TAP: the last taps (fm1_ms) */
-    uint8_t ntap, dt_l, dtap, rp_dirty;
+    uint8_t ntap, dt_l, dtap, rp_dirty, unlocked;      /* unlocked: the layer its button's press just closed */
     uint32_t dt_ms;
     struct { uint8_t home, page, act, seq, fam[FAM_COUNT]; } nv;
 } lys;
@@ -64,7 +66,7 @@ static uint32_t layer_bits(void)
 static uint32_t layer_btn(void) { return LAYERS[ui.layer % LAYER_N].btn; }
 static const char *layer_head(void)
 {
-    static const char *const locked[LAYER_N] = {"", "[FX] LOCK", "[GLO] LOCK", "[SCL] LOCK"};
+    static const char *const locked[LAYER_N] = {"", "[FX] LOCK", "[GLO] SET", "[SCL] LOCK"};   /* (GLO's: its main page) */
     if (ui.layer == LAYER_FX && punch_memory_failed)    /* (a key that needs the history pressed without it) */
         return "[FX] MEMORY";
     return ui.lock ? locked[ui.layer % LAYER_N] : LAYERS[ui.layer % LAYER_N].head;
@@ -98,7 +100,7 @@ static void layer_arm(uint32_t pressed, uint32_t now)
         return;
     for (l = LAYER_FX; l < LAYER_N; l++)
         if (pressed & ly_bit(l) & layer_bits()) {
-            lys.dtap=l!=LAYER_SCL && lys.dt_l==l && fm1_ms-lys.dt_ms<=LY_DTAP_MS;
+            lys.dtap=l!=LAYER_SCL && l!=LAYER_GLO && lys.dt_l==l && fm1_ms-lys.dt_ms<=LY_DTAP_MS;   /* (GLO: its tap locks) */
             lys.dt_l=0;
             ui.ly = (uint8_t)l;
             ui.ly_t0 = (now & ~15u) | 1u | (layer_allowed() ? 0u : LY_DEAD);
@@ -132,17 +134,45 @@ static void layer_let_go(uint32_t quiet)
     if (lys.rp_dirty) { lys.rp_dirty=0; settings_save(); }
     ui.ly_t0=0; ui.ly=0; ui.lock=0; kb_lock=0;
 }
-static void layer_lock_input(uint32_t pressed)
+static void layer_lock_input(uint32_t pressed, uint32_t now)
 {
     uint32_t keep = 1u << panel.btn[B_PLAY] | 1u << panel.btn[B_REC] | 1u << panel.btn[B_OCTDN] | 1u << panel.btn[B_OCTUP];
     if (lys.dt_l && (pressed & ~ly_bit(lys.dt_l)))
         lys.dt_l = 0;
     if (!ui.lock)
         return;
-    if (pressed & ly_bit(ui.lock))
+    if (pressed & ly_bit(ui.lock)) {
+        if (ui.lock == LAYER_GLO) {                     /* (GLO's main page: this press is a fresh tap, on to the mixer) */
+            lys.unlocked = LAYER_GLO;
+            ui.ly_t0 = (now & ~15u) | 1u;
+        }
         ui.lock = 0;
-    else if (pressed & ~keep)
+    } else if (pressed & ~keep)
         layer_let_go(1);
+}
+static void glo_open(uint32_t now)                      /* GLO's main page: the layer, locked open */
+{
+    ui.entry_open = 0; ui.msg_t = 0; ui.lock = LAYER_GLO; ui.ly = LAYER_GLO;
+    ui.ly_t0 = (now & ~15u) | 1u | LY_OPEN; ui.force = 1; layer_opened(LAYER_GLO);
+}
+
+/* GLO tapped -> 1: its main page, the layer locked open (from any page but the mixer and the global pages before their
+ * last); 2: from the main page, the mixer; 0: on through the pages (page_tap) */
+static int glo_main(uint32_t now)
+{
+    uint32_t i;
+    if (lys.unlocked == LAYER_GLO) {
+        lys.unlocked = 0;
+        ui.page = (uint8_t)page_first(FAM_TRK); ui.home = 0; page_entered();
+        return 2;
+    }
+    if (!ui.home && cur_page()->fam == FAM_TRK) return 0;
+    if (!ui.home && cur_page()->fam == FAM_GLO) {
+        for (i = ui.page + 1u; i < NPAGES && (PAGES[i].fam != FAM_GLO || !page_visible(i)); i++) {}
+        if (i < NPAGES) return 0;
+    }
+    glo_open(now);
+    return 1;
 }
 
 /* the armed button: 0, or the layer whose button was tapped (let go) */
@@ -172,8 +202,39 @@ static uint32_t layer_gesture(uint32_t now, uint32_t combo)
         ui.ly_t0=(now&~15u)|1u|LY_OPEN; ui.force=1; layer_opened(l);
         return 0;
     }
+    if (l == LAYER_GLO) {                               /* (GLO: its main page, or from it the mixer) */
+        uint32_t to = (uint32_t)glo_main(now);
+        if (to == 2u) layer_let_go(1);
+        if (to) return 0;
+    }
+    if (!l) lys.unlocked = 0;
     layer_let_go(*t0 & LY_OPEN || combo);
     return l;
+}
+
+/* SELECT on GLO's pages: one list, the main page, MIXER, GLOBAL .. WEIGHTS 2 (nav_pages), a page a detent, no wrap
+ * -> 1 taken (GLO held: GLO SELECT instead, ui_input.c) */
+static int glo_scroll(int32_t s, uint32_t now)
+{
+    uint8_t pg[NPAGES];
+    uint32_t n, main = ui.lock == LAYER_GLO;
+    int32_t k = -1, to;
+    if (!main && (ui.home || nav_owner(ui.page) != FAM_GLO))
+        return 0;
+    n = nav_pages(FAM_GLO, pg);
+    if (!main)
+        for (k = 0; k < (int32_t)n && pg[k] != ui.page; k++) {}
+    to = clamp(k + (s > 0 ? 1 : -1), -1, (int32_t)n - 1);
+    if (to == k)
+        return 1;
+    if (to < 0) {                                       /* (back past MIXER: the main page) */
+        glo_open(now);
+        return 1;
+    }
+    if (main) layer_let_go(1);
+    ui.page = pg[to]; ui.home = 0; ui.fam_last[FAM_GLO] = ui.page;
+    page_entered();
+    return 1;
 }
 
 /* the map shows while the button is held open, and after it while its keys are still held */
@@ -725,7 +786,10 @@ static void draw_layer(void)
     }
     if (ui.force) {                                     /* the footer: what the keys, knobs and buttons do */
         cv_begin(240, H_FOOT, T_BG);
-        cv_key_row(4, 236, (H_FOOT - KC_PH) / 2, LAYERS[l].foot, LAYERS[l].foot[2].act ? 3u : 2u, 7u, T_BG);
+        khint_t foot[3];
+        memcpy(foot, LAYERS[l].foot, sizeof foot);
+        if (l == LAYER_GLO && ui.lock == LAYER_GLO) foot[2].act = "MIXER";   /* (the main page: GLO goes on to it) */
+        cv_key_row(4, 236, (H_FOOT - KC_PH) / 2, foot, foot[2].act ? 3u : 2u, 7u, T_BG);
         cv_blit(0, Y_FOOT);
         ui.foot_sig = 0;
     }

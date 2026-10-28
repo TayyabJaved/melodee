@@ -301,6 +301,31 @@ static int test_no_save_in_edit(void)
 }
 
 #if MELODEE_KEY_NAV
+/* M3 + A#4 (the HAL's FM1_NAV_ACTION bit, key_nav_test): the note or chord at the NOTES cursor, PREVIEW off too */
+static int test_hear(void)
+{
+    int bad = 0;
+    ui_power_on();
+    settings_preview = 0;
+    track_defaults_steps(TSEL);
+    TSEL->step[2] = (step_t){{60, 64, 67}, 3, ST_NOTE, 0, 96};
+    go_title("NOTES"); cursor_set(2); frame();
+    audition_request = 0;
+    host_pressed |= 1u << FM1_NAV_ACTION; frame();
+    bad += check("M3 + A#4 on NOTES: the step's whole chord heard, PREVIEW off", audition_request && audition_count == 3u &&
+                 audition_notes[0] == 60 && audition_notes[2] == 67 && audition_track == song.sel);
+    audition_request = 0; cursor_set(5); frame();
+    host_pressed |= 1u << FM1_NAV_ACTION; frame();
+    bad += check("..an empty step: NOTHING TO PREVIEW", !audition_request && msg_is("NOTHING TO PREVIEW"));
+    go_home(); frame();
+    host_pressed |= 1u << FM1_NAV_ACTION; frame();
+    bad += check("..away from the note pages: says where it works", !audition_request && msg_is("PREVIEW: OPEN NOTES"));
+    go_title("NOTES"); cursor_set(2); song.playing = 1; frame();
+    host_pressed |= 1u << FM1_NAV_ACTION; frame();
+    bad += check("..playing: STOP TO PREVIEW", !audition_request && msg_is("STOP TO PREVIEW"));
+    song.playing = 0;
+    return bad;
+}
 static int test_f5_keep(void)                           /* F#5 keeps a momentary edit (the HAL's routing: key_nav_test) */
 {
     int bad = 0;
@@ -411,8 +436,8 @@ static int test_modifier_lights(void)
     bad += check("M2 held: HOME .. REC lit, FX dark", lit(panel.btn[B_HOME]) && lit(panel.btn[B_REC]) && lit(panel.btn[B_ARP]) &&
                  !lit(panel.btn[B_FX]) && lit(14 + 26) && lit(14 + 13));
     fm1_nav.mod = 1u << 25; ui_leds();                  /* M3 (F#5) */
-    bad += check("M3 held: F#5, C#5 and D#5 lit, OCT- and OCT+ lit, nothing else",
-                 lit(14 + 25) && lit(14 + 20) && lit(14 + 22) && !lit(14 + 13) && lit(panel.btn[B_OCTDN]) &&
+    bad += check("M3 held: F#5, A#4 (hear), C#5 and D#5 lit, OCT- and OCT+ lit, nothing else",
+                 lit(14 + 25) && lit(14 + 17) && lit(14 + 20) && lit(14 + 22) && !lit(14 + 13) && !lit(14 + 15) && lit(panel.btn[B_OCTDN]) &&
                  lit(panel.btn[B_OCTUP]) && !lit(panel.btn[B_FX]) && !lit(panel.btn[B_HOME]));
     fm1_nav.mod = (1u << 24) | (1u << 26); ui_leds();
     bad += check("two modifiers: the usual lights (keys do nothing then)", lit(panel.btn[B_ARP]) && !lit(panel.btn[B_FX]));
@@ -437,6 +462,7 @@ int main(void)
     bad += test_no_save_in_edit();
     bad += test_drum_grid();
 #if MELODEE_KEY_NAV
+    bad += test_hear();
     bad += test_f5_keep();
     bad += test_modifier_lights();
 #endif

@@ -161,7 +161,7 @@
           <li>Named values often open a picker. Hold <kbd>HOME</kbd> and set <strong>PICKER POPUPS</strong> to <strong>OFF</strong> to edit those names on the knob instead. The choice is remembered. Sheets, and lists you open yourself, stay as they are. Short pages (CHORD, ENV DEST, LFO DEST, LFO 2, ARP 2) put their settings straight on the four knobs.</li>
         </ul>
         <h3>Holds and locks</h3>
-        <p>Hold <kbd>GLO</kbd> or <kbd>SCL</kbd> for a quick layer on the keys and knobs (hold time is set in the global settings menu as <strong>HOLD</strong>). Double-press the same button within about 300&nbsp;ms to lock the layer open with both hands free; press it again to close. Press <kbd>FX</kbd> to open the track effects rack. Its track insert slots also offer <strong>NOTE TAIL</strong> (its rack row's REL extends the envelope release) and <strong>NOTE ECHO</strong> (LEVEL sets repeat velocity, TIME selects a tempo division, DECAY sets velocity loss per repeat). Both save with the project and are available only on individual tracks. Hold <kbd>EDIT</kbd> to undo, <kbd>SAVE</kbd> to write the project back to its slot, <kbd>HOME</kbd> for the menu, <kbd>SEQ</kbd> for the PATTERNS grid, <kbd>REC</kbd> to capture.</p>
+        <p>Hold <kbd>GLO</kbd> or <kbd>SCL</kbd> for a quick layer on the keys and knobs while you hold it (hold time is set in the global settings menu as <strong>HOLD</strong>). A tap on <kbd>GLO</kbd> opens the same controls as GLO’s main page, which stays open with both hands free; see <a href="#global">Global</a>. Press <kbd>FX</kbd> to open the track effects rack. Its track insert slots also offer <strong>NOTE TAIL</strong> (its rack row's REL extends the envelope release) and <strong>NOTE ECHO</strong> (LEVEL sets repeat velocity, TIME selects a tempo division, DECAY sets velocity loss per repeat). Both save with the project and are available only on individual tracks. Hold <kbd>EDIT</kbd> to undo, <kbd>SAVE</kbd> to write the project back to its slot, <kbd>HOME</kbd> for the menu, <kbd>SEQ</kbd> for the PATTERNS grid, <kbd>REC</kbd> to capture.</p>
         <h3>Sheets and undo</h3>
         <p>Hold <kbd>OCT+</kbd> on pages that have a sheet (Stage, sound pages, NOTES, PATTERNS, SONG, and others) to open actions such as Init sound, Copy to…, or Sound designer.</p>
         <p><strong>Undo / redo:</strong></p>
@@ -193,6 +193,18 @@
             <tr><td><kbd>OCT−</kbd> <kbd>OCT+</kbd></td><td>On Stage: shift octave (both together reset). In menus and everywhere else: go back / enter or confirm.</td></tr>
           </tbody>
         </table>
+        <h4>Keyboard shortcuts (M1, M2, M3)</h4>
+        <p>Three keys at the top of the keyboard work as modifiers, so the panel buttons can be reached from the keys. F5, G5 and F#5 do not play notes.</p>
+        <table>
+          <thead><tr><th>Hold</th><th>Then press</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>F5</kbd> (M1)</td><td>F#4 G#4 A#4 C#5 D#5 F#5</td><td><kbd>FX</kbd> <kbd>SCL</kbd> <kbd>ENV</kbd> <kbd>LFO</kbd> <kbd>EDIT</kbd> <kbd>GLO</kbd></td></tr>
+            <tr><td><kbd>G5</kbd> (M2)</td><td>F#4 G#4 A#4 C#5 D#5 F#5</td><td><kbd>HOME</kbd> <kbd>SAVE</kbd> <kbd>ARP</kbd> <kbd>SEQ</kbd> <kbd>PLAY</kbd> <kbd>REC</kbd></td></tr>
+            <tr><td><kbd>F#5</kbd> (M3)</td><td>C#5 / D#5</td><td><kbd>OCT−</kbd> / <kbd>OCT+</kbd></td></tr>
+            <tr><td><kbd>F#5</kbd> (M3)</td><td>A#4</td><td>Hear the note or chord at the cursor on NOTES (or the drum grid, a drum hit), with NOTE PREVIEW off too. Stopped only (<strong>STOP TO PREVIEW</strong>); elsewhere <strong>PREVIEW: OPEN NOTES</strong>.</td></tr>
+          </tbody>
+        </table>
+        <p>While a modifier is held, its keys and the buttons they press light up. F#5 is M3 only when pressed alone; with M1 or M2 held it is their GLO or REC. While M3 is held, F5 and G5 are ordinary keys. With a momentary edit on (LFO held and a knob turned), F#5 keeps it, as <kbd>OCT+</kbd> does.</p>
         <p>Key and button lights share one grammar: <strong>dark</strong> nothing there, <strong>dim</strong> something there, <strong>bright</strong> happening now, <strong>slow pulse</strong> waiting (for example REC armed but stopped, or a pattern queued for the loop end). The menu’s <strong>LIGHTS</strong> sets how bright idle indicators are.</p>
       </section>
 
@@ -700,7 +712,7 @@
         <table>
           <thead><tr><th>Control</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td>BPM</td><td>Song speed in beats per minute (40–240). Saved with the project. With the internal clock you can also tap tempo from the GLO hold layer.</td></tr>
+            <tr><td>BPM</td><td>Song speed in beats per minute (40–240). Saved with the project. With the internal clock you can also tap tempo on GLO’s main page (or while holding GLO).</td></tr>
             <tr><td>SWG</td><td>Song swing: a project-wide lean applied on top of timing. Use this when every track should share the same groove; use PATTERN SWG when only one part should shuffle.</td></tr>
             <tr><td>QNT</td><td>One project-wide grid for the <em>next</em> recorded take on any audio or MIDI track, saved with the project and template. <strong>OFF</strong> (default) keeps the timing you played. A division snaps that take’s note onsets to the swung grid when recording ends; lengths and velocities stay. The piano roll then shows the committed timing. Changing QNT later chooses the next take’s grid — it does not redo a take already recorded. If a manual step is in the way, the take is left alone and the screen says <strong>QNT STEP OCCUPIED</strong>. This is separate from scale QNT on SCL.</td></tr>
           </tbody>
@@ -747,7 +759,7 @@
           <p>The three pages show each thing the same way:</p>
           <ul>
             <li><strong>Tracks:</strong> a numbered chip in the track’s colour, at the left of each row (filled: the selected track).</li>
-            <li><strong>Patterns:</strong> their number, in the track’s colour: a cell on PATTERNS and the section page, a block on SONG.</li>
+            <li><strong>Patterns:</strong> their number, in the track’s colour: a cell on PATTERNS and the section page, a block on SONG. Empty patterns show no number: a plain outline.</li>
             <li><strong>Sections:</strong> their letter, A–Z.</li>
             <li><strong>Rests:</strong> the word REST where the track’s pattern would be.</li>
             <li><strong>Lengths:</strong> bars:beats on SONG’s cards (<strong>2:3</strong> is 2 bars 3 beats, <strong>4:0</strong> four bars); in words where there is room.</li>
@@ -767,7 +779,7 @@
 
         <section id="patterns">
           <h3>Patterns</h3>
-          <p>Sixteen patterns per track on tracks 1–4, eight on MIDI tracks 5–8. The PATTERNS grid has one row for each track in use; its cells are that track’s patterns, each showing its number: two rows of eight (1–8 above 9–16) on tracks 1–4, one row on MIDI tracks. The pattern playing is filled in the track’s colour, with a line showing how far it has played; patterns holding notes are raised, with their number in the track’s colour; empty ones are outlines; one waiting for its loop end is dashed. <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. While a song plays, its sections choose the patterns, so the knobs show <strong>STOP SONG TO SWITCH</strong>. <kbd>SELECT</kbd> goes on to SONG.</p>
+          <p>Sixteen patterns per track on tracks 1–4, eight on MIDI tracks 5–8. The PATTERNS grid has one row for each track in use; its cells are that track’s patterns: two rows of eight (1–8 above 9–16) on tracks 1–4, one row on MIDI tracks. The pattern playing is filled in the track’s colour, with its number and a line showing how far it has played; patterns holding notes are raised, with their number in the track’s colour; one waiting for its loop end is dashed, with its number; empty patterns are plain outlines. <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. While a song plays, its sections choose the patterns, so the knobs show <strong>STOP SONG TO SWITCH</strong>. <kbd>SELECT</kbd> goes on to SONG.</p>
           <div class="shots">
             <figure class="shot"><img src="patterns.png" alt="Patterns grid" width="240" height="240"><figcaption>PATTERNS: one row per track; the song’s letters at the foot.</figcaption></figure>
             <figure class="shot"><img src="patterns_sheet.png" alt="Patterns sheet" width="240" height="240"><figcaption>Pattern sheet: Copy to…, Delete.</figcaption></figure>
@@ -895,12 +907,13 @@
 
       <section id="global">
         <h2>Global</h2>
-        <p>Press <kbd>GLO</kbd> for the mixer, then again for GLOBAL and SYSTEM. Hold <kbd>GLO</kbd> for a quick layer: mute / solo on the keys, TAP tempo (internal clock), and track levels on the knobs; <kbd>GLO</kbd>+<kbd>PLAY</kbd> restarts from the top without stopping.</p>
+        <p>Tap <kbd>GLO</kbd> for its <strong>main page</strong>: mute / solo on the keys, UNMUTE ALL, TAP tempo (internal clock), and track levels on the knobs; <kbd>GLO</kbd>+<kbd>PLAY</kbd> restarts from the top without stopping. It stays open until you press another button (<kbd>PLAY</kbd>, <kbd>REC</kbd> and <kbd>OCT±</kbd> keep it; <kbd>OCT−</kbd> puts back what it changed). Tap <kbd>GLO</kbd> again for MIXER, then GLOBAL, SYSTEM, WEIGHTS and WEIGHTS 2; after the last, the main page again. <kbd>SELECT</kbd> walks the same six pages as one list (the header shows 2/6 and so on): it stops at the main page and at WEIGHTS 2 rather than wrapping round, so you can dial straight to the page you want. Hold <kbd>GLO</kbd> on any page to see the main page only while you hold it; <kbd>GLO</kbd>+<kbd>SELECT</kbd> stays GLO SELECT (BPM by default).</p>
         <div class="shots">
           <figure class="shot"><img src="mixer.png" alt="Mixer" width="240" height="240"><figcaption>MIXER.</figcaption></figure>
           <figure class="shot"><img src="global.png" alt="Global page" width="240" height="240"><figcaption>GLOBAL.</figcaption></figure>
           <figure class="shot"><img src="system.png" alt="System page" width="240" height="240"><figcaption>SYSTEM.</figcaption></figure>
-          <figure class="shot"><img src="layer_glo_active.png" alt="GLO hold layer" width="240" height="240"><figcaption>Hold GLO: mute / solo, TAP, levels.</figcaption></figure>
+          <figure class="shot"><img src="layer_glo_main.png" alt="GLO main page" width="240" height="240"><figcaption>Tap GLO: its main page (mute / solo, TAP, levels).</figcaption></figure>
+          <figure class="shot"><img src="layer_glo_active.png" alt="GLO hold layer" width="240" height="240"><figcaption>Hold GLO: the same, while held.</figcaption></figure>
         </div>
         <table>
           <thead><tr><th>Page</th><th>Controls</th></tr></thead>
@@ -935,7 +948,7 @@
             <tr><td>AUDIO CLICK</td><td><strong>OFF</strong> / <strong>REC</strong> (while recording) / <strong>ON</strong>.</td></tr>
             <tr><td>CLICK LEVEL</td><td>Metronome volume.</td></tr>
             <tr><td>COUNT-IN</td><td>Bars of count-in before an armed track records when you start with <kbd>PLAY</kbd> (internal clock only).</td></tr>
-            <tr><td>NOTE PREVIEW</td><td>Hear notes as you edit steps.</td></tr>
+            <tr><td>NOTE PREVIEW</td><td>Hear notes as you edit steps. Hold F#5 (M3) and press A#4 to hear the note or chord at the cursor at any time.</td></tr>
             <tr><td>CHORD ENTRY</td><td>How keys and MIDI build a chord on a stopped step: HOLD = press pitches together, then release to advance; ADD = tap pitches one by one to add or remove them at the same cursor (up to four; a full step shows CHORD FULL).</td></tr>
             <tr><td>AUTOSAVE</td><td><strong>ON</strong> (default) writes a changed project back to its slot after five seconds stopped and untouched. <strong>OFF</strong> leaves saving to you. The choice survives power-off.</td></tr>
             <tr><td>PICKER POPUPS</td><td><strong>ON</strong> (default) opens a picker for a long list of names. <strong>OFF</strong> edits those names on the knob. Remembered across power-off.</td></tr>

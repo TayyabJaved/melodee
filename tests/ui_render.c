@@ -461,7 +461,7 @@ enum { S_HOME, S_HOME_IDLE, S_HOME_NOTE, S_HOME_CHORD, S_HOME_INVERSION, S_HOME_
        S_CONFIRM_SEQ, S_CONFIRM_PROJ, S_CONFIRM_USER, S_CONFIRM_MOTION, S_CONFIRM_ERASE,
        S_MENU, S_ABOUT, S_ABOUT_REC, S_ABOUT_CREDITS, S_ABOUT_END, S_UBOOT, S_CALIBRATION,
        S_BATT0, S_BATT1, S_BATT2, S_BATT3, S_BATT_USB, S_MOTION_REC, S_MOTION_OFF, S_SONG_HOME,
-       S_MENU_HOLD, S_MENU_USB, S_MENU_USB_STEREO, S_MENU_USB_TRACKS, S_GLO_PEEK, S_GLO_ACTIVE, S_GLO_EXT, S_SCL_PEEK, S_SCL_ACTIVE, S_LAYER_HINT,
+       S_MENU_HOLD, S_MENU_USB, S_MENU_USB_STEREO, S_MENU_USB_TRACKS, S_GLO_PEEK, S_GLO_ACTIVE, S_GLO_EXT, S_GLO_MAIN, S_SCL_PEEK, S_SCL_ACTIVE, S_LAYER_HINT,
        S_NAME_USER, S_NAME_TYPING, S_NAME_123, S_NAME_EMPTY, S_NAME_FULL, S_NAME_PLAYING, S_PROJECT_NAMED, S_SONG_NAMED,
        S_USER_FOOT,
 #if MELODEE_SLICE && SMP_USER_SLOTS
@@ -492,7 +492,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "home_note", "h
     "confirm_motion", "confirm_erase", "menu", "about", "about_rec", "about_credits", "about_end", "uboot", "calibration",
     "batt_0", "batt_1", "batt_2", "batt_3", "batt_usb", "motion_rec", "motion_off", "song_home",
     "menu_hold", "menu_usb", "menu_usb_stereo", "menu_usb_tracks",
-    "layer_glo_peek", "layer_glo_active", "layer_glo_ext", "layer_scl_peek", "layer_scl_active", "layer_hint",
+    "layer_glo_peek", "layer_glo_active", "layer_glo_ext", "layer_glo_main", "layer_scl_peek", "layer_scl_active", "layer_hint",
     "name_user", "name_typing", "name_123", "name_empty", "name_full", "name_playing", "project_named", "song_named",
     "user_foot",
 #if MELODEE_SLICE && SMP_USER_SLOTS
@@ -1557,6 +1557,8 @@ static void setup(int s)
      * held) and KNOB 1 turned; with CLK EXT (TAP dimmed); SCL at D# minor, KNOB 2 turned; EDIT on DIGITAL preset 3,
      * a favourite; a user preset; the hint after a tap */
     case S_GLO_PEEK: go_title("ENV"); ui.layer = LAYER_GLO; break;
+    case S_GLO_MAIN:                             /* GLO tapped: its main page, open (the footer: GLO MIXER) */
+        go_home(); trk[1].p[P_MUTE] = 1; glo_main(0); ui.layer = LAYER_GLO; break;
     case S_GLO_ACTIVE:
         go_home(); ui.layer = LAYER_GLO; trk[1].p[P_MUTE] = 1; track_solo = 4; trk[0].p[P_LEVEL] = 90;
         ui.hot_col = 0; ui.hot_t = 30;

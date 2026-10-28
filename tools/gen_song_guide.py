@@ -83,8 +83,10 @@ def cell(o, k, b, x, y, h, playing, used, queued=False):
         o.append(r(x, y, 23, h, c, 4) + t(x + 11.5, ny, str(b + 1), size, BG, "middle", 600))
     elif used:
         o.append(r(x, y, 23, h, SURF, 4) + t(x + 11.5, ny, str(b + 1), size, c, "middle", 600))
-    else:
-        o.append(r(x + 0.5, y + 0.5, 22, h - 1, "none", 4, LINE) + t(x + 11.5, ny, str(b + 1), size, DIM, "middle", 500))
+    elif queued:
+        o.append(r(x, y, 23, h, SURF, 4) + t(x + 11.5, ny, str(b + 1), size, MID, "middle", 600))
+    else:                                                    # (empty: no number)
+        o.append(r(x + 0.5, y + 0.5, 22, h - 1, "none", 4, LINE))
     if queued:
         o.append(r(x - 1, y - 1, 25, h + 2, "none", 5, c, 1.4, "2 2"))
 
@@ -324,11 +326,11 @@ STEPS = [
      patterns_screen(P_PLAY, P_USED, sel_trk=0),
      [(0, 30, 28, 172), (30, 75, 206, 40), (30, 32, 23, 19)],
      ["Hold [SEQ] for a moment (or press [SEQ] and turn [SELECT] to PATTERNS).",
-      "Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns, each with its "
-      "number: 1-8 above, 9-16 below.",
+      "Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns: 1-8 above, "
+      "9-16 below.",
       "The filled cell is the pattern the track plays now; the line under its number shows how far it has played."],
-     "Cells with notes are raised, their number in the track's colour; empty ones are outlines. At the foot: the "
-     "song's sections, by letter.",
+     "Cells with notes are raised, their number in the track's colour; empty patterns are plain outlines, no number. "
+     "At the foot: the song's sections, by letter.",
      "A pattern is one track's loop. Write its notes on SEQ > NOTES; this page chooses which one plays."),
     ("choose-patterns", "PATTERNS", "Choose what each track plays",
      patterns_screen([1, 1, 0, 0], P_USED, queued={1: 2}, sel_trk=1),

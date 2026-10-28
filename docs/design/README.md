@@ -143,6 +143,11 @@ One way to move on every screen with something to move through (Kerem, 2026-10-1
   Clear motion). A clearing row with nothing there says so instead of asking.
 - **SELECT** turns the pages, as before, NOTES too (Kerem, 2026-10-10): there KNOB 1 alone moves, the steps one by
   one (empty ones too) and a step's notes one at a time (a chord's, a take's), back onto the step before's last note.
+- **GLO** (this fork, 2026-10-28): a tap opens its main page, the GLO layer locked open (header `[GLO] SET`, footer
+  `GLO MIXER`; `ui_layer.c` `glo_main`); another button leaves it (PLAY, REC, OCT± stay). GLO again: MIXER, then
+  GLOBAL .. WEIGHTS 2, after the last the main page. SELECT walks the same six as one list (main, MIXER, GLOBAL ..
+  WEIGHTS 2; position `2/6`), stopping at both ends (`ui_layer.c` `glo_scroll`); only GLO physically held makes it GLO
+  SELECT. Held: the layer while held, as before. No double-tap lock for GLO.
 - **Direct pages stay direct**: one knob per track where speed matters (Stage, MIXER, PATTERNS, NEW SONG's roles);
   the sound pages' four knobs edit their four values. PATTERNS: OCT- clears what is queued; OCT+ the selected
   track's pattern's sheet (Copy to.., Delete pattern; Kerem 2026-10-11). Copy to: the place it goes framed in the
@@ -187,10 +192,11 @@ picked column's section, length in words (AUTO), its use count and the song's pr
 length in minutes:seconds.
 One look across PATTERNS, the section page and SONG (2026-10-28): a track is its numbered chip in its colour, a
 pattern its number (1-16) in the track's colour, a section its letter, a rest the word REST, a length bars:beats on
-the cards and words elsewhere. PATTERNS' cells hold their numbers: a part's 16 in two rows of eight (1-8 above 9-16),
-23 x 19 px on a 26 px pitch, a MIDI-only track's 8 in one row, 23 x 40; the playing one filled with its progress
-line at the foot, ones holding notes raised (SURF, the number in the track's colour), empty ones outlined, a queued
-one dashed (`ui_patterns.c` `pt_cell`, shared by the section page). The column numbers above the grid are gone.
+the cards and words elsewhere. PATTERNS' cells: a part's 16 in two rows of eight (1-8 above 9-16), 23 x 19 px on a
+26 px pitch, a MIDI-only track's 8 in one row, 23 x 40; the playing one filled with its number and its progress line
+at the foot, ones holding notes raised (SURF, the number in the track's colour), a queued one dashed with its number,
+empty ones a bare outline without a number (a Copy to place on one: "+"; `ui_patterns.c` `pt_cell`, shared by the
+section page, where the section's pattern counts as playing). The column numbers above the grid are gone.
 The section page (OCT+ on a column) draws PATTERNS' cells with the section's pattern filled (16 px high; a rest: REST
 across them), the length on top (AUTO chip) with the section's use count at its right, and a lane per track at the
 foot: the first loop bright, later loops

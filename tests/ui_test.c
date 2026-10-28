@@ -2861,7 +2861,10 @@ static int test_product_ux(void)
     bad += check("REC in ABOUT does nothing (the document and its scroll stay)",
                  ui.menu == 2 && !ui.menu_scroll && song.rec == 0 && !transport_req);
     ui_power_on(); press(B_GLO);
-    bad += check("GLO directly opens the four-channel MIXER", cur_page()->graph == GR_TRK);
+    bad += check("GLO opens its main page first (the GLO layer, open: mutes, solos, TAP, levels)",
+                 ui.lock == LAYER_GLO && ui.layer == LAYER_GLO && ui.home);
+    press(B_GLO);
+    bad += check("  GLO again: the four-channel MIXER", cur_page()->graph == GR_TRK && !ui.lock && !ui.layer);
     int16_t len = TSEL->p[P_SLEN], send = TSEL->p[P_RESERVED36];
     turn(EN_K3, 1);
     bad += check("MIXER K3 is inert, never changes sequence length", TSEL->p[P_SLEN] == len && TSEL->p[P_RESERVED36] == send);
@@ -2869,8 +2872,9 @@ static int test_product_ux(void)
     press(B_GLO); ok &= str_eq(cur_page()->title, "SYSTEM");
     press(B_GLO); ok &= str_eq(cur_page()->title, "WEIGHTS");
     press(B_GLO); ok &= str_eq(cur_page()->title, "WEIGHTS 2");
-    press(B_GLO); ok &= cur_page()->graph == GR_TRK;
-    bad += check("GLO cycles MIXER > GLOBAL > SYSTEM > WEIGHTS > WEIGHTS 2 > MIXER", ok);
+    press(B_GLO); ok &= ui.lock == LAYER_GLO && ui.layer == LAYER_GLO;
+    press(B_GLO); ok &= cur_page()->graph == GR_TRK && !ui.lock;
+    bad += check("GLO cycles main > MIXER > GLOBAL > SYSTEM > WEIGHTS > WEIGHTS 2 > main > MIXER", ok);
     go_home(); hold(B_SEQ);
     bad += check("long SEQ goes directly to PATTERNS (the song under it) with no tap on release", cur_page()->graph == GR_PATGRID);
     turn(EN_SELECT, 1);
@@ -3091,7 +3095,7 @@ static int test_layer(void)
             btn_down(PB[i]); frame();
             ok &= ui.home;
             btn_up(PB[i]); frame();
-            ok &= !ui.home && (PB[i] == B_GLO ? cur_page()->graph == GR_TRK : cur_page()->fam == PF[i]);
+            ok &= PB[i] == B_GLO ? ui.lock == LAYER_GLO && ui.layer == LAYER_GLO : !ui.home && cur_page()->fam == PF[i];
             if (PB[i] == B_SCL || PB[i] == B_GLO || PB[i] == B_EDIT)
                 continue;                             /* (a layer of their own: held long is a peek) */
             ui_power_on_general();
@@ -3634,7 +3638,8 @@ static int test_boot_template(void)
 }
 
 /* BPM and SWG: SEQ > TEMPO, the project's (saved and loaded with it); SELECT never sets the BPM: it turns the open
- * section's pages both ways (wrapping) and moves the cursor on STEP */
+ * section's pages both ways (wrapping; GLO's main page, MIXER and the global pages one list, stopping at its ends)
+ * and moves the cursor on STEP */
 static int test_tempo_select(void)
 {
     int bad = 0, ok;
@@ -3648,10 +3653,29 @@ static int test_tempo_select(void)
     turn(EN_SELECT, 1);
     ok &= str_eq(cur_page()->title, "WEIGHTS 2");
     turn(EN_SELECT, 1);
-    ok &= str_eq(cur_page()->title, "GLOBAL");
-    turn(EN_SELECT, -1);
-    bad += check("SELECT on GLO: GLOBAL -> SYSTEM -> WEIGHTS -> WEIGHTS 2 -> GLOBAL (wraps), back the other way; the BPM untouched",
-                 ok && str_eq(cur_page()->title, "WEIGHTS 2") && song.g[G_BPM] == 120);
+    ok &= str_eq(cur_page()->title, "WEIGHTS 2");
+    bad += check("SELECT on GLO: GLOBAL -> SYSTEM -> WEIGHTS -> WEIGHTS 2, stopping there (no wrap); the BPM untouched",
+                 ok && song.g[G_BPM] == 120);
+    {
+        uint32_t k, n;
+        turn(EN_SELECT, -1); turn(EN_SELECT, -1); turn(EN_SELECT, -1);
+        ok = str_eq(cur_page()->title, "GLOBAL");
+        turn(EN_SELECT, -1);
+        n = nav_pos(&k);
+        ok &= cur_page()->graph == GR_TRK && !ui.lock && n == 6u && k == 1u;
+        turn(EN_SELECT, -1);
+        ok &= ui.lock == LAYER_GLO && ui.ly == LAYER_GLO;
+        turn(EN_SELECT, -1);
+        ok &= ui.lock == LAYER_GLO && song.g[G_BPM] == 120;
+        bad += check("  back: GLOBAL -> MIXER (2/6) -> GLO's main page, stopping there; SELECT never locked, BPM untouched", ok);
+        turn(EN_SELECT, 1);
+        ok = cur_page()->graph == GR_TRK && !ui.lock && !ui.ly;
+        turn(EN_SELECT, -1); press(B_GLO);
+        ok &= cur_page()->graph == GR_TRK && !ui.lock && !ui.ly;
+        press(B_GLO);
+        ok &= str_eq(cur_page()->title, "GLOBAL");
+        bad += check("  the main page: SELECT on to MIXER; GLO there: MIXER, then GLOBAL", ok);
+    }
     go_title("NOTES");
     cursor_set(4);
     turn(EN_SELECT, 1);
@@ -4156,8 +4180,8 @@ static int test_quick_layers(void)
         btn_down(LB[i]);
         for (flash = 0, k = 0; k < 20u; k++) { frame(); flash |= ui.layer; }      /* 0.32 s */
         btn_up(LB[i]); frame();
-        ok &= !flash && !ui.home && (LB[i] == B_GLO ? cur_page()->graph == GR_TRK :
-                                     LB[i] == B_SCL ? cur_page()->fam == FAM_SCL : str_eq(cur_page()->title, "EDIT 1"));
+        ok &= !flash && (LB[i] == B_GLO ? ui.lock == LAYER_GLO && ui.layer == LAYER_GLO :   /* (its main page, over the page) */
+                         !ui.home && (LB[i] == B_SCL ? cur_page()->fam == FAM_SCL : str_eq(cur_page()->title, "EDIT 1")));
         hint &= !ui.msg_t;
         frames(320);                              /* another ordinary tap, outside the double-tap window */
         press(LB[i]);
@@ -4396,7 +4420,7 @@ static int test_bughunt_ui(void)
         btn_up(B_SCL); frame();
         btn_down(B_GLO); turn(EN_ALGO, 1);             /* armed, not open yet: ignored too */
         ok &= song.sel == 0u;
-        btn_up(B_GLO); frame(); go_home(); frame();
+        btn_up(B_GLO); frame(); press(B_HOME);         /* (a tap: GLO's main page, which HOME leaves) */
         turn(EN_ALGO, 1);
         bad += check("ALGORITHM ignored with a layer's button held (OCT- puts back all); then T2",
                      ok && song.sel == 1u);

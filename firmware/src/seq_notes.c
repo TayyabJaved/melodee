@@ -183,10 +183,11 @@ static void notes_audition(const uint8_t *nn,const uint8_t *vv,uint32_t count,in
     fm1_irq_off(); audition_track=song.sel;audition_count=(uint8_t)count;audition_pitch=pitch;audition_gate=gate;
     memcpy(audition_notes,nn,count);memcpy(audition_vel,vv,count);audition_request=1;fm1_irq_on();
 }
-static void notes_preview(void)
+/* asked (M3 + A#4): with PREVIEW off too, and a step's whole chord, not its selected note -> the notes heard */
+static uint32_t notes_preview_play(int asked)
 {
-    if(!notes_preview_on()) return;
-    const page_t *pg=cur_page();
+    if((!settings_preview && !asked) || song.playing || seq_counting() || ui.home || ui.menu || ui.layer || ui.entry_open) return 0;
+    const page_t *pg=cur_page(); if(pg->graph!=GR_ROLL && pg->graph!=GR_STEPS && pg->graph!=GR_DRUMHIT) return 0;
     uint8_t nn[12],vv[12];uint32_t count=0,chosen=notes_selected(TSEL);
     if(pg->scope==SC_DRUMHIT)chosen=drum_hit_selected();
     int32_t pitch=0;uint32_t gate=0;
@@ -196,10 +197,22 @@ static void notes_preview(void)
     else {
         uint32_t at=step_note_start(TSEL,ui.cursor);
         if(at<NSTEP) { const step_t *st=&TSEL->step[at];
-            if(pg->graph==GR_ROLL && st->n && !(count=cseq_heard(st,nn,vv))) { nn[count]=st->note[notes_manual_slot(st)];vv[count++]=st->vel?st->vel:96; }   /* (an entry: ui_chords.c) */
+            if(pg->graph==GR_ROLL && st->n && asked && (count=cseq_heard(st,nn,vv))) {}   /* (asked: an entry's chord) */
+            else if(pg->graph==GR_ROLL && st->n && !asked && !(count=cseq_heard(st,nn,vv))) { nn[count]=st->note[notes_manual_slot(st)];vv[count++]=st->vel?st->vel:96; }   /* (an entry: ui_chords.c) */
             else for(uint32_t i=0;i<st->n;i++){nn[count]=st->note[i];vv[count++]=st->vel?st->vel:96;}
             if(drum_track(TSEL))for(uint32_t i=0;i<NLANE;i++)if(step_lanes(st)&(1u<<i)){nn[count]=DRUM_LANE_NOTE[i];vv[count++]=(step_accents(st)&(1u<<i))?127:96;}
         }
     }
+    if(!count) return 0;
     notes_audition(nn,vv,count,pitch,gate);
+    return count;
+}
+static void notes_preview(void) { (void)notes_preview_play(0); }
+/* M3 + A#4 (MELODEE_KEY_NAV, ui_input.c): the note or chord at the cursor, heard now, whatever PREVIEW is */
+static void notes_preview_key(void)
+{
+    const page_t *pg = cur_page();
+    if (song.playing || seq_counting()) ui_message("STOP TO PREVIEW");
+    else if (ui.home || (pg->graph != GR_ROLL && pg->graph != GR_STEPS && pg->graph != GR_DRUMHIT)) ui_message("PREVIEW: OPEN NOTES");
+    else if (!notes_preview_play(1)) ui_message("NOTHING TO PREVIEW");
 }

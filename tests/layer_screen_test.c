@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Kerem Kilic (Ellic Studio) */
 /* Host test of Felucca 1.2's panel controls as Melodee has them, through the UI test's stubs (ui_test.c):
- * double-tapped GLO stays open and owns the keys silently, repeated SCL taps navigate without locking,
+ * a tapped GLO (its main page) stays open and owns the keys silently, repeated SCL taps navigate without locking,
  * FX LATCH, the FX key map (PRESETS assigns, EDIT
  * restores the default), MENU > SCREEN OFF (the panel dark while the transport runs, the wake press swallowed, NEVER),
  * LFO 2 (SYNC's increments at every division and tempo, TRIG NOTE / FREE, POL UNI, the transport's reset),
@@ -50,12 +50,12 @@ static void test_layers(void)
     {
         uint32_t l = LAYER_GLO;
         reset_controls(); uint32_t b=LAYERS[l].btn;
-        tap_fast(b); tap_fast(b);
+        tap_fast(b);                                    /* (one tap: GLO's main page, the layer open) */
         assert(ui.lock==l && ui.layer==l && ui.home);
         key_down(white(0)); frame();
         assert(kb_layer & (1u<<white(0))); assert(!gates());
-        key_up(white(0)); frame(); tap_fast(b);
-        assert(!ui.lock && !ui.layer);
+        key_up(white(0)); frame(); tap_fast(b);         /* (again, at once: on to the mixer, not a double tap) */
+        assert(!ui.lock && !ui.layer && !ui.home && cur_page()->graph == GR_TRK);
     }
     for (uint32_t home = 0; home < 2u; home++) {
         reset_controls();
@@ -72,20 +72,25 @@ static void test_layers(void)
         assert(gates() && !kb_layer && TSEL->p[P_ROOT] == root);
         key_up(white(0)); frame();
     }
-    puts("layers/screen: GLO double-tap locks; repeated SCL taps navigate and keep keys playable");
+    puts("layers/screen: a GLO tap opens its main page, the next the mixer; repeated SCL taps navigate and keep keys playable");
 }
 static void test_glo_select(void)
 {
     for (uint32_t home = 0; home < 2u; home++)
     for (uint32_t locked = 0; locked < 2u; locked++)
-    for (int32_t dir = -1; dir <= 1; dir += 2) {
+    for (int32_t dir = -1; dir <= 1; dir += 2) {   /* (locked: GLO's main page, GLO held again over it) */
         reset_controls();
         HOME_SELECT = HS_LEVEL;
         glo_select_set(HS_SWING);
         song.g[G_SWING] = 40;
         if (!home) { go_title("ENV"); frame(); }
-        if (locked) { tap_fast(B_GLO); tap_fast(B_GLO); assert(ui.lock == LAYER_GLO); }
-        else { btn_down(B_GLO); frame(); }
+        if (locked) {                                   /* (GLO's main page: SELECT its pages, GLO not held) */
+            tap_fast(B_GLO); assert(ui.lock == LAYER_GLO);
+            int16_t sw = song.g[G_SWING];
+            turn(EN_SELECT, -1);
+            assert(ui.lock == LAYER_GLO && song.g[G_SWING] == sw);   /* (the list's first: stays) */
+        }
+        btn_down(B_GLO); frame();
         uint32_t pg = ui.page;
         int16_t level = TSEL->p[P_LEVEL], swing = song.g[G_SWING];
         /* A scan publishes a second detent after the first take, even in the armed frame. */
@@ -100,7 +105,6 @@ static void test_glo_select(void)
         assert(select_takes == 1u && !host_enc[panel.enc[EN_SELECT]]);
         assert(ui.home == home && ui.page == pg && TSEL->p[P_LEVEL] == level);
         /* SELECT still belongs to GLO on the frame its button is released. */
-        if (locked) { btn_down(B_GLO); frame(); }
         btn_up(B_GLO);
         select_takes = 0;
         turn(EN_SELECT, dir);

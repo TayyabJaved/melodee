@@ -19,12 +19,12 @@ enum { M1 = 24, M2 = 26, M3 = 25 };
 static const uint8_t MODS[FM1_NAV_ROWS] = {M1, M2, M3};
 static const uint8_t TRIG[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};
 static const uint8_t MAP[FM1_NAV_ROWS][FM1_NAV_N] = {{2, 3, 4, 5, 6, 7}, {8, 9, 10, 11, 12, 13},
-                                                     {0xFF, 0xFF, 0xFF, 0, 1, 0xFF}};   /* panel.c PANEL_DEFAULT */
+                                                     {0xFF, 0xFF, FM1_NAV_ACTION, 0, 1, 0xFF}};   /* panel.c PANEL_DEFAULT */
 static const uint8_t ALT[FM1_NAV_ROWS][FM1_NAV_N] = {{7, 6, 5, 4, 3, 2}, {13, 12, 11, 10, 9, 8},
-                                                     {0xFF, 0xFF, 0xFF, 1, 0, 0xFF}};
+                                                     {0xFF, 0xFF, FM1_NAV_ACTION, 1, 0, 0xFF}};
 static const char *const NAME[FM1_NAV_ROWS][FM1_NAV_N] = {{"FX", "SCL", "ENV", "LFO", "EDIT", "GLO"},
                                                           {"HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"},
-                                                          {"", "", "", "OCT-", "OCT+", ""}};
+                                                          {"", "", "HEAR (no button, the UI's action bit 14)", "OCT-", "OCT+", ""}};
 
 static int fails;
 static int check(const char *what, int ok)

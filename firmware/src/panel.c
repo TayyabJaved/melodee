@@ -33,17 +33,19 @@ static const panel_t PANEL_DEFAULT = {
 };
 
 #if MELODEE_KEY_NAV
-/* the M1 / M2 / M3 key layer (hal/fm1_input.h) with this table's buttons; 0: off (calibration) */
+/* the M1 / M2 / M3 key layer (hal/fm1_input.h) with this table's buttons; 0: off (calibration). NB: a note; B_NAV_HEAR
+ * (M3 + A#4): no button, the UI's FM1_NAV_ACTION, the note or chord at the cursor heard (ui_input.c) */
+#define B_NAV_HEAR (NB + 1)
 static void panel_nav(int on)
 {
     static const uint8_t ROW[FM1_NAV_ROWS][FM1_NAV_N] = {{B_FX, B_SCL, B_ENV, B_LFO, B_EDIT, B_GLO},
                                                         {B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC},
-                                                        {NB, NB, NB, B_OCTDN, B_OCTUP, NB}};
+                                                        {NB, NB, B_NAV_HEAR, B_OCTDN, B_OCTUP, NB}};
     uint8_t btn[FM1_NAV_ROWS][FM1_NAV_N];
     uint32_t r, i;
     for (r = 0; r < FM1_NAV_ROWS; r++)
         for (i = 0; i < FM1_NAV_N; i++)
-            btn[r][i] = ROW[r][i] < NB ? panel.btn[ROW[r][i]] : 0xFFu;
+            btn[r][i] = ROW[r][i] < NB ? panel.btn[ROW[r][i]] : ROW[r][i] == B_NAV_HEAR ? FM1_NAV_ACTION : 0xFFu;
     fm1_input_nav(on ? (const uint8_t (*)[FM1_NAV_N])btn : 0);
 }
 #endif

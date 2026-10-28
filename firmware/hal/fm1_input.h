@@ -247,6 +247,8 @@ static void fm1_input_init(void)
  * on (fm1_input_nav_keep), F#5 keeps it instead (fm1_nav.keep). Armed by fm1_input_nav */
 #define FM1_NAV_N 6u
 #define FM1_NAV_ROWS 3u
+#define FM1_NAV_ACTION 14u               /* a row's key that presses no panel button: buttons / pressed bit 14, the UI's
+                                          * own (M3 + A#4: hear the note at the cursor, ui_input.c) */
 static const uint8_t FM1_NAV_MOD[FM1_NAV_ROWS] = {24, 26, 25};                 /* F5 M1, G5 M2, F#5 M3 */
 static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};       /* F#4 G#4 A#4 C#5 D#5 F#5 */
 #ifdef __ELF__
@@ -258,7 +260,8 @@ static volatile struct {
     uint32_t mod, held, mute, btn;   /* modifier keys down, keys routed to a button, keys ignored, buttons pressed */
     uint8_t to[27];                  /* each routed key's button */
     uint8_t on, keep_on, keep;       /* armed; a momentary edit on (F#5 keeps it); F#5 pressed for it */
-    uint8_t row[FM1_NAV_ROWS][FM1_NAV_N];   /* matrix button ids, M1 M2 M3 rows; >= 14: none (a note) */
+    uint8_t row[FM1_NAV_ROWS][FM1_NAV_N];   /* matrix button ids, M1 M2 M3 rows; FM1_NAV_ACTION: the UI's; above it:
+                                             * none (a note) */
 } fm1_nav FM1_NAV_POOL;
 
 /* arm the layer with the matrix buttons of its rows, 0: off (keys already routed still release). No lock: the
@@ -320,7 +323,7 @@ static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a 
     for (i = 0; fm1_nav.mod && i < FM1_NAV_N; i++)
         if (k == FM1_NAV_KEY[i]) {
             fm1_nav.to[k] = fm1_nav.row[fm1_nav.mod & m1 ? 0 : fm1_nav.mod & m2 ? 1 : 2][i];
-            if (fm1_nav.to[k] >= 14u)
+            if (fm1_nav.to[k] > FM1_NAV_ACTION)
                 return 0;
             fm1_nav.held |= bit;
             fm1_nav.btn |= 1u << fm1_nav.to[k];

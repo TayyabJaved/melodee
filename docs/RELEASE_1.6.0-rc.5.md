@@ -51,6 +51,17 @@ in one part of the song, and the song places sections in up to 64 columns.
   RESTART), and a song of more than 26 different rows keeps its first 26
   sections (SONG CUT: 26 SECTIONS). The web editor's song rows convert the same way.
 
+## GLO's main page
+
+- A tap on **GLO** opens its main page: mute / solo on the keys, UNMUTE ALL, TAP
+  tempo and the track levels on the knobs, open until you press another button.
+  GLO again goes on to MIXER, then GLOBAL, SYSTEM, WEIGHTS and WEIGHTS 2, and
+  back to the main page. SELECT walks the same six pages as one list and stops
+  at either end instead of wrapping, so you can dial to a page; it is never
+  taken over by the main page (GLO held + SELECT is still GLO SELECT). Holding
+  GLO still shows it only while held. The GLO double-tap lock is gone (a tap
+  does it).
+
 ## Projects: one shared storage pool
 
 - **32 projects** instead of four fixed slots. An empty slot occupies nothing;

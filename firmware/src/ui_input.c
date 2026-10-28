@@ -1698,7 +1698,8 @@ static uint32_t btn_hold(uint32_t *t0, uint32_t label, uint32_t now, int hold_ok
 
 /* the quick layers: ui_layer.c (included after this file) */
 static void layer_masks(void);
-static void layer_lock_input(uint32_t pressed);
+static void layer_lock_input(uint32_t pressed, uint32_t now);
+static int glo_scroll(int32_t s, uint32_t now);
 static void layer_arm(uint32_t pressed, uint32_t now);
 static uint32_t layer_held(void);
 static uint32_t layer_gesture(uint32_t now, uint32_t combo);
@@ -2121,12 +2122,18 @@ static void ui_input(void)
     if (song_punch_on() && (song_punch_epoch != pattern_epoch || song_punch.row >= chain_config.count))
         pop_close();
     if (scr_input(pressed, notes)) return;
+#if MELODEE_KEY_NAV
+    if (pressed & (1u << FM1_NAV_ACTION)) {             /* M3 + A#4: hear the note or chord at the cursor */
+        pressed &= ~(1u << FM1_NAV_ACTION);
+        if (!ui.menu && !ui.confirm && !name_on()) notes_preview_key();
+    }
+#endif
     if (designer_on() && !name_on() && !ui.confirm && designer_input(pressed, notes)) return;
     preset_pick_poll();                              /* restore key selection before handling new edges */
     if (notes)
         browse_commit();                              /* a key played while browsing: hear the sound shown */
     browse_poll();
-    layer_lock_input(pressed);
+    layer_lock_input(pressed, now);
     if(momentary.active && (pressed&(1u<<panel.btn[B_OCTUP]))){
         momentary.active=momentary.count=momentary.native=0;pressed&=~(1u<<panel.btn[B_OCTUP]);ui_message("KEPT");
     }
@@ -2195,7 +2202,9 @@ static void ui_input(void)
     /* The armed layer owns the release frame too. Read each knob once: the scan ISR can publish another
      * detent after a take, which must wait for the next frame rather than edit the underlying page. */
     knob_layer = ui.ly && layer_allowed();
-    glo_select_layer = knob_layer && ui.ly == LAYER_GLO;
+    glo_select_layer = knob_layer && ui.ly == LAYER_GLO && (ui.lock != LAYER_GLO ||
+                       (fm1_in.buttons & ly_bit(LAYER_GLO)));   /* (GLO's main page, GLO not held: SELECT its pages,
+                                                                 * ui_layer.c glo_scroll) */
     if (glo_select_layer)
         glo_sel = panel_enc(EN_SELECT);               /* GLO owns SELECT through its release frame too */
     if (knob_layer)
@@ -2640,6 +2649,7 @@ static void ui_input(void)
             if (pattern_request(TSEL, (uint32_t)clamp((int32_t)from + s, 0, (int32_t)trk_npat(song.sel) - 1))) ui_message("STOP SONG TO SWITCH");
             ui.force = 1;
         } else if (step_gesture(s)) {                   /* ENV / SCL / a key held: the note's length, its place */
+        } else if (glo_scroll(s, now)) {                /* GLO's main page, MIXER, GLOBAL ..: one list (ui_layer.c) */
         } else if (sect_on()) {                         /* SONG's section page: its length, a beat a detent */
             sect_length(s);
         } else if (!ui.home) {                          /* the section's pages (BPM: SEQ > TEMPO; the notes, the hits:

@@ -32,13 +32,22 @@ static int nav_hidden(uint32_t i)
 static uint32_t nav_owner(uint32_t i)                  /* page i's button (family); FAM_COUNT: none */
 {
     return nav_hidden(i) ? FAM_COUNT : native_page(i, FAM_ENV) ? FAM_ENV : native_page(i, FAM_LFO) ? FAM_LFO :
-           PAGES[i].fam;
+           PAGES[i].fam == FAM_TRK ? FAM_GLO : PAGES[i].fam;   /* (MIXER is GLO's: one list with the global pages) */
 }
 static uint32_t nav_pages(uint32_t fam, uint8_t *pg)   /* the pages fam's button walks, in order -> how many */
 {
     uint32_t i, n = 0;
     if (fam == FAM_ENV || fam == FAM_LFO)              /* (the engine's first: ui.c fam_pages) */
         return fam_pages(fam, pg);
+    if (fam == FAM_GLO) {                              /* (MIXER first, then GLOBAL ..; GLO's main page before them) */
+        for (i = 0; i < NPAGES; i++)
+            if (PAGES[i].fam == FAM_TRK && page_visible(i))
+                pg[n++] = (uint8_t)i;
+        for (i = 0; i < NPAGES; i++)
+            if (PAGES[i].fam == FAM_GLO && page_visible(i))
+                pg[n++] = (uint8_t)i;
+        return n;
+    }
     for (i = 0; i < NPAGES; i++)
         if (nav_owner(i) == fam && page_visible(i))
             pg[n++] = (uint8_t)i;
@@ -142,6 +151,8 @@ static uint32_t nav_pos(uint32_t *k)                   /* -> n, the page's place
     }
     for (i = 0; i < n && pg[i] != ui.page; i++)
         ;
+    if (fam == FAM_GLO && i < n)                       /* (GLO's main page is the first: MIXER 2/6) */
+        return *k = i + 1u, n + 1u;
     *k = i;
     return i < n ? n : 0u;
 }
@@ -227,8 +238,8 @@ static void nav_dview_turn(int32_t s) { nav_drum_roll = (uint8_t)(s > 0); ui.for
 static void nav_dview(void) { nav_dview_turn(!nav_drum_roll); }   /* (OCT+: the other view) */
 
 /* M1 / M2 / M3 held (MELODEE_KEY_NAV): the keys light their map, the modifier and its black keys, and the panel buttons
- * light the ones those keys press (M1: FX .. GLO, M2: HOME .. REC, M3: OCT- OCT+), in place of the usual lights, until
- * it is let go (ui_input.c ui_leds) */
+ * light the ones those keys press (M1: FX .. GLO, M2: HOME .. REC, M3: OCT- OCT+, and A#4 for hearing the cursor's
+ * note, no button), in place of the usual lights, until it is let go (ui_input.c ui_leds) */
 static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
 {
 #if MELODEE_KEY_NAV
@@ -245,9 +256,10 @@ static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
     *keys = mod;
     *play = 0;
     for (i = 0; i < FM1_NAV_N; i++)
-        if (fm1_nav.row[r][i] < 14u) {
+        if (fm1_nav.row[r][i] <= FM1_NAV_ACTION) {
             *keys |= 1u << FM1_NAV_KEY[i];
-            led_put(nl, fm1_nav.row[r][i], 1);
+            if (fm1_nav.row[r][i] < FM1_NAV_ACTION)
+                led_put(nl, fm1_nav.row[r][i], 1);
         }
 #else
     (void)nl; (void)keys; (void)play;

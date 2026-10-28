@@ -524,8 +524,8 @@ user presets saved by earlier Melodee versions are not imported, and the user sa
   MONO / LEGATO / UNISON
 - **Modulation matrix:** 4 slots per track, MIDI controllers as sources
 - **Dry mixer:** track level, pan and synth voice spread, optional per-track FX, with output protection
-- **Quick layers:** hold GLO or SCL for shortcuts on the keys and knobs; double-press GLO to lock
-  its layer. Repeated SCL taps navigate the scale pages. Multi-level undo (EDIT held); REC on every page;
+- **Quick layers:** hold GLO or SCL for shortcuts on the keys and knobs; a GLO tap opens its layer as GLO's main
+  page (it stays open; GLO again: the mixer, then the global pages). Repeated SCL taps navigate the scale pages. Multi-level undo (EDIT held); REC on every page;
   OCT+ confirms, OCT- goes back
 - **Presets:** browse by category (BASS, LEAD, PAD, KEYS, ORGAN, STRING, BRASS, WIND, PLUCK, BELL, DRUM, FX), favourites or
   RECENT, with knob acceleration; factory presets, 384 shared user slots and 4 projects, named on the device;
@@ -1298,7 +1298,8 @@ them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)
   sheet and set **Drum view** to **Notes** (the piano roll; programmed hits do not show there), back to **Grid** the
   same way. It starts as Grid at power-on.
 - **Keyboard shortcuts (built in):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
-  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+. While M3 is
+  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+, or A#4 to hear the note or chord at the NOTES
+  cursor (also with NOTE PREVIEW off). While M3 is
   held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). While one is held, its keys and
   the buttons they press light up. Momentary edits:
   hold LFO and turn knobs, the values spring back when you let go; press F#5 (or OCT+) while holding to keep them.

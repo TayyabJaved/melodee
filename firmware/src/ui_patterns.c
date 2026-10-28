@@ -6,7 +6,8 @@
  * colour, a section its letter, a rest REST, a length bars:beats on SONG's cards and words elsewhere.
  * PATTERNS (SEQ held, or its page): the header, then a row per track: its chip (the selected one filled), a numbered
  * cell per pattern (a part's 16 in two rows of eight): the one playing filled in the track's colour (how far through it
- * at its foot), the one waiting for the bar dashed, ones holding notes raised, empty ones an outline. At the foot the song as its columns' section letters, the column playing (else the one SONG picked) lit, a
+ * at its foot), the one waiting for the bar dashed, ones holding notes raised, all three with their numbers; empty ones
+ * a bare outline. At the foot the song as its columns' section letters, the column playing (else the one SONG picked) lit, a
  * section queued live dashed. KNOB k queues track k's pattern.
  * OCT+ the selected track's pattern's sheet (Copy to.., Delete pattern). Copy to: the place it goes framed in the
  * theme's colour on the track's row (the first empty one first), any knob moves it, OCT+ copies (over a pattern in
@@ -97,8 +98,8 @@ static void pt_prog_bar(int32_t x, int32_t y, uint32_t prog, uint16_t tc)   /* a
     cv_rrect(x, y, (int32_t)w, 2, 1, tr, tc);
     cv_rrect(x, y, prog < 2u ? 2 : (int32_t)prog, 2, 1, T_BG, tr);
 }
-/* track k's pattern b as a cell at x, y (h high): playing filled, holding notes raised, empty an outline, its number in
- * each; dst: a Copy to place (framed); next: waiting for its loop end (dashed) */
+/* track k's pattern b as a cell at x, y (h high): playing filled, holding notes raised, both with its number; empty a
+ * bare outline (a Copy to place there: "+"); dst: a Copy to place (framed); next: waiting for its loop end (dashed) */
 static void pt_cell(uint32_t k, uint32_t b, int32_t x, int32_t y, int32_t h, int playing, int next, int dst, uint16_t tc)
 {
     char n[3];
@@ -113,10 +114,10 @@ static void pt_cell(uint32_t k, uint32_t b, int32_t x, int32_t y, int32_t h, int
     } else if (pattern_used(k, b) || next) {
         cv_rrect(x, y, PT_CELL_W, h, 4, T_SURF, dst ? T_THEME : T_BG);
         cv_text_c(x + PT_CELL_W / 2, ny, f, n, pattern_used(k, b) ? tc : T_MID, T_SURF);
-    } else {                                            /* empty: an outline, its number dim */
+    } else {                                            /* empty: an outline alone */
         cv_rrect(x, y, PT_CELL_W, h, 4, dst ? T_BG : T_LINE, dst ? T_THEME : T_BG);
         cv_rrect(x + 1, y + 1, PT_CELL_W - 2, h - 2, 3, T_BG, dst ? T_BG : T_LINE);
-        cv_text_c(x + PT_CELL_W / 2, ny, f, n, dst ? T_THEME : T_DIM, T_BG);
+        if (dst) cv_text_c(x + PT_CELL_W / 2, ty_y(y + h / 2, f), f, "+", T_THEME, T_BG);
     }
     if (next)                                           /* waiting for the bar: dashed */
         cv_dashed(x, y, PT_CELL_W, h, 4, tc);

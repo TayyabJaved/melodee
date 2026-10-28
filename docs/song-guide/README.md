@@ -48,10 +48,10 @@ they all play the same. A *track* is its numbered chip at the left of each row.
 ![Step 1: Open PATTERNS](01-patterns.svg)
 
 1. Hold **SEQ** for a moment (or press **SEQ** and turn **SELECT** to PATTERNS).
-2. Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns, each with its number: 1-8 above, 9-16 below.
+2. Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns: 1-8 above, 9-16 below.
 3. The filled cell is the pattern the track plays now; the line under its number shows how far it has played.
 
-*You see:* Cells with notes are raised, their number in the track's colour; empty ones are outlines. At the foot: the song's sections, by letter.
+*You see:* Cells with notes are raised, their number in the track's colour; empty patterns are plain outlines, no number. At the foot: the song's sections, by letter.
 
 > A pattern is one track's loop. Write its notes on SEQ > NOTES; this page chooses which one plays.
 

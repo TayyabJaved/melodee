@@ -22,6 +22,7 @@ static int fm1_enc_take(unsigned k) { (void)k; return 0; }
 #if MELODEE_KEY_NAV
 #define FM1_NAV_N 6u
 #define FM1_NAV_ROWS 3u
+#define FM1_NAV_ACTION 14u
 static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }
 #endif
 static void lcd_sync(void) {}

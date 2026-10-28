@@ -692,8 +692,9 @@ static void open_family(uint32_t fam)
         slot_save_sheet();                       /* SAVE: USER; OCT+ then its slot's sheet on Save here (ui_slots.c) */
 }
 
-/* GLO always enters the mixer from another family. Subsequent taps visit the
- * global settings, then return to the mixer; recording has no navigation role. */
+/* GLO: its main page first (ui_layer.c glo_main: the layer, open), then the mixer, the global settings (SELECT: the
+ * same list, no wrap, ui_layer.c glo_scroll); after the last
+ * the main page again (glo_main, before this). Recording has no navigation role. */
 static void open_global(void)
 {
     uint32_t i;
