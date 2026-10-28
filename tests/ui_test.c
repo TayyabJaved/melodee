@@ -2189,6 +2189,15 @@ static int test_patterns_queue(void)
     press(B_OCTDN);
     bad += check("..OCT- again: Stage", ui.home);
     stop_transport();
+    /* a part's 16 patterns: two pages of eight, the page goes with the pattern turned to */
+    go_title("PATTERNS"); frame();
+    pattern_switch(&trk[0], 7); ui.force = 1; frame();
+    bad += check("PATTERNS: track 1 on 8, the first page", pt_page() == 0u);
+    turn(EN_K1, 1); frame();
+    bad += check("..KNOB 1 to 9: the second page", trk[0].pattern == 8u && pt_page() == 1u);
+    turn(EN_K2, 1); frame();
+    bad += check("..KNOB 2 (track 2 to 2): back to the first", trk[1].pattern == 1u && pt_page() == 0u);
+    pattern_switch(&trk[1], 0); pattern_switch(&trk[0], 0); frame();
     return bad;
 }
 

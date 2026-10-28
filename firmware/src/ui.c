@@ -159,6 +159,7 @@ static struct {
     uint8_t ptc_on, ptc_trk, ptc_src, ptc_dst, ptc_to;   /* PATTERNS' Copy to: track ptc_trk's pattern src to
                                                           * track ptc_to's dst (ui_patterns.c) */
     uint8_t preset_audition;     /* Patterns' temporary preset picker; navigation cancels it */
+    uint8_t pt_page;             /* PATTERNS' page of eight (a part's 16: two; 0xFF: the selected track's, ui_patterns.c) */
     uint8_t cursor;              /* SEQ: step being edited (STEP page KNOB 1 moves it) */
     uint16_t note_pick;          /* NOTES: event index + 1; zero chooses the first hit */
     uint8_t erase_gesture, erase_owner; /* an EDIT press captures one track/bank until released */
@@ -413,6 +414,7 @@ static void page_entered(void)
     ui.act = 0;
     ui.proj_new = 0;
     ui.ptc_on = 0;
+    ui.pt_page = 0xFF;
     if (pg->graph == GR_BROWSE) {                /* (OCT- goes back to the sound from before: its loads, a level */
         browse_mark = browse_loads;              /* of their own) */
         undo_seal();
