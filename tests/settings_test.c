@@ -67,7 +67,7 @@ int main(void)
         settings_click_level=80;settings_export(&q);
         assert(f[0]=='C' && f[1]=='K' && f[2]==1u && f[3]==80u);
         settings_click_level=0;assert(settings_import(&q,sizeof q) && settings_click_level==80u);
-        f[3]=101;assert(settings_import(&q,sizeof q) && settings_click_level==50u);   /* untagged: HIGH, the nearest old level */
+        f[3]=101;assert(settings_import(&q,sizeof q) && settings_click_level==25u);   /* untagged: HIGH, the nearest old level */
     }
 
     {   /* Device workload budget shares tagged high USB bits, never its low flags. */

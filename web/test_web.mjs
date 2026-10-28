@@ -340,7 +340,7 @@ async function editorMock() {
   let prefs = await E.readDevicePreferences(rq, info, names);
   ok(info.uiCaps === 121 && prefs.palettes.length === 8 && prefs.palettes[0] === "MONO" && prefs.palettes.includes("HI-CON"),
      "editor: preference capabilities (palette, favorites) and palette names");
-  ok(prefs.state.clickLevel===25,"click level reports a percentage (capability bit 6), MID's 25 % by default");
+  ok(prefs.state.clickLevel===12,"click level reports a percentage (capability bit 6), 12 % (the old MID at MASTER 0.5) by default");
   for(const [id,key,value] of [[4,"click",2],[5,"clickLevel",73],[6,"countin",2],[7,"preview",1],[8,"chordAdd",1]]) {
     const changed=E.parse[E.CMD.UI_SET](await rq(E.req.uiSet(id,value)));
     ok(changed.rc===0 && changed[key]===value,`recording preference ${key} round trip`);

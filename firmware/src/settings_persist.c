@@ -39,7 +39,7 @@ static int16_t settings_glo[4];                     /* ext.glo: project.c GLO_KE
 #define VOICE_PREF_ROW 8u
 #define VOICE_PREF_BYTE 8u
 /* Retired DIGITAL row bytes 24..27 (FX RATE's FQ tag until 1.2): 'C', 'K', version 1, CLICK LEVEL 0..100 %.
- * Untagged records take the old LOW/MID/HIGH bits of the zoom word (12/25/50 %), which stay written
+ * Untagged records take the old LOW/MID/HIGH bits of the zoom word (6/12/25 %, as heard at the default MASTER), which stay written
  * (nearest) for older builds. No settings/project layout change. */
 #define CLICK_PREF_ROW 1u
 #define CLICK_PREF_BYTE 24u
@@ -112,7 +112,7 @@ static int settings_import(persist_t *p, int n)
         const uint8_t *q = p->favorites.factory[CLICK_PREF_ROW] + CLICK_PREF_BYTE;
         uint32_t level = (rp >> 2) & 3u;
         settings_click_level = q[0] == 'C' && q[1] == 'K' && q[2] == 1u && q[3] <= 100u ? q[3] :
-                               (uint8_t)(level == 1u ? 12u : level == 2u ? 50u : CLICK_LEVEL_DEFAULT);
+                               (uint8_t)(level == 1u ? 6u : level == 2u ? 25u : CLICK_LEVEL_DEFAULT);
     }
     settings_countin = (uint8_t)(((rp >> 4) & 3u) < 3u ? (rp >> 4) & 3u : 0u);
     settings_preview = (uint8_t)((rp >> 6) & 1u);
@@ -141,7 +141,7 @@ static void settings_export(persist_t *p)
     p->magic = PERSIST_MAGIC;
     p->palette = palette_to_stored(settings.palette);
     p->lowcut = 0;
-    uint32_t rp = settings_click % 3u | (settings_click_level < 19u ? 1u : settings_click_level >= 38u ? 2u : 0u) << 2 |
+    uint32_t rp = settings_click % 3u | (settings_click_level < 9u ? 1u : settings_click_level >= 19u ? 2u : 0u) << 2 |
                   (settings_countin % 3u) << 4 | (settings_preview != 0u) << 6 | (settings_chord_add != 0u) << 7;
     p->zoom = (settings.zoom & 0xFFu) | (rp ? RECORD_PREF_TAG | rp << 8 : 0u);
     p->panel = panel;

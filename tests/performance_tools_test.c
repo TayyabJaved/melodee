@@ -118,17 +118,17 @@ static void test_midi_and_levels(void)
 }
 static void test_compatibility(void)
 {
-    reset_tools();settings_click=2;settings_click_level=37;settings_countin=2;settings_preview=settings_chord_add=1;
+    reset_tools();settings_click=2;settings_click_level=15;settings_countin=2;settings_preview=settings_chord_add=1;
     persist_t p={0};settings_export(&p);settings_click=settings_countin=settings_preview=settings_chord_add=0;settings_click_level=CLICK_LEVEL_DEFAULT;
-    assert(settings_import(&p,sizeof p));assert(settings_click==2 && settings_click_level==37 && settings_countin==2 && settings_preview && settings_chord_add);
-    /* older builds read the nearest LOW/MID/HIGH from the zoom word: 37 % is MID (0) */
+    assert(settings_import(&p,sizeof p));assert(settings_click==2 && settings_click_level==15 && settings_countin==2 && settings_preview && settings_chord_add);
+    /* older builds read the nearest LOW/MID/HIGH from the zoom word: 15 % is MID (0) */
     assert(((p.zoom>>10)&3u)==0u);
     settings_click_level=0;settings_export(&p);assert(((p.zoom>>10)&3u)==1u);
     settings_click_level=100;settings_export(&p);assert(((p.zoom>>10)&3u)==2u);
-    /* records from before the percentage: LOW/MID/HIGH become 12/25/50 % */
+    /* records from before the percentage: LOW/MID/HIGH become 6/12/25 %, as heard at the default MASTER */
     for(uint32_t old=0;old<3;old++) {
         memset(p.favorites.factory[1]+24,0,4);p.zoom=0x52500000u|((old<<2)|1u)<<8;
-        assert(settings_import(&p,sizeof p));assert(settings_click_level==(old==1u?12u:old==2u?50u:25u));
+        assert(settings_import(&p,sizeof p));assert(settings_click_level==(old==1u?6u:old==2u?25u:12u));
     }
     p.zoom=1;assert(settings_import(&p,sizeof p));assert(!settings_click && settings_click_level==CLICK_LEVEL_DEFAULT && !settings_countin && !settings_preview && !settings_chord_add);
     project_t q,back;project_store_t current;project_capture(&q);q.t[0].p[P_E4]=53;
