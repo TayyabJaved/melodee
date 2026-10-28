@@ -31,7 +31,6 @@ enum { UH_MSG_NONE, UH_MSG_ON, UH_MSG_OFF, UH_MSG_MIDI, UH_MSG_NOMIDI, UH_MSG_LO
 #define UH_MAX_ERRORS 16u
 
 static uint8_t uh_rx[64 + 4] __attribute__((aligned(4)));
-static uint8_t uh_cfg[320];                                  /* a configuration, cut short if longer */
 static struct {
     uint8_t want;                                       /* the menu (main loop) */
     uint8_t on;                                         /* the port is a host */
@@ -78,11 +77,12 @@ static int uh_csr0(uint32_t want_set, uint32_t want_clr)
 }
 
 /* One control transfer to `addr`: SETUP, the IN data stage if any, the status stage. Bytes read, or < 0.
- * Only requests without an OUT data stage (every one used here). */
-static int uh_ctl(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t idx, uint16_t len, uint8_t *out,
-                  uint8_t mps)
+ * Only requests without an OUT data stage (every one used here). The data goes to `out`, or with `walk` to the
+ * descriptor walk, which may end the data stage early once it has found what it needs. */
+static int uh_xfer(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t idx, uint16_t len, uint8_t *out,
+                   uh_desc_t *walk, uint8_t mps)
 {
-    uint32_t got = 0, n, i;
+    uint32_t got = 0, n, k, i, stop = 0;
     int r;
     sie_wr(S_FADDR, addr);
     sie_wr(S_INDEX, 0);
@@ -109,11 +109,15 @@ static int uh_ctl(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t i
             if (n > 64u)
                 n = 64u;
             fm1_usb_rx_sync();
-            for (i = 0; i < n && got + i < len; i++)
-                out[got + i] = ep0buf[i];
+            k = got + n > len ? len - got : n;
+            if (walk)
+                stop = (uint32_t)uh_desc_feed(walk, ep0buf, k);
+            else
+                for (i = 0; i < k; i++)
+                    out[got + i] = ep0buf[i];
             sie_wr(S_CSR0, 0);                          /* RxPktRdy done */
             got += n;
-            if (n < mps)
+            if (n < mps || stop)
                 break;
         }
         if (got > len)
@@ -129,6 +133,12 @@ static int uh_ctl(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t i
     return r < 0 ? r : (int)got;
 }
 
+static int uh_ctl(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t idx, uint16_t len, uint8_t *out,
+                  uint8_t mps)
+{
+    return uh_xfer(addr, rt, rq, val, idx, len, out, 0, mps);
+}
+
 /* ---------------------------------------------------- enumeration --- */
 static int uh_hub_probe(uint8_t addr, uint8_t mps, uint8_t cfgval, uh_midi_t *m);
 
@@ -136,8 +146,9 @@ static int uh_hub_probe(uint8_t addr, uint8_t mps, uint8_t cfgval, uh_midi_t *m)
  * streaming interface select it. 1 = found, 0 = no (including a hub below depth 0 and a device that fails). */
 static int uh_probe(uint8_t depth, uh_midi_t *m)
 {
-    uint8_t d8[8], mps, cls, addr = uh.next_addr++;
+    uint8_t d8[8], c9[9], mps, cls, addr = uh.next_addr++;
     uint32_t total;
+    uh_desc_t walk;
     int r;
     r = uh_ctl(0, 0x80, 6, 0x0100, 0, 8, d8, 8);        /* GET_DESCRIPTOR(device), first 8 bytes */
     if (r < 8)
@@ -147,21 +158,16 @@ static int uh_probe(uint8_t depth, uh_midi_t *m)
     if (uh_ctl(0, 0x00, 5, addr, 0, 0, 0, mps) < 0)     /* SET_ADDRESS */
         return 0;
     uh_wait(10);                                        /* the device settles to its new address */
-    r = uh_ctl(addr, 0x80, 6, 0x0200, 0, 9, uh_cfg, mps);
+    r = uh_ctl(addr, 0x80, 6, 0x0200, 0, 9, c9, mps);
     if (r < 9)
         return 0;
-    total = (uint32_t)(uh_cfg[2] | uh_cfg[3] << 8);
-    if (total > sizeof uh_cfg)
-        total = sizeof uh_cfg;
-    if (total > 9u) {
-        r = uh_ctl(addr, 0x80, 6, 0x0200, 0, (uint16_t)total, uh_cfg, mps);
-        if (r < 9)
-            return 0;
-        total = (uint32_t)r;
-    }
+    total = (uint32_t)(c9[2] | c9[3] << 8);             /* the whole configuration, walked as it arrives */
+    uh_desc_start(&walk, m);
+    if (total > 9u && uh_xfer(addr, 0x80, 6, 0x0200, 0, (uint16_t)total, 0, &walk, mps) < 9)
+        return 0;
     if (cls == 9u)                                      /* a hub */
-        return depth == 0u ? uh_hub_probe(addr, mps, uh_cfg[5], m) : 0;
-    if (!uh_parse_midi(uh_cfg, total, m))
+        return depth == 0u ? uh_hub_probe(addr, mps, c9[5], m) : 0;
+    if (!m->found)
         return 0;
     if (uh_ctl(addr, 0x00, 9, m->cfg, 0, 0, 0, mps) < 0)   /* SET_CONFIGURATION */
         return 0;
