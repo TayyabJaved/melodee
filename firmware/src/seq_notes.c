@@ -172,10 +172,21 @@ static void notes_step_jog(int32_t delta)
     notes_preview();
 }
 
+static int notes_preview_on(void)
+{
+    const page_t *pg=cur_page();
+    return settings_preview && !song.playing && !seq_counting() && !ui.home && !ui.menu && !ui.layer && !ui.entry_open &&
+        (pg->graph==GR_ROLL || pg->graph==GR_STEPS || pg->graph==GR_DRUMHIT);
+}
+static void notes_audition(const uint8_t *nn,const uint8_t *vv,uint32_t count,int32_t pitch,uint32_t gate)
+{
+    fm1_irq_off(); audition_track=song.sel;audition_count=(uint8_t)count;audition_pitch=pitch;audition_gate=gate;
+    memcpy(audition_notes,nn,count);memcpy(audition_vel,vv,count);audition_request=1;fm1_irq_on();
+}
 static void notes_preview(void)
 {
-    if(!settings_preview || song.playing || seq_counting() || ui.home || ui.menu || ui.layer || ui.entry_open) return;
-    const page_t *pg=cur_page(); if(pg->graph!=GR_ROLL && pg->graph!=GR_STEPS && pg->graph!=GR_DRUMHIT) return;
+    if(!notes_preview_on()) return;
+    const page_t *pg=cur_page();
     uint8_t nn[12],vv[12];uint32_t count=0,chosen=notes_selected(TSEL);
     if(pg->scope==SC_DRUMHIT)chosen=drum_hit_selected();
     int32_t pitch=0;uint32_t gate=0;
@@ -190,6 +201,5 @@ static void notes_preview(void)
             if(drum_track(TSEL))for(uint32_t i=0;i<NLANE;i++)if(step_lanes(st)&(1u<<i)){nn[count]=DRUM_LANE_NOTE[i];vv[count++]=(step_accents(st)&(1u<<i))?127:96;}
         }
     }
-    fm1_irq_off(); audition_track=song.sel;audition_count=(uint8_t)count;audition_pitch=pitch;audition_gate=gate;
-    memcpy(audition_notes,nn,count);memcpy(audition_vel,vv,count);audition_request=1;fm1_irq_on();
+    notes_audition(nn,vv,count,pitch,gate);
 }

@@ -106,7 +106,7 @@ static int test_entry_history(void)
     bad += check("EDIT+OCT+ restores the whole held entry", step_note_length(t, 0) == 4 && ui.cursor == 4 && cur_page()->graph == GR_ROLL);
     history_key(B_OCTDN);
     bad += check("EDIT+OCT- undoes without changing octave", !step_on(&t->step[0]) && !song.octave);
-    turn(EN_K2, 1);
+    press(B_OCTUP);                                     /* (a note placed) */
     history_key(B_OCTUP);
     bad += check("a new edit drops redo", msg_is("NOTHING TO REDO") && step_on(&t->step[0]));
 

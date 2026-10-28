@@ -952,6 +952,19 @@ static void drum_hit_key(uint32_t accent)
     notes_preview();
 }
 
+/* OCT+ on an empty NOTES place (ui_popup.c step_enter): the last note played goes there. PITCH never adds one */
+static void notes_place(void)
+{
+    if (chain_busy()) { ui_message("STOP TO EDIT"); return; }
+    if (live_rec_sel()) { ui_message("STOP RECORDING"); return; }
+    fm1_irq_off();
+    uint32_t at = notes_manual_start(TSEL);
+    step_t *st = &TSEL->step[at < NSTEP ? at : ui.cursor];
+    if (at >= NSTEP && (st->flags & SF_RECORDED)) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
+    if (!st->n) { st->note[0] = last_note; st->n = 1; st->time = ST_NOTE; }
+    fm1_irq_on();
+}
+
 static void step_edit(uint32_t slot, int32_t steps)
 {
     if (slot == 0u) {                                   /* KNOB 1: the notes one by one, the steps (empty ones too) */
@@ -962,27 +975,28 @@ static void step_edit(uint32_t slot, int32_t steps)
         return;
     }
     if (live_rec_sel()) { ui_message("STOP RECORDING"); return; }
+    if (slot == 1u && !grid_on() && (bulk.on || ui.note_copy || (ui.note_move && notes_selected(TSEL) < RECORD_MAX))) {
+        notes_range_pitch(steps);                       /* a range, or a note being moved / copied */
+        return;
+    }
     if (notes_selected(TSEL) < RECORD_MAX) {
         uint32_t fine = slot == 2u ? ui.step_mods & (1u << panel.btn[B_ENV]) : 0u;
         ui.step_used |= (uint16_t)fine;
         notes_event_edit(fine ? 4u : slot, steps);
+        if (slot == 1u) notes_preview();                /* the new pitch heard (PREVIEW on) */
         return;
     }
     if (grid_on()) { grid_edit(slot, steps); return; }
     if(slot==2u){uint32_t fine=ui.step_mods&(1u<<panel.btn[B_ENV]);ui.step_used|=(uint16_t)fine;note_manual_length(steps,fine?RECORD_UNIT/16u:RECORD_UNIT/4u);return;}
     fm1_irq_off();
     uint32_t at = notes_manual_start(TSEL);
-    if (at >= NSTEP && (slot != 1u || (TSEL->step[ui.cursor].flags & SF_RECORDED))) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
-    step_t *st = &TSEL->step[at < NSTEP ? at : ui.cursor];
+    if (at >= NSTEP || (slot == 1u && !TSEL->step[at].n)) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }   /* PITCH never adds a note */
+    step_t *st = &TSEL->step[at];
     if (slot == 1u) {
-        if (!st->n) {
-            if (st->flags & SF_RECORDED) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
-            st->note[0] = last_note; st->n = 1; st->time = ST_NOTE;
-        } else {
-            uint32_t j = notes_manual_slot(st);
-            st->note[j] = (uint8_t)clamp((int32_t)st->note[j] + steps, 1, 127);
-        }
-        last_note = st->note[notes_manual_slot(st)];
+        uint32_t j = notes_manual_slot(st);
+        st->note[j] = (uint8_t)clamp((int32_t)st->note[j] + steps, 1, 127);
+        last_note = st->note[j];
+        fm1_irq_on(); notes_preview(); return;
     } else if (slot == 2u) {
         ui.step_used |= (uint16_t)(ui.step_mods & (1u << panel.btn[B_ENV]));
         step_note_resize(TSEL, at, (int32_t)step_note_length(TSEL, at) + steps);
@@ -1888,6 +1902,7 @@ static int bulk_jog(int32_t delta)
 {
     if(!bulk_context()||!(fm1_in.buttons&(1u<<panel.btn[B_OCTUP])))return 0;
     uint32_t slots=slot_kind(),cur=slots?slot_cur(slots):ui.cursor;
+    if(!slots)notes_pitch_seal();                       /* a new range: its own PITCH undo */
     if(!bulk.on||bulk.on==2u){bulk.anchor=(uint16_t)cur;bulk.engine=(uint8_t)library_engine();bulk.track=song.sel;bulk.pattern=TSEL->pattern;bulk.generation=TSEL->pattern_gen;}
     bulk.on=1;uint32_t limit=slots?UP_SLOTS:step_pattern_len(TSEL);
     uint32_t to=(uint32_t)clamp((int32_t)cur+delta,0,(int32_t)limit-1);

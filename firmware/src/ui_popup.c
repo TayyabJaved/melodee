@@ -38,6 +38,7 @@ static uint16_t song_punch_epoch;
 
 static void confirm_open(uint32_t kind, uint32_t trk);  /* ui_input.c */
 static void edit_param(uint32_t slot, int32_t steps);
+static void notes_place(void);                 /* ui_input.c */
 static void jam_take(void);
 static int name_on(void);
 static int new_on(void);
@@ -313,7 +314,7 @@ static int step_enter(void)
     chosen = notes_selected(TSEL);
     start = notes_manual_start(TSEL);
     if (chosen >= RECORD_MAX && !(start < NSTEP && TSEL->step[start].n)) {
-        edit_param(1u, 0);                              /* (NOTES' PITCH on an empty step: the last note there) */
+        notes_place();                                  /* (the last note played) */
         return 1;
     }
     str_cpy(t, "Note ", sizeof t);
