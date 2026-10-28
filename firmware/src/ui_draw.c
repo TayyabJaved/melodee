@@ -163,10 +163,12 @@ static void head_chip_text(char *b)
         str_cpy(b, "SONG FX", 16);
     } else if (new_on()) {                                     /* NEW SONG */
         str_cpy(b, "NEW SONG", 16);
-    } else if (ptc_on()) {                              /* PATTERNS' Copy to: "copy 3 to 5" */
+    } else if (ptc_on()) {                              /* PATTERNS' Copy to: "copy 3 to 5", another track's "to T2 5" */
         str_cpy(b, "copy ", 16);
         pat_num(b + 5, ui.ptc_src);
-        str_cpy(b + str_len(b), " to ", 5);
+        str_cpy(b + str_len(b), ui.ptc_to != ui.ptc_trk ? " to T1 " : " to ", 8);
+        if (ui.ptc_to != ui.ptc_trk)
+            b[str_len(b) - 2] = (char)('1' + ui.ptc_to % NTRK);
         pat_num(b + str_len(b), ui.ptc_dst);
     } else if (ui.home) {                               /* Stage: the engine (a kit: its name, "909 KIT") */
         if (browse_pending()) { uint32_t kk, s = browse_shown(&kk); e = src_engine(s, kk); }
@@ -266,7 +268,7 @@ static void ble_head_text(char text[24])
 #endif
 static void draw_head(void)
 {
-    char b[16], chip[16];
+    char b[16], chip[20];                               /* (chip: "copy 16 to T2 16") */
 #if MELODEE_BLE
     char ble_text[24]; ble_head_text(ble_text);
 #endif
@@ -1029,8 +1031,10 @@ static void confirm_text(char *a, char *b)
         str_cpy(a, "REPLACE PATTERN ", 24);
         pat_num(a + 16, ui.ptc_dst);
         str_cpy(a + str_len(a), "?", 2);
-        str_cpy(b, "Track 1 \xB7 with pattern ", 32);
-        b[6] = (char)('1' + k % NTRK);
+        str_cpy(b, ui.ptc_to != ui.ptc_trk ? "Track 1 \xB7 with T1 pattern " : "Track 1 \xB7 with pattern ", 32);
+        b[6] = (char)('1' + ui.ptc_to % NTRK);
+        if (ui.ptc_to != ui.ptc_trk)
+            b[16] = (char)('1' + ui.ptc_trk % NTRK);
         pat_num(b + str_len(b), ui.ptc_src);
         break;
     case CF_CLEAR_MOTION:

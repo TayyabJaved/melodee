@@ -156,8 +156,8 @@ static struct {
     uint8_t pat_tap, pat_dlg, pat_did;             /* .. the key last tapped (+1), the one held to its dialog, its
                                                     * length changed there (Cancel: Done) */
     uint32_t pat_ms, pat_tap_ms;                   /* .. when it went down, when the tapped one was let go */
-    uint8_t ptc_on, ptc_trk, ptc_src, ptc_dst;     /* PATTERNS' Copy to: track ptc_trk's pattern src to dst
-                                                    * (ui_patterns.c) */
+    uint8_t ptc_on, ptc_trk, ptc_src, ptc_dst, ptc_to;   /* PATTERNS' Copy to: track ptc_trk's pattern src to
+                                                          * track ptc_to's dst (ui_patterns.c) */
     uint8_t preset_audition;     /* Patterns' temporary preset picker; navigation cancels it */
     uint8_t cursor;              /* SEQ: step being edited (STEP page KNOB 1 moves it) */
     uint16_t note_pick;          /* NOTES: event index + 1; zero chooses the first hit */

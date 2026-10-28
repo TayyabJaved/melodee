@@ -158,7 +158,7 @@ static void pt_row(uint32_t k)
     h = fnv1(fnv1(fnv1(2166136261u, steps_hash(t)), t->pattern_gen), t->pattern + 16u * t->pattern_next + 8192u * sel +
             16384u * (uint32_t)(t->p[P_MUTE] != 0) + 65536u * (uint32_t)t->p[P_SLEN]);
     h = fnv1(h, ux.gen * 977u + ux.pal * 31u + (uint32_t)song.playing);
-    if (ptc_on() && k == ui.ptc_trk)                    /* Copy to: where it goes */
+    if (ptc_on() && k == ui.ptc_to)                     /* Copy to: where it goes */
         h = fnv1(h, 1u + ui.ptc_src + 16u * ui.ptc_dst);
     if (!ui.force && h == ptv.row[k]) {
         if (prog != ptv.prog[k]) {                      /* playing: the bar at the cell's foot only */
@@ -183,7 +183,7 @@ static void pt_row(uint32_t k)
     int32_t w = PT_CELL_W(k), r = w > 12 ? 4 : 2;
     for (b = 0; b < trk_npat(k); b++) {
         int32_t x = PT_CELL_X(k, b), y = 2;
-        int dst = ptc_on() && k == ui.ptc_trk && b == ui.ptc_dst;
+        int dst = ptc_on() && k == ui.ptc_to && b == ui.ptc_dst;
         if (dst)                                        /* Copy to: the place, framed in the theme's colour */
             cv_rrect(x - 2, y - 2, w + 4, 36, r + 2, T_THEME, T_BG);
         if (b == t->pattern) {                          /* playing: filled, how far through it */
@@ -271,19 +271,25 @@ static int patterns_queued(void)
     return 0;
 }
 /* KNOB k: track k's next pattern (stopped: at once; playing: at the end of its bar; a song plays: refused); Copy to:
- * any knob the place */
+ * the place on track k's row (another row: the frame there first, the same pattern number) */
 static void patgrid_edit(uint32_t k, int32_t steps)
 {
     track_t *t;
     k = trk_group() + k % NPART;                        /* (KNOB k: the selected track's four) */
     t = &trk[k];
+    if (k >= trk_n())                                   /* (no track there) */
+        return;
     if (ptc_on()) {
-        ui.ptc_dst = (uint8_t)ptc_next(ui.ptc_dst, steps > 0 ? 1 : -1);
+        if (k != ui.ptc_to) {
+            uint32_t b = ui.ptc_dst < trk_npat(k) ? ui.ptc_dst : trk_npat(k) - 1u;
+            ui.ptc_to = (uint8_t)k;
+            ui.ptc_dst = (uint8_t)(k == ui.ptc_trk && b == ui.ptc_src ? ptc_next(b, b ? -1 : 1) : b);
+        } else {
+            ui.ptc_dst = (uint8_t)ptc_next(ui.ptc_dst, steps > 0 ? 1 : -1);
+        }
         ui.force = 1;
         return;
     }
-    if (k >= trk_n())                                   /* (no track there) */
-        return;
     uint32_t from = t->pattern_next < NPAT ? t->pattern_next : t->pattern;
     if (pattern_request(t, (uint32_t)clamp((int32_t)from + (steps > 0 ? 1 : -1), 0, (int32_t)trk_npat(k) - 1)))
         ui_message("STOP SONG TO SWITCH");
@@ -293,12 +299,13 @@ static void patgrid_edit(uint32_t k, int32_t steps)
 /* ----------------------------------------------- PATTERNS: Copy to --- */
 static void confirm_open(uint32_t kind, uint32_t trk);  /* ui_input.c */
 static int ptc_on(void) { return ui.ptc_on && !ui.home && cur_page()->graph == GR_PATGRID && ui.ptc_trk == song.sel; }
-static uint32_t ptc_next(uint32_t from, int32_t dir)    /* the next place that is not the pattern copied (ends kept) */
+static uint32_t ptc_next(uint32_t from, int32_t dir)    /* the next place on its row that is not the pattern copied
+                                                         * (ends kept) */
 {
     int32_t b = (int32_t)from + dir;
-    if (b == (int32_t)ui.ptc_src)
+    if (ui.ptc_to == ui.ptc_trk && b == (int32_t)ui.ptc_src)
         b += dir;
-    return b < 0 || b >= (int32_t)trk_npat(ui.ptc_trk) ? from : (uint32_t)b;
+    return b < 0 || b >= (int32_t)trk_npat(ui.ptc_to) ? from : (uint32_t)b;
 }
 static void ptc_start(void)                             /* the pattern sheet's Copy to: the selected track's pattern */
 {
@@ -316,7 +323,7 @@ static void ptc_start(void)                             /* the pattern sheet's C
     if (i < n)
         b = (src + i) % n;
     ui.ptc_on = 1;
-    ui.ptc_trk = (uint8_t)k;
+    ui.ptc_trk = ui.ptc_to = (uint8_t)k;
     ui.ptc_src = (uint8_t)src;
     ui.ptc_dst = (uint8_t)b;
     ui.force = 1;
@@ -324,18 +331,18 @@ static void ptc_start(void)                             /* the pattern sheet's C
 static void ptc_paste(int asked)                        /* OCT+: copy it there (over one in use: asked first;
                                                          * that or the one playing, playing: at its loop end) */
 {
-    uint32_t k = ui.ptc_trk % NTRK;
+    uint32_t k = ui.ptc_trk % NTRK, d = ui.ptc_to % NTRK;
     int rc;
-    if (!asked && !pattern_empty(k, ui.ptc_dst)) {
+    if (!asked && !pattern_empty(d, ui.ptc_dst)) {
         confirm_open(CF_PASTE_PAT, k);
         return;
     }
-    if (ui.ptc_src != ui.ptc_dst && (ui.ptc_dst == trk[k].pattern || !pattern_empty(k, ui.ptc_dst)) &&
-        dq_defer(CF_PASTE_PAT, k, ui.ptc_dst, ui.ptc_src)) {
+    if ((d != k || ui.ptc_src != ui.ptc_dst) && (ui.ptc_dst == trk[d].pattern || !pattern_empty(d, ui.ptc_dst)) &&
+        dq_defer(CF_PASTE_PAT, d, ui.ptc_dst, k * NPAT + ui.ptc_src)) {
         ui.ptc_on = 0;
         return;
     }
-    rc = pattern_copy(&trk[k], ui.ptc_src, ui.ptc_dst);
+    rc = pattern_copy_to(&trk[k], ui.ptc_src, &trk[d], ui.ptc_dst, 0);
     if (!rc)
         ui.ptc_on = 0;
     ui_message(!rc ? "PATTERN COPIED" : rc == 4 ? "PATTERN STORAGE FULL" : rc == 2 ? "PATTERN DATA FULL" : chain_busy() ? "STOP SONG TO COPY" :

@@ -2259,10 +2259,10 @@ static int test_init_scales_patterns(void)
     sheet_do("Copy to\x85");
     bad += check("..Copy to: the pattern, the first empty place", ptc_on() && ui.ptc_src == t->pattern &&
                  ui.ptc_dst == first && first < NPAT);
-    turn(EN_K3, 1);
-    ok = ui.ptc_dst == first + 1u && t->pattern == 0u;
+    turn(EN_K1, 1);
+    ok = song.sel == 0u && ui.ptc_dst == first + 1u && t->pattern == 0u;
     turn(EN_K1, -1);
-    bad += check("..any knob moves the place (no pattern switched)", ok && ui.ptc_dst == first && t->pattern == 0u);
+    bad += check("..its row's knob moves the place (no pattern switched)", ok && ui.ptc_dst == first && t->pattern == 0u);
     hold(B_OCTUP);
     bad += check("..OCT+ held: no sheet while copying", pop.on != POP_SHEET);
     ok = 1;
@@ -2281,6 +2281,23 @@ static int test_init_scales_patterns(void)
     sheet_do("Copy to\x85");
     press(B_OCTDN);
     bad += check("..OCT- leaves Copy to, PATTERNS stays", !ptc_on() && !ui.home && str_eq(cur_page()->title, "PATTERNS"));
+    sheet_do("Copy to\x85");
+    b = ui.ptc_dst;
+    turn(EN_K2, 1);
+    {
+        char c[20];
+        head_chip_text(c);
+        ok = ptc_on() && ui.ptc_to == 1u && ui.ptc_dst == b && trk[1].pattern == 0u && !memcmp(c, "copy 1 to T2 ", 13);
+    }
+    bad += check("..another row's knob: the place on that track, the same number (\"copy 1 to T2 ..\")", ok);
+    turn(EN_K2, 1);
+    ok = ui.ptc_dst == b + 1u;
+    press(B_OCTUP);
+    if (ui.confirm == CF_PASTE_PAT)
+        press(B_OCTUP);
+    for (i = 0; i < NSTEP; i++)
+        ok &= !memcmp(&pattern_at(1, b + 1u)->step[i], &t->step[i], sizeof t->step[i]);
+    bad += check("..OCT+ copies it to that track", ok && !ptc_on() && msg_is("PATTERN COPIED") && song.sel == 0u);
     sheet_do("Delete pattern");
     bad += check("..Delete pattern asks", ui.confirm == CF_DEL_PAT && !seq_is_empty(t));
     press(B_OCTUP);

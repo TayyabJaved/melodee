@@ -160,7 +160,8 @@ static uint32_t pattern_leds(uint32_t *dim, uint32_t *breath)
 #define DQ_N 8u
 static struct { uint8_t cf, trk, a, b; uint16_t loop, epoch; } dq[DQ_N];   /* cf: CF_DEL_PAT, CF_CLEAR_SEQ,
                                                                             * CF_CLEAR_TRK (bank a), CF_CLEAR_MOTION (a),
-                                                                            * CF_PASTE_PAT (b over a); epoch: its
+                                                                            * CF_PASTE_PAT (track b / NPAT's bank
+                                                                            * b % NPAT over a); epoch: its
                                                                             * project's (pattern_epoch) */
 static uint8_t dq_n;
 /* the pattern playing on track k cleared (its notes, motion, the latched chord), undoably */
@@ -202,7 +203,7 @@ static void dq_do(uint32_t cf, uint32_t k, uint32_t a, uint32_t b)
         load_end(t);
         ui_message("MOTION CLEARED");
     } else if (cf == CF_PASTE_PAT) {
-        rc = pattern_copy_at(t, b, a, 1);
+        rc = pattern_copy_to(&trk[b / NPAT % NTRK], b % NPAT, t, a, 1);
         ui_message(rc == 4 ? "PATTERN STORAGE FULL" : rc == 2 ? "PATTERN DATA FULL" : rc ? "STOP TO COPY" : "PATTERN COPIED");
     } else if (a == t->pattern) {
         seq_clear_now(cf, k);
@@ -272,7 +273,7 @@ static void dq_poll(void)
 static void pattern_copy_ui(uint32_t k, uint32_t src, uint32_t dst)
 {
     int rc;
-    if (src != dst && (dst == trk[k].pattern || !pattern_empty(k, dst)) && dq_defer(CF_PASTE_PAT, k, dst, src))
+    if (src != dst && (dst == trk[k].pattern || !pattern_empty(k, dst)) && dq_defer(CF_PASTE_PAT, k, dst, k * NPAT + src))
         return;
     rc = pattern_copy(&trk[k], src, dst);
     ui_message(rc == 4 ? "PATTERN STORAGE FULL" : rc == 2 ? "PATTERN DATA FULL" : rc ? "STOP TO COPY" : "PATTERN COPIED");
