@@ -1450,7 +1450,7 @@ static void setup(int s)
         if(s==S_PEDAL_FOLD || s==S_PEDAL_PHASER){ui.hot_col=3;ui.hot_t=30;}break;
     case S_REVERB:go_title("FX 1");TSEL->p[P_FXTYPE]=FX_REVERB;TSEL->p[P_FXMIX]=80;break;
     case S_MENU_CLICK: ui.menu=1;ui.menu_sel=MI_CLICK;settings_click=2;break;
-    case S_MENU_CLICK_LEVEL: ui.menu=1;ui.menu_sel=MI_CLICK_LEVEL;settings_click_level=2;break;
+    case S_MENU_CLICK_LEVEL: ui.menu=1;ui.menu_sel=MI_CLICK_LEVEL;settings_click_level=40;break;
     case S_MENU_COUNTIN: ui.menu=1;ui.menu_sel=MI_COUNTIN;settings_countin=2;break;
     case S_MENU_PREVIEW: ui.menu=1;ui.menu_sel=MI_PREVIEW;settings_preview=1;break;
     case S_DRUM_SOUND_808: case S_DRUM_SOUND_909: case S_DRUM_MIX_909: case S_DRUM_HIT_909: case S_DRUM_HIT_FREE: case S_DRUM_HIT_LONG:
