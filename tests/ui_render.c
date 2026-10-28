@@ -1297,7 +1297,7 @@ static void setup(int s)
         TSEL->p[P_FX2TYPE] = FX_MIDIDELAY; TSEL->p[P_FX2MIX] = 84;
         TSEL->p[P_FX2RATE] = 4; TSEL->p[P_FX2CHAR] = 72;
         if (s == S_FX_MIDIDELAY) go_title("FX 2");       /* (NOTE TAIL: no page, its rack row) */
-        else { go_title("FX"); fx_rack_row[0] = s == S_FX_MIDIVERB ? 0 : 1;
+        else { go_title("NOTE FX"); fx_rack_row[0] = s == S_FX_MIDIVERB ? 0 : 1;
                if (s == S_FX_MIDI_LIST) { TSEL->p[P_FX3TYPE] = FX_OFF; fx_rack_row[0] = 2; vlist_open(ui.page, 0); vl.sel = FX_MIDIDELAY; } }
         break;
     case S_FX_PHASER: case S_FX_WIDTH: case S_FX_FORMANT: case S_FX_TAPE: case S_FX_SPIT: case S_FX_ROOM: case S_FX_CHORUS: case S_FX_FULL:
@@ -2240,7 +2240,7 @@ static void fx_redesign_sweep(const char *out)
             }
         }
         for (uint32_t i = 1; i < NELEM(FX_ORDER); i++) {
-            state();pal(p);uint32_t shared=!fx_is_midi(FX_ORDER[i]);go_title(shared?"SHARED":"FX");fx_rack_row[shared] = 0;vlist_open(ui.page, 0);vl.sel = FX_ORDER[i];
+            state();pal(p);uint32_t shared=!fx_is_midi(FX_ORDER[i]);go_title(shared?"SHARED":"NOTE FX");fx_rack_row[shared] = 0;vlist_open(ui.page, 0);vl.sel = FX_ORDER[i];
             snprintf(name, sizeof name, "%s%s/FX browser %u", render_pixel ? "PIXEL " : "", UI_PALETTES[p].name, i);
             cur_name = name;draw(-1);lint();if (p == UI_GRAY_INDEX) mono_check();
             if (p == 0) {

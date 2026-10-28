@@ -375,20 +375,26 @@ and incremental redraws when the state ends or the selected track changes (`test
 
 ## FX rack (2026-10-15)
 
-FX opens the selected track's **rack**, laid out like MOD's rows: its three insert slots (1–3) and a fourth row for
-the shared FX (an arrow, "Shared", the shared effects in order: a chain arrow between them, a comma in SPLIT). KNOB 2
-picks the row (outlined and tinted in its knob colour), KNOB 1 its effect (the name picker), KNOB 4 its amount: a
-slot's MIX, the shared row the track's SEND (in SPLIT the track's sends are SHARED's rows; the shared row then has no
-amount). Empty slots read "--", dim. OCT+ opens the row: a slot's page; an empty slot its effects' list (OCT+ takes
-one); the shared row SHARED. OCT- goes back up a level (slot → its rack, SHARED → FX, FX → Stage). FX pressed off the
-rack returns to it; on the rack it turns on to the next page, as SELECT does.
+FX opens **SHARED**, the audio rack, first; the track's **NOTE FX** rack comes second (this fork: the audio effects
+before the note effects). Both are laid out like MOD's rows. KNOB 2 picks the row (outlined and tinted in its knob
+colour), KNOB 1 its effect (the name picker), KNOB 4 its amount. Empty slots read "--", dim.
 
-**SHARED** is the same rack for the shared bus: its slots A–C (KNOB 4 their MIX; SPLIT: the selected track's send to
-each) and RETURN (the four track colours as its numeral); KNOB 3 is ROUTE, Chain or Split (Kerem asked where it had
-gone). Its sheet (OCT+ held, or OCT+ on RETURN) holds Routing too and Clear shared FX (asks first).
+**SHARED** holds the shared bus: its slots A–C (KNOB 4 their MIX; SPLIT: the selected track's send to each) and
+RETURN, the one level the shared effects come back into the mix at (the four track colours as its numeral); KNOB 3 is
+ROUTE, Chain or Split (Kerem asked where it had gone). Its sheet (OCT+ held, or OCT+ on RETURN) holds Routing too and
+Clear shared FX (asks first).
 
-A **slot's page** shows while the slot holds an effect, so SELECT never stops on an empty one: FX, the slots in use,
-SHARED, its slots in use. The header names the effect. Audio controls are MIX, RATE (ROOM: SIZE), the
+**NOTE FX** holds the track's three note-effect slots (1–3: NOTE TAIL, NOTE ECHO) and a fourth row, **Send**: how
+much of this track goes to SHARED (an arrow, "Send", the shared effects in order: a chain arrow between them, a comma
+in SPLIT). KNOB 4 is a slot's amount, or on Send the track's SEND (in SPLIT the track's sends are SHARED's rows; Send
+then has no amount).
+
+OCT+ opens the row: a slot's page; an empty slot its effects' list (OCT+ takes one); Send SHARED. OCT- goes back up a
+level: a slot → its rack, a rack → Stage. FX pressed off the FX pages opens SHARED; on a slot's page it returns to that
+slot's rack; on a rack it turns on to the next page, as SELECT does.
+
+A **slot's page** shows while the slot holds an effect, so SELECT never stops on an empty one: SHARED, its slots in
+use, NOTE FX, the slots in use. The header names the effect. Audio controls are MIX, RATE (ROOM: SIZE), the
 effect's DEPTH / FOCUS / JITTER / BITE / DECAY / DAMP, and TONE (ROOM and REVERB).
 The picture (no words) draws what the effect does: DRIVE's shaped wave, CRUSH's steps, FLANGER's comb, PEDAL PHASER's
 notches, PEDAL CHORUS's voices, ROOM/REVERB's tail, NOTE ECHO's echoes (2026-10-24, canvas QDJMbY7BjJiwEL8WKK394N).

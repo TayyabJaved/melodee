@@ -124,10 +124,10 @@ static void pv_mod_rows(void)
 }
 
 /* FX's racks (README "FX rack"): under the knobs' strip (KNOB 1 FX, 2 SLOT, 4 the amount: what the row picked gets; SHARED's 3 ROUTE),
- * a row a slot. FX: the track's three slots and the shared FX; SHARED: its three slots and RETURN. A row: its number
- * (A-C on SHARED; the shared FX an arrow, RETURN the four tracks' colours), the effect ("--" none; the shared row:
- * "Shared" and the shared effects in order), under them the amount's bar and value (a slot's MIX, the track's SEND;
- * SPLIT: SHARED's slots the track's send to each, FX's shared row none). The row picked wears the colours of the knobs
+ * a row a slot. SHARED: its three slots and RETURN; NOTE FX: the track's three slots and its send to SHARED. A row: its
+ * number (A-C on SHARED; the send an arrow, RETURN the four tracks' colours), the effect ("--" none; the send row:
+ * "Send" and the shared effects in order), under them the amount's bar and value (a slot's MIX, the track's SEND;
+ * SPLIT: SHARED's slots the track's send to each, NOTE FX's send row none). The row picked wears the colours of the knobs
  * that edit it: outlined and tinted in KNOB 2's, its effect in KNOB 1's, its amount in KNOB 4's; empty slots dim */
 #define PV_RACK_H 39                                    /* the rows: 39 px each under the strip, y 84 .. 239 */
 static void pv_rack_rows(void)
@@ -190,7 +190,7 @@ static void pv_rack_rows(void)
             cv_rect(9, 11, 11, 2, ac);
             cv_line(15, 7, 19, 11, ac);
             cv_line(15, 16, 19, 12, ac);
-            x = cv_text_on(30, ty_y(12, TY_TX), TY_TX, "Shared", wc, bg) + 8;
+            x = cv_text_on(30, ty_y(12, TY_TX), TY_TX, "Send", wc, bg) + 8;
             for (j = 0; j < FX_SLOTS && x < vx - 12; j++) {
                 if (bus[j * FX_PARAMS] == FX_OFF)
                     continue;

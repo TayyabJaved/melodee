@@ -169,7 +169,7 @@ static void original_recording(void)
 }
 static void ui_storage(void)
 {
-    reset(); go_title("FX"); fx_rack_row[0] = 0;
+    reset(); go_title("NOTE FX"); fx_rack_row[0] = 0;
     edit_param(0, 1); assert(TSEL->p[P_FXTYPE] == FX_MIDIVERB && TSEL->p[P_FXMIX] == 64);
     int16_t *vp;
     const page_t *slot = &PAGES[page_titled("FX 1")];

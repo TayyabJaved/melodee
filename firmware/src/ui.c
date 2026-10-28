@@ -371,6 +371,15 @@ static uint32_t page_first(uint32_t fam)
             return i;
     return 0;
 }
+/* FX's racks: SHARED (shared 1), the track's NOTE FX (0) */
+static uint32_t fx_rack_page(uint32_t shared)
+{
+    uint32_t i;
+    for (i = 0; i < NPAGES; i++)
+        if (PAGES[i].fam == FAM_FX && PAGES[i].graph == GR_FXRACK && (PAGES[i].scope == SC_GLOBAL) == (shared != 0u))
+            return i;
+    return 0;
+}
 
 /* transient message in the top bar, right of the transport and the BPM: a + b */
 static void ui_say(const char *a, const char *b)
@@ -655,8 +664,10 @@ static void open_family(uint32_t fam)
         ui.page = !ui.home && k < n ? nav_next_group(fam, pg, n, k, 1) /* again: the next one; from elsewhere the */
                   : native_page(ui.fam_last[fam], fam) && fam_has(fam, ui.fam_last[fam]) ? ui.fam_last[fam] : pg[0];
                                                                         /* engine's page last used, else its first */
+    } else if (fam == FAM_FX && !ui.home && cur_page()->fam == FAM_FX && cur_page()->graph != GR_FXRACK) {
+        ui.page = (uint8_t)fx_rack_page(cur_page()->scope == SC_GLOBAL);   /* FX on a slot's page: its rack */
     } else if (fam == FAM_FX && (ui.home || ui.page != page_first(FAM_FX))) {
-        ui.page = (uint8_t)page_first(FAM_FX);        /* FX: the track's rack (from its slots and SHARED too); */
+        ui.page = (uint8_t)page_first(FAM_FX);        /* FX: SHARED, the audio rack (from NOTE FX too); */
     } else if (!ui.home && nav_owner(ui.page) == fam) {   /* same button again: next page (FX: on from its rack) */
         uint32_t n, i = ui.page;
         for (n = 0; n < NPAGES; n++) {

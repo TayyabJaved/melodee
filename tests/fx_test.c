@@ -96,7 +96,7 @@ static void send_return(void)
     trk[0].p[P_FXSEND]=81;apply_preset_to(&trk[0],0);assert(trk[0].p[P_FXSEND]==81);sound_init_of(TSEL,eng_idx(TSEL->eng_req));assert(trk[0].p[P_FXSEND]==81);
     song.g[G_FXRETURN]=73;project_t q;project_capture(&q);project_store_t wire;assert(proj_pack(&wire,&q) && proj_import(&proj_scratch,&wire,sizeof wire));assert(proj_scratch.g[G_FXRETURN]==73 && proj_scratch.g[G_MFXTYPE]==FX_ROOM && proj_scratch.t[0].p[P_FXSEND]==81);
     template_save();memset(song.g+G_MFXTYPE,0,(G_COUNT-G_MFXTYPE)*sizeof *song.g);trk[0].p[P_FXSEND]=0;template_load();assert(song.g[G_FXRETURN]==73 && song.g[G_MFXTYPE]==FX_ROOM && trk[0].p[P_FXSEND]==81);
-    go_title("FX");fx_rack_row[0]=3;turn(EN_K4,1);assert(trk[0].p[P_FXSEND]>81);   /* the rack's shared row: SEND */
+    go_title("NOTE FX");fx_rack_row[0]=3;turn(EN_K4,1);assert(trk[0].p[P_FXSEND]>81);   /* the rack's shared row: SEND */
     go_title("SHARED");fx_rack_row[1]=3;turn(EN_K4,1);assert(song.g[G_FXRETURN]>73);  /* SHARED's last row: RETURN */
     wire.raw[PROJ_FX_WIRE_OFF+3u]=128;uint32_t hash=proj_hash(wire.raw,sizeof wire-4u);memcpy(wire.raw+sizeof wire-4u,&hash,4);assert(!proj_import(&proj_scratch,&wire,sizeof wire));
     /* OFF and a type change fade the parallel return to silence, while an
@@ -170,7 +170,7 @@ static void separate_sends(void)
     assert(song.g[G_FXMODE]==1 && TSEL->p[P_FXSEND2]==71 && TSEL->p[P_FXSEND3]==99);
     go_title("SHARED");fx_rack_row[1]=1;turn(EN_K4,1);turn(EN_K2,1);turn(EN_K4,-1);   /* SPLIT: SHARED's rows send */
     assert(TSEL->p[P_FXSEND2]>71 && TSEL->p[P_FXSEND3]<99 && fx_rack_row[1]==2);
-    go_title("FX");fx_rack_row[0]=3;turn(EN_K4,1);assert(TSEL->p[P_FXSEND]==20);       /* (FX's shared row: no SEND) */
+    go_title("NOTE FX");fx_rack_row[0]=3;turn(EN_K4,1);assert(TSEL->p[P_FXSEND]==20);       /* (FX's shared row: no SEND) */
     go_title("SHARED");page_sheet_open();assert(pop.on==POP_SHEET && pop.rows==SHEET_SHARED);
     turn(EN_K1,-1);assert(!song.g[G_FXMODE]);pop_close();                               /* the sheet's Routing */
     uint32_t inserts_epoch=fx_state[0].epoch;fx_bus_mix=32768;fx_bus_select();assert(fx_bus_separate);
@@ -459,7 +459,7 @@ static void grouped_fx_test(void)
             assert(fx_step(d, order[i], -1) == order[i - (i > 0)]);
         }
         assert(fx_step(d, FX_HARD, 0) == FX_HARD && fx_step(d, FX_FUZZ, 1) == FX_CRUSH);
-        go_title(shared ? "SHARED" : "FX");
+        go_title(shared ? "SHARED" : "NOTE FX");
         fx_rack_row[shared] = 0;
         vlist_open(ui.page, 0);assert(vl.sel == FX_ROOM);
         turn(EN_K1, 1);assert(vl.sel == FX_PHASER);   /* Space -> Motion */
@@ -499,7 +499,8 @@ static void grouped_fx_test(void)
 static void rack_test(void)
 {
     ui_power_on();char chip[16];
-    press(B_FX);assert(!ui.home && cur_page()->graph==GR_FXRACK && cur_page()->scope==SC_TRACK && str_eq(cur_page()->title,"FX"));
+    press(B_FX);assert(!ui.home && cur_page()->graph==GR_FXRACK && cur_page()->scope==SC_GLOBAL && str_eq(cur_page()->title,"SHARED"));
+    press(B_FX);assert(cur_page()->graph==GR_FXRACK && cur_page()->scope==SC_TRACK && str_eq(cur_page()->title,"NOTE FX"));   /* (FX again: NOTE FX) */
     for(uint32_t i=0;i<NPAGES;i++)if(PAGES[i].fam==FAM_FX && PAGES[i].graph!=GR_FXRACK)assert(!page_visible(i));   /* (all empty) */
     fx_rack_row[0]=0;turn(EN_K1,1);assert(TSEL->p[P_FXTYPE]!=FX_OFF);turn(EN_K4,5);assert(TSEL->p[P_FXMIX]>0);
     for(uint32_t k=0;k<6;k++)turn(EN_K2,1);
@@ -507,14 +508,15 @@ static void rack_test(void)
     assert(fx_rack_row[0]==0);
     TSEL->p[P_FXTYPE]=FX_MIDIDELAY;press(B_OCTUP);assert(cur_page()->id[0]==P_FXMIX);
     head_chip_text(chip);assert(str_eq(chip,"NOTE ECHO"));
-    press(B_OCTDN);assert(str_eq(cur_page()->title,"FX") && fx_rack_row[0]==0);
+    press(B_OCTDN);assert(str_eq(cur_page()->title,"NOTE FX") && fx_rack_row[0]==0);
     turn(EN_K2,1);press(B_OCTUP);assert(pop.on==POP_LIST);                         /* an empty slot: the list */
     turn(EN_K2,1);turn(EN_K2,1);press(B_OCTUP);assert(pop.on==POP_NONE && TSEL->p[P_FX2TYPE]==FX_MIDIDELAY);
     press(B_OCTUP);assert(cur_page()->id[0]==P_FX2MIX);head_chip_text(chip);assert(str_eq(chip,"NOTE ECHO"));
-    press(B_FX);assert(str_eq(cur_page()->title,"FX"));                            /* FX from a slot: the rack */
+    press(B_FX);assert(str_eq(cur_page()->title,"NOTE FX"));                       /* FX from a slot: its rack */
     turn(EN_SELECT,1);assert(cur_page()->id[0]==P_FXMIX);turn(EN_SELECT,1);assert(cur_page()->id[0]==P_FX2MIX);
     turn(EN_SELECT,1);assert(str_eq(cur_page()->title,"SHARED"));                  /* (slot 3 empty: none) */
-    press(B_OCTDN);assert(str_eq(cur_page()->title,"FX") && fx_rack_row[0]==3);
+    press(B_OCTDN);assert(ui.home);                                                /* (SHARED, the first: OCT- home) */
+    go_title("NOTE FX");fx_rack_row[0]=3;
     TSEL->p[P_FXSEND]=10;turn(EN_K4,1);assert(TSEL->p[P_FXSEND]>10);              /* the shared row: SEND */
     press(B_OCTUP);assert(str_eq(cur_page()->title,"SHARED"));
     fx_rack_row[1]=0;turn(EN_K1,1);assert(song.g[G_MFXTYPE]!=FX_OFF);song.g[G_MFXTYPE]=FX_ROOM;
@@ -522,16 +524,16 @@ static void rack_test(void)
     song.g[G_FXMODE]=1;TSEL->p[P_FXSEND]=30;turn(EN_K4,1);assert(TSEL->p[P_FXSEND]>30 && song.g[G_MFXMIX]<100);   /* SPLIT */
     turn(EN_K3,-1);assert(!song.g[G_FXMODE]);turn(EN_K3,1);assert(song.g[G_FXMODE]==1);   /* KNOB 3: ROUTE */
     {int16_t *vp;const param_desc_t *d=page_desc(cur_page(),2,&vp);assert(d && vp==&song.g[G_FXMODE] && str_eq(d->label,"ROUTE"));
-     go_title("FX");assert(!page_desc(cur_page(),2,&vp));go_title("SHARED");}                 /* (FX's KNOB 3: none) */
+     go_title("NOTE FX");assert(!page_desc(cur_page(),2,&vp));go_title("SHARED");}                 /* (FX's KNOB 3: none) */
     press(B_OCTUP);assert(cur_page()->scope==SC_GLOBAL && cur_page()->id[0]==G_MFXMIX);head_chip_text(chip);assert(str_eq(chip,"ROOM"));
     press(B_OCTDN);assert(str_eq(cur_page()->title,"SHARED") && fx_rack_row[1]==0);
-    press(B_OCTDN);assert(str_eq(cur_page()->title,"FX"));press(B_OCTDN);assert(ui.home);
+    press(B_OCTDN);assert(ui.home);
     /* SHARED's sheet: Clear asks, then every shared slot is off */
-    press(B_FX);fx_rack_row[0]=3;press(B_OCTUP);fx_rack_row[1]=3;press(B_OCTUP);assert(pop.on==POP_SHEET && pop.rows==SHEET_SHARED);
+    press(B_FX);assert(str_eq(cur_page()->title,"SHARED"));fx_rack_row[1]=3;press(B_OCTUP);assert(pop.on==POP_SHEET && pop.rows==SHEET_SHARED);
     turn(EN_K2,1);press(B_OCTUP);assert(ui.confirm==CF_CLEAR_SHARED);ui_confirm_accept();
     assert(!song.g[G_MFXTYPE] && !song.g[G_MFX2TYPE] && !song.g[G_MFX3TYPE] && song.g[G_MFXMIX]==GP[G_MFXMIX].def);
     /* the editor empties the slot shown: its rack */
-    TSEL->p[P_FXTYPE]=FX_MIDIDELAY;go_title("FX 1");TSEL->p[P_FXTYPE]=FX_OFF;frame();assert(str_eq(cur_page()->title,"FX"));
+    TSEL->p[P_FXTYPE]=FX_MIDIDELAY;go_title("FX 1");TSEL->p[P_FXTYPE]=FX_OFF;frame();assert(str_eq(cur_page()->title,"NOTE FX"));
     puts("FX rack: rows, effect list, slot pages named after their effect, OCT+/OCT-/FX/SELECT navigation, SHARED, SPLIT sends and its sheet: OK");
 }
 int main(int argc,char **argv)
@@ -577,12 +579,12 @@ int main(int argc,char **argv)
         for(uint32_t k=0;k<100;k++)assert(!fx_kernel_process(&trk[0],b,CTL));assert(resource_failures==fail);
     }
     for(uint32_t id=0;id<RES_COUNT;id++)resource_release(id);
-    ui_power_on();press(B_FX);assert(!ui.home && cur_page()->fam==FAM_FX && !ui.layer);
+    ui_power_on();press(B_FX);assert(!ui.home && cur_page()->fam==FAM_FX && !ui.layer);go_title("NOTE FX");
     fx_rack_row[0]=0;turn(EN_K1,1);turn(EN_K1,1);assert(TSEL->p[P_FXTYPE]==FX_MIDIDELAY);turn(EN_K4,50);assert(TSEL->p[P_FXMIX]>0);
     project_t q;project_capture(&q);project_store_t p;assert(proj_pack(&p,&q));
     assert(proj_import(&proj_scratch,&p,sizeof p));assert(proj_scratch.t[0].p[P_FXTYPE]==FX_MIDIDELAY);
     frames(400);press(B_OCTUP);assert(cur_page()->id[0]==P_FXMIX);press(B_OCTUP);assert(pop.on==POP_SHEET);
-    press(B_OCTDN);assert(!pop.on);press(B_OCTDN);assert(str_eq(cur_page()->title,"FX"));press(B_OCTDN);assert(ui.home);
+    press(B_OCTDN);assert(!pop.on);press(B_OCTDN);assert(str_eq(cur_page()->title,"NOTE FX"));press(B_OCTDN);assert(ui.home);
     /* Four live tracks through the actual mixer, then mute a sounding insert. */
     ui_power_on();int32_t out[CTL*2];
     for(uint32_t k=0;k<NPART;k++){

@@ -164,7 +164,7 @@ static int page_and_local_controls(void)
     bad += check("MIDI native edits record through the existing motion path", motion.count && motion.event[0].param == MO_NATIVE + P5_CUTOFF);
     seq_stop();
     knob_reset(MK_MINILAB, MK_ABSOLUTE);
-    go_page(GR_FXRACK);
+    go_title("NOTE FX");
     knob_cc(1, 93, 64); knob_cc(1, 93, 127);
     d = page_desc(cur_page(), 0, &vp);
     bad += check("absolute note FX selection reaches NOTE ECHO", d && *vp == FX_MIDIDELAY && enum_rows(d) == 3);

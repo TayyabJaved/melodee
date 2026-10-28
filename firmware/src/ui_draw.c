@@ -896,11 +896,11 @@ static void draw_columns(void)
             draw_column(c, "FAV", scale_favorite((uint32_t)TSEL->p[P_SCALE]) ? "ON" : "OFF", "", VAL(c), -1, ICON_X_STAR);
             continue;
         }
-        if (cur_page()->graph == GR_FXRACK && c == 1u) {   /* a rack's KNOB 2: the row ("2", "Shared"; SHARED: "B") */
+        if (cur_page()->graph == GR_FXRACK && c == 1u) {   /* a rack's KNOB 2: the row ("2", "Send"; SHARED: "B") */
             uint32_t sh = cur_page()->scope == SC_GLOBAL, r = fx_rack_row[sh] & 3u;
             val[0] = (char)((sh ? 'A' : '1') + r);
             val[1] = 0;
-            draw_column(c, "SLOT", r < FX_SLOTS ? val : sh ? "Return" : "Shared", "", VAL(c), -1, ICON_AUTO);
+            draw_column(c, "SLOT", r < FX_SLOTS ? val : sh ? "Return" : "Send", "", VAL(c), -1, ICON_AUTO);
             continue;
         }
         const param_desc_t *d = page_desc(cur_page(), c, &vp);
@@ -1201,7 +1201,7 @@ static void draw_page(void)
     /* SCALES opens explicitly from the Scale row, outside the SCL/SELECT cycle.
      * An unavailable OP page returns to EDIT 1; an emptied FX slot to its rack. */
     if (!ui.home && !page_visible(ui.page) && cur_page()->graph != GR_SCALE_PICKER) {
-        ui.page = (uint8_t)page_first(cur_page()->fam == FAM_FX ? FAM_FX : FAM_EDIT);
+        ui.page = (uint8_t)(cur_page()->fam == FAM_FX ? fx_rack_page(cur_page()->scope == SC_GLOBAL) : page_first(FAM_EDIT));
         page_entered();
     }
     cursor_fix();

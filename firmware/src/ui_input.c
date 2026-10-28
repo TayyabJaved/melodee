@@ -1875,7 +1875,8 @@ static void fx_go(uint32_t page)
         page_entered();
     }
 }
-/* OCT+ on a rack: the row's slot page; an empty slot: its effects (the list, OCT+ takes one); FX's last row: SHARED.
+/* OCT+ on a rack: the row's slot page; an empty slot: its effects (the list, OCT+ takes one); NOTE FX's last row (Send):
+ * SHARED.
  * 0: nothing here (SHARED's RETURN: the sheet) */
 static int fx_rack_enter(void)
 {
@@ -1886,7 +1887,7 @@ static int fx_rack_enter(void)
     if (ui.home || pg->graph != GR_FXRACK || (sh && r == FX_SLOTS))
         return 0;
     if (r == FX_SLOTS) {
-        fx_go(page_titled("SHARED"));
+        fx_go(fx_rack_page(1));
     } else if (page_desc(pg, 0, &vp) && vp && *vp == FX_OFF) {
         vlist_open(ui.page, 0);
     } else if (vp && *vp == FX_MIDIVERB) {              /* NOTE TAIL: no page (its row: KNOB 4 REL) */
@@ -1895,20 +1896,15 @@ static int fx_rack_enter(void)
     }
     return 1;
 }
-/* OCT- on a slot's page: its rack, on its row; on SHARED: FX's, on its shared row. 0: elsewhere */
+/* OCT- on a slot's page: its rack, on its row. 0: elsewhere (a rack: home) */
 static int fx_rack_back(void)
 {
     const page_t *pg = cur_page();
     uint32_t sh = pg->scope == SC_GLOBAL;
-    if (ui.home || pg->fam != FAM_FX || (pg->graph == GR_FXRACK && !sh))
+    if (ui.home || pg->fam != FAM_FX || pg->graph == GR_FXRACK)
         return 0;
-    if (pg->graph == GR_FXRACK) {
-        fx_rack_row[0] = FX_SLOTS;
-        fx_go(page_titled("FX"));
-    } else {
-        fx_rack_row[sh] = (uint8_t)((pg->id[0] - (sh ? G_MFXMIX : P_FXMIX)) / FX_PARAMS);
-        fx_go(page_titled(sh ? "SHARED" : "FX"));
-    }
+    fx_rack_row[sh] = (uint8_t)((pg->id[0] - (sh ? G_MFXMIX : P_FXMIX)) / FX_PARAMS);
+    fx_go(fx_rack_page(sh));
     return 1;
 }
 
@@ -2562,7 +2558,7 @@ static void ui_input(void)
         if (str_eq(cur_page()->title, "SCALES") && p < NPAGES) {
             ui.page = (uint8_t)p;
             page_entered();
-        } else if (fx_rack_back()) {                    /* an FX slot: its rack; SHARED: FX's */
+        } else if (fx_rack_back()) {                    /* an FX slot: its rack */
         } else if (ptc_on()) {                          /* PATTERNS' Copy to: left, the page stays */
             ui.ptc_on = 0;
             ui.force = 1;
