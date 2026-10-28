@@ -159,6 +159,9 @@ cd web && python3 -m http.server 8000 --bind 127.0.0.1
 # http://localhost:8000/editor.html?mock=1   simulated device, no hardware
 ```
 
+What the protocol can and cannot set on a live device (for building songs from a script or an AI) is mapped in
+[docs/PROTOCOL_COVERAGE.md](docs/PROTOCOL_COVERAGE.md).
+
 Chrome asks for MIDI/SysEx permission on the first Connect. The editor only talks to
 Melodee firmware. On stock V15 or TransitFM1 it gets no reply. Its tests are
 `node web/test_web.mjs`, which `tests/run_tests.sh` also runs.
