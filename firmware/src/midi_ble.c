@@ -136,7 +136,8 @@ static void mel_ble_boot(void) /* CPU1 held, IRQs off; does not start the radio 
         mb.trims = sdk;
         fm1_rf_cal_on = 1;
         mb.cal = 1;                           /* (a saved calibration imported later still replaces it) */
-    }
+    } else
+        fm1_rf_cal_on = 1;                    /* a stored one too: its 187 alone left the radio deaf on our unit (106-108 kept) */
     ble_store_load(&mb.store, mb_saved.dev);
     ble_scan_clear(&mb.found);
     ble_hw_wl82_attach(); fm1_ble_crumb_boot();
