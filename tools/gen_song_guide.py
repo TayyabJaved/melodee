@@ -66,9 +66,40 @@ def head(left="", right="", right_fill=THEME, chip=None, chip_fill=TEXT):
     return o
 
 
+def brief(length):
+    """a card's length, bars:beats ("2 bars" -> "2:0")"""
+    words = length.split()
+    bars = int(words[0]) if "bar" in length else 0
+    beats = int(words[-2]) if "beat" in length else 0
+    return f"{bars}:{beats}"
+
+
+def cell(o, k, b, x, y, h, playing, used, queued=False):
+    """a pattern as PATTERNS and the section page draw it: its number in the track's colour"""
+    c = TRK[k]
+    size = 10 if h < 24 else 12
+    ny = y + h / 2 + size * 0.36
+    if playing:
+        o.append(r(x, y, 23, h, c, 4) + t(x + 11.5, ny, str(b + 1), size, BG, "middle", 600))
+    elif used:
+        o.append(r(x, y, 23, h, SURF, 4) + t(x + 11.5, ny, str(b + 1), size, c, "middle", 600))
+    else:
+        o.append(r(x + 0.5, y + 0.5, 22, h - 1, "none", 4, LINE) + t(x + 11.5, ny, str(b + 1), size, DIM, "middle", 500))
+    if queued:
+        o.append(r(x - 1, y - 1, 25, h + 2, "none", 5, c, 1.4, "2 2"))
+
+
+def chip(o, k, y, h, sel):
+    c = TRK[k]
+    if sel:
+        o.append(r(2, y + 2, 24, h - 4, c, 6) + t(14, y + h / 2 + 4.5, str(k + 1), 13, BG, "middle", 600))
+    else:
+        o.append(r(2.5, y + 2.5, 23, h - 5, BG, 6, c, 1.5) + t(14, y + h / 2 + 4.5, str(k + 1), 13, c, "middle", 600))
+
+
 def song_screen(cols, cursor=0, playing=None, queued=None, sel_range=None, status=None, msg=None, foot=None,
                 playhead=None):
-    """SONG: a card a column (letter, length), a block a track, "+" at the end"""
+    """SONG: a card a column (letter, bars:beats), a block a track (its pattern's number; REST), "+" at the end"""
     o = [r(0, 0, 240, 240, BG)]
     left = msg if msg else "0:24" if cols else ""
     o += head(left, "SONG" if not status else "", chip=status)
@@ -89,21 +120,21 @@ def song_screen(cols, cursor=0, playing=None, queued=None, sel_range=None, statu
         ink = BG if sel or on else TEXT
         o.append(r(x, 31, 54, 34, fill, 6))
         o.append(t(x + 5, 46, name, 12, ink, weight=600))
-        o.append(t(x + 4, 60, length, 9, BG if sel or on else MID))
+        o.append(t(x + 4, 60, brief(length), 10, BG if sel or on else MID))
         if i == queued:
             o.append(r(x - 1.5, 29.5, 57, 37, "none", 7, THEME, 1.5, "3 2"))
         for k, p in enumerate(pats):
             y = 70 + 32 * k
             if p:
-                o.append(r(x, y, 54, 28, TRK[k], 5) + t(x + 6, y + 18.5, f"P{p}", 11, BG, weight=500))
+                o.append(r(x, y, 54, 28, TRK[k], 5) + t(x + 7, y + 18.5, str(p), 12, BG, weight=600))
             else:
-                o.append(t(x + 6, y + 18.5, "--", 11, DIM))
+                o.append(t(x + 7, y + 18.5, "REST", 10, DIM, weight=500))
     for j in range(1, 4):
         o.append(r(8 + 56 * j, 68, 1, 128, LINE))
     if playhead is not None:
         o.append(r(playhead, 30, 2, 166, TEXT))
     if foot is None and cursor < len(cols):
-        foot = (f"{cols[cursor]} · {SECT[cols[cursor]][1]}{' AUTO' if SECT[cols[cursor]][2] else ''}",
+        foot = (f"{cols[cursor]} \u00b7 {SECT[cols[cursor]][1]}{' AUTO' if SECT[cols[cursor]][2] else ''}",
                 f"used {cols.count(cols[cursor])}x")
     elif foot is None:
         foot = ("OCT+ adds what plays now", "")
@@ -117,28 +148,17 @@ def song_screen(cols, cursor=0, playing=None, queued=None, sel_range=None, statu
 
 
 def patterns_screen(playing, used, queued=None, sel_trk=0, song=None, song_cur=0, msg=None):
-    """PATTERNS: a row a track, 16 narrow cells (the one playing filled, used ones raised, queued dashed)"""
+    """PATTERNS: a row a track, its 16 patterns as numbered cells, 1-8 above 9-16 (the one playing filled, ones with
+    notes raised, empty outlined, queued dashed)"""
     o = [r(0, 0, 240, 240, BG)]
-    o += head(msg or "▶ 124", "PATTERNS")
-    for b in (0, 4, 8, 12):
-        o.append(t(35.5 + 13 * b, 43, str(b + 1), 9, MID, "middle"))
+    o += head(msg or "\u25b6 124", "PATTERNS")
     for k in range(4):
-        y = 50 + 38 * k
-        c = TRK[k]
-        if k == sel_trk:
-            o.append(r(2, y + 2, 24, 32, c, 6) + t(14, y + 23, str(k + 1), 12, BG, "middle", 600))
-        else:
-            o.append(r(2.5, y + 2.5, 23, 31, BG, 6, c, 1.5) + t(14, y + 23, str(k + 1), 12, c, "middle", 600))
+        y = 30 + 43 * k
+        chip(o, k, y, 43, k == sel_trk)
         for b in range(16):
-            x = 30 + 13 * b
-            if b == playing[k]:
-                o.append(r(x, y + 2, 11, 32, c, 2) + r(x + 2, y + 27, 7, 3, BG, 1))
-            elif b in used[k]:
-                o.append(r(x, y + 2, 11, 32, SURF, 2) + r(x + 4, y + 18, 3, 10, c, 1, opacity=0.7))
-            else:
-                o.append(r(x + 0.5, y + 2.5, 10, 31, "none", 2, LINE))
-            if queued and queued.get(k) == b:
-                o.append(r(x - 1, y + 1, 13, 34, "none", 3, c, 1.4, "2 2"))
+            cell(o, k, b, 30 + 26 * (b % 8), y + 2 + 21 * (b // 8), 19, b == playing[k], b in used[k],
+                 bool(queued) and queued.get(k) == b)
+        o.append(r(33 + 26 * (playing[k] % 8), y + 17 + 21 * (playing[k] // 8), 17, 2, BG, 1))
     o.append(t(8, 226, "SONG", 10, MID, weight=500))
     if song:
         for i, l in enumerate(song[:6]):
@@ -150,41 +170,36 @@ def patterns_screen(playing, used, queued=None, sel_trk=0, song=None, song_cur=0
     return o
 
 
-def section_screen(name, length, auto=True, uses=2, chip="SECTION", looping=False, edited=None):
-    """the section page: the length, PATTERNS' rows with the section's pattern filled, a lane a track"""
+def section_screen(name, length, auto=True, uses=2, chip_text="SECTION", looping=False, edited=None):
+    """the section page: the length (its use count at the right), PATTERNS' cells with the section's pattern filled,
+    a lane a track"""
     pats = list(SECT[name][0])
     if edited:
         for k, v in edited.items():
             pats[k] = v
     o = [r(0, 0, 240, 240, BG)]
-    o += head("120", chip=f"LOOPING {name}" if looping else f"{chip} {name}", chip_fill=THEME)
-    o.append(r(4, 31, 232, 24, SURF, 5) + t(10, 47, "LENGTH", 8, MID, weight=500))
-    o.append(t(80, 48, length, 13, TEXT, weight=500))
+    o += head("120", chip=f"LOOPING {name}" if looping else f"{chip_text} {name}", chip_fill=THEME)
+    o.append(r(4, 31, 232, 22, SURF, 5) + t(10, 46, "LENGTH", 8, MID, weight=500))
+    o.append(t(80, 47, length, 13, TEXT, weight=500))
     if auto:
         ax = 80 + 7.2 * len(length) + 8
-        o.append(r(ax, 35, 40, 16, THEME, 5) + t(ax + 20, 47, "AUTO", 8.5, BG, "middle", 700))
+        o.append(r(ax, 34, 40, 16, THEME, 5) + t(ax + 20, 46, "AUTO", 8.5, BG, "middle", 700))
+    o.append(t(230, 46, f"{uses}x", 10, MID, "end"))
     used = [{0, 1, 2}, {0, 1, 2, 3}, {0, 1}, {0}]
     for k in range(4):
-        y = 56 + 28 * k
-        c = TRK[k]
-        o.append(r(2.5, y + 2.5, 23, 23, BG, 6, c, 1.5) + t(14, y + 18, str(k + 1), 10, c, "middle", 600))
+        y = 54 + 36 * k
+        chip(o, k, y, 36, False)
         if pats[k] is None:
-            o.append(r(30, y + 3, 206, 22, SURF, 4) + t(133, y + 18, "REST", 10, MID, "middle", 500))
+            o.append(r(30, y + 1, 205, 34, SURF, 4) + t(132, y + 22, "REST", 10, MID, "middle", 500))
             continue
         for b in range(16):
-            x = 30 + 13 * b
-            if b == pats[k] - 1:
-                o.append(r(x, y + 3, 11, 22, c, 2))
-            elif b in used[k]:
-                o.append(r(x, y + 3, 11, 22, SURF, 2))
-            else:
-                o.append(r(x + 0.5, y + 3.5, 10, 21, "none", 2, LINE))
+            cell(o, k, b, 30 + 26 * (b % 8), y + 1 + 18 * (b // 8), 16, b == pats[k] - 1, b in used[k])
     bars = int(length.split()[0])
     for bar in range(bars):
         x = 30 + bar * 202 / bars
-        o.append(r(x, 185, 1, 32, LINE) + t(x + 3, 181, str(bar + 1), 8, DIM))
+        o.append(r(x, 201, 1, 36, LINE))
     for k in range(4):
-        y = 188 + 8 * k
+        y = 204 + 8 * k
         if pats[k] is None:
             for x in range(30, 232, 6):
                 o.append(r(x, y + 3, 2, 1, DIM))
@@ -200,8 +215,7 @@ def section_screen(name, length, auto=True, uses=2, chip="SECTION", looping=Fals
         if lb * ((bars + lb - 1) // lb) > bars:          # (its last loop cut where the section ends)
             o.append(r(230, y - 1, 2, 8, REC))
     if looping:
-        o.append(r(112, 183, 2, 36, TEXT))
-    o.append(t(8, 233, "SELECT length", 10, MID) + t(232, 233, f"in song {uses}x", 10, MID, "end"))
+        o.append(r(112, 201, 2, 36, TEXT))
     return o
 
 
@@ -293,8 +307,11 @@ def page(n, total, part, title, screen, marks, actions, see, tip):
         y += 6
         svg, y2 = rich(x + 14, y + 24, tip, 12.5, SOFT, 58)
         o.append(r(x, y, W - x - 24, y2 - y + 2, "#1C1826", 8, "#2E2939") + r(x, y, 4, y2 - y + 2, THEME, 2))
-        o.append(t(x + 14, y + 0, "", 1))
         o.append(svg)
+        y = y2
+    h = max(H, int(y) + 24)                             # (a long step: the page grows to hold its text)
+    o[0] = o[0].replace(f'viewBox="0 0 {W} {H}" width="{W}" height="{H}"', f'viewBox="0 0 {W} {h}" width="{W}" height="{h}"')
+    o[1] = r(0, 0, W, h, "#0E0C13")
     o.append("</svg>")
     return "\n".join(o)
 
@@ -305,15 +322,17 @@ P_USED = [{0, 1, 2}, {0, 1, 2, 3}, {0, 1}, {0}]
 STEPS = [
     ("patterns", "PATTERNS", "Open PATTERNS",
      patterns_screen(P_PLAY, P_USED, sel_trk=0),
-     [(0, 30, 28, 154), (28, 30, 212, 18), (30, 50, 11, 36)],
+     [(0, 30, 28, 172), (30, 75, 206, 40), (30, 32, 23, 19)],
      ["Hold [SEQ] for a moment (or press [SEQ] and turn [SELECT] to PATTERNS).",
-      "Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead. The numbers on top are its patterns, 1 to 16.",
-      "The filled cell is the pattern each track plays now."],
-     "A grid, a row a track. Cells with notes are raised; empty ones are outlines. At the foot: the song's sections.",
+      "Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns, each with its "
+      "number: 1-8 above, 9-16 below.",
+      "The filled cell is the pattern the track plays now; the line under its number shows how far it has played."],
+     "Cells with notes are raised, their number in the track's colour; empty ones are outlines. At the foot: the "
+     "song's sections, by letter.",
      "A pattern is one track's loop. Write its notes on SEQ > NOTES; this page chooses which one plays."),
     ("choose-patterns", "PATTERNS", "Choose what each track plays",
      patterns_screen([1, 1, 0, 0], P_USED, queued={1: 2}, sel_trk=1),
-     [(30, 50, 210, 36), (30, 88, 210, 36)],
+     [(30, 32, 206, 40), (30, 75, 206, 40)],
      ["Turn [KNOB_1] to pick track 1's pattern, [KNOB_2] track 2's, [KNOB_3] and [KNOB_4] tracks 3 and 4.",
       "Or: hold [SEQ] and press a white key (patterns 1-16) for the selected track; black keys pick the track."],
      "Stopped, the pattern changes at once. Playing, it waits for that track's loop to end: the waiting one is dashed.",
@@ -326,7 +345,8 @@ STEPS = [
       "Tap [OCT+]: the pattern's sheet.",
       "Copy to…: turn any knob to the place, [OCT+] copies. Delete pattern asks first."],
      "The sheet over the grid. [OCT−] closes it; hold [EDIT] to undo.",
-     "Copies are separate patterns. A song only points at patterns: editing P2's notes changes every section using P2."),
+     "Copies are separate patterns. A song only points at patterns: editing pattern 2's notes changes every section "
+     "using it."),
     ("open-song", "SONG", "Go to SONG",
      song_screen([], cursor=0),
      [(9, 31, 54, 34), (8, 202, 224, 20)],
@@ -337,15 +357,15 @@ STEPS = [
     ("add-first-section", "SONG", "Add your first section (A)",
      song_screen(["A"], cursor=1, msg="ADDED A"),
      [(65, 31, 54, 34), (9, 31, 54, 165)],
-     ["Set each track's pattern for the first part (step 2): drums P1, bass P1. On SONG, turn [KNOB_1] to the + card.",
+     ["Set each track's pattern for the first part (step 2): drums 1, bass 1. On SONG, turn [KNOB_1] to the + card.",
       "Tap [OCT+]: section A, a column of what every track plays."],
-     "Card A with its length (AUTO: its longest pattern), its column showing each track's pattern; -- is a rest. "
-     "The cursor stays on + for the next one.",
-     "A track can rest in a section: set it on the section page (step 10), turning below P1."),
+     "Card A with its length in bars:beats (2:0, two bars: AUTO, its longest pattern), its column showing each "
+     "track's pattern number; REST is a resting track. The cursor stays on + for the next one.",
+     "A track can rest in a section: set it on the section page (step 10), turning below pattern 1."),
     ("add-more-sections", "SONG", "Add more sections",
      song_screen(["A", "B", "A"], cursor=3, msg="PLACED A"),
      [(2, 65, 31, 54, 34), (3, 121, 31, 54, 34)],
-     ["Hold [SEQ], change patterns for the next part (drums P2, bass P2, chords P1), let go.",
+     ["Hold [SEQ], change patterns for the next part (drums 2, bass 2, chords 1), let go.",
       "Turn [SELECT] back to SONG, [KNOB_1] to +, tap [OCT+]: section B.",
       "Patterns that match a section place it again: back to A's patterns, [OCT+] on +: A."],
      "\"ADDED B\" for new patterns, \"PLACED A\" for ones a section already has. Up to 26 sections (A-Z), 64 columns.",
@@ -353,8 +373,8 @@ STEPS = [
     ("read-the-grid", "SONG", "Read the SONG grid",
      song_screen(["A", "B", "A", "C"], cursor=1),
      [(65, 31, 54, 34), (8, 68, 232, 32), (8, 202, 150, 20), (180, 202, 54, 20)],
-     ["Cards: a column each, its section's letter and length (3:2 = 3 bars 2 beats).",
-      "Rows: a track each, its pattern in each column; -- rests.",
+     ["Cards: a column each, its section's letter and length in bars:beats (2:3 = 2 bars 3 beats, 4:0 = 4 bars).",
+      "Rows: a track each, the number of the pattern it plays in each column; REST rests.",
       "Footer: the picked column's section and length, AUTO when it follows its longest pattern.",
       "How often the song uses that section."],
      "The picked column has a white card. The header shows the song's length in minutes and seconds.",
@@ -368,44 +388,45 @@ STEPS = [
      "If it was the section's last column, that section is gone and its letter is free again."),
     ("open-section", "SECTION PAGE", "Open a section",
      section_screen("B", "4 bars", True, uses=1),
-     [(4, 30, 232, 26), (0, 56, 240, 112), (0, 176, 240, 42), (150, 222, 86, 16)],
-     ["On SONG, turn [KNOB_1] to a column and tap [OCT+]. The top row: its length (AUTO).",
-      "Its tracks: PATTERNS' rows, the section's pattern filled; REST across a resting track.",
-      "Under them a lane a track: how its pattern loops in the length (lighter: later loops).",
+     [(4, 30, 232, 24), (0, 54, 240, 144), (0, 200, 240, 38), (206, 32, 30, 20)],
+     ["On SONG, turn [KNOB_1] to a column and tap [OCT+]. The top row: its length in words (AUTO).",
+      "Its tracks: PATTERNS' numbered cells, the section's pattern filled; REST across a resting track.",
+      "At the foot a lane a track: how its pattern loops in the length (lighter: later loops).",
       "How many columns play this section."],
      "SECTION B in the header. Whatever you change here changes every column of B.",
      "[OCT−] goes back to SONG."),
     ("edit-section", "SECTION PAGE", "Change the section's patterns",
      section_screen("B", "4 bars", True, uses=1, edited={2: 2, 3: None}),
-     [(30, 112, 210, 28), (0, 140, 240, 28)],
+     [(30, 127, 206, 34), (0, 162, 240, 36)],
      ["Turn [KNOB_1] to [KNOB_4]: tracks 1-4's pattern in this section.",
       "Turn below the first pattern for REST: that track is silent here."],
      "The filled cell moves; the lanes below follow. Every column of the section changes with it.",
      "Tracks 5-8: select one with [ALGORITHM]; the knobs then work on its group."),
     ("set-length", "SECTION PAGE", "Set the section's length",
      section_screen("C", "3 bars", False, uses=1),
-     [(4, 30, 232, 26), (226, 186, 12, 12)],
-     ["Turn [SELECT]: one beat a click, from its AUTO length. Turn it below one beat for AUTO again.",
+     [(4, 30, 232, 24), (226, 210, 12, 12)],
+     ["Turn [SELECT]: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).",
       "A pattern longer than the section is cut where it ends: the red mark."],
-     "The AUTO chip goes when you set a length. Shorter patterns loop to fill the section.",
+     "The AUTO chip goes when you set a length. On SONG its card shows it as bars:beats (3:0). Shorter patterns loop "
+     "to fill the section.",
      "There are no repeats: make a section longer, or place it twice. Every track starts again at each column."),
     ("hear-section", "SECTION PAGE", "Hear just this section",
      section_screen("B", "4 bars", True, uses=1, looping=True),
-     [(150, 6, 86, 18), (108, 180, 10, 40)],
+     [(150, 6, 86, 18), (108, 199, 10, 40)],
      ["Press [PLAY]: the section loops, alone. Change patterns or the length while it plays.",
       "Press [PLAY] again to stop; [OCT−] back to SONG."],
      "LOOPING B in the header and a playhead across the lanes. Changes are heard from the next pass.",
      ""),
     ("section-sheet", "SECTION PAGE", "Sounds, punches, a copy",
      sheet(section_screen("B", "4 bars", True, uses=1), "Section B", "in song 1x",
-           [("Length", "4 bars AUTO", False), ("Set preset", "T2", False), ("Remove preset", "T2", False),
+           [("Set preset", "T2", False), ("Remove preset", "T2", False),
             ("Punch FX", "", False), ("Copy as new section", "", False)]),
-     [(4, 32, 232, 206)],
+     [(4, 66, 232, 172)],
      ["On the section page tap [OCT+]: its sheet. [KNOB_2] picks a row, [OCT+] does it.",
       "Set preset: a sound for the selected track in this section ([ALGORITHM] picks the track).",
       "Punch FX (or [FX]): master effects at steps of the section."],
-     "On the Length row [KNOB_1] turns the length and [OCT+] sets AUTO. A section's sound plays in that section only; "
-     "the normal one returns elsewhere and on STOP.",
+     "Set preset, Remove preset, Punch FX, Copy as new section. (The length is on [SELECT], step 11.) A section's "
+     "sound plays in that section only; the normal one returns elsewhere and on STOP.",
      "Copy as new section makes the next letter with the same contents, then shows it, for a variation."),
     ("copy-as-new", "SONG", "Make a variation of a section",
      sheet(song_screen(["A", "B", "A", "C"], cursor=1), "Song", "4 columns",
@@ -475,9 +496,11 @@ def guide_md():
           "\"Songs\"); the design notes are in [`docs/design/README.md`](../design/README.md) \"SONG sections\".", "",
           "The pictures are drawings of the device's screens, made by `tools/gen_song_guide.py`; run it again after the",
           "screens change.", "",
-          "**The words:** a *pattern* is one track's loop (P1-P16). A *section* (A-Z) is one part of the song: the",
-          "pattern or a rest for every track, and a length. The *song* is sections in columns, left to right; a",
-          "section can be placed in as many columns as you like, and they all play the same.", "",
+          "**The words:** a *pattern* is one track's loop, shown everywhere as its number (1-16) in the track's colour. A",
+          "*section* is one part of the song, shown as its letter (A-Z): the",
+          "pattern or a rest (REST) for every track, and a length (on SONG's cards bars:beats: 2:3 is 2 bars 3 beats). The",
+          "*song* is sections in columns, left to right; a section can be placed in as many columns as you like, and",
+          "they all play the same. A *track* is its numbered chip at the left of each row.", "",
           "## Contents", ""]
     part = None
     for i, s in enumerate(STEPS):
@@ -512,10 +535,10 @@ def guide_md():
            "| SONG | REC | launch the picked column's section live |",
            "| SONG | FX | the picked section's master punches |",
            "| SONG | EDIT held | undo (EDIT + OCT- / OCT+: undo / redo) |",
-           "| Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below P1: REST) |",
+           "| Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below pattern 1: REST) |",
            "| Section page | SELECT | its length, a beat a click (below a beat: AUTO) |",
            "| Section page | PLAY | loop just this section / stop |",
-           "| Section page | OCT+ | Length, Set / Remove preset, Punch FX, Copy as new section |",
+           "| Section page | OCT+ | Set / Remove preset, Punch FX, Copy as new section |",
            "| Section page | OCT- | back to SONG |", ""]
     return "\n".join(md)
 

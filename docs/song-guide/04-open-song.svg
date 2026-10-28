@@ -14,6 +14,5 @@
 <text x="432" y="223" font-size="12" fill="#9A93A8" text-anchor="start" font-weight="700">YOU SEE</text>
 <text x="432" y="247" font-size="13" fill="#C9C2D6" xml:space="preserve">SONG in the top right. Columns will appear left to right as</text><text x="432" y="269" font-size="13" fill="#C9C2D6" xml:space="preserve">you add sections.</text>
 <rect x="432" y="297" width="484" height="69" rx="8" fill="#1C1826" stroke="#2E2939" stroke-width="1"/><rect x="432" y="297" width="4" height="69" rx="2" fill="#F5A623"/>
-<text x="446" y="297" font-size="1" fill="#F3EEF8" text-anchor="start" font-weight="400"></text>
 <text x="446" y="321" font-size="12.5" fill="#C9C2D6" xml:space="preserve">A section is one part of the song: the pattern (or a rest)</text><text x="446" y="342.5" font-size="12.5" fill="#C9C2D6" xml:space="preserve">each track plays, and how long.</text>
 </svg>

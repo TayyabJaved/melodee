@@ -738,12 +738,20 @@
             <thead><tr><th>Term</th><th>What it is</th><th>Example</th></tr></thead>
             <tbody>
               <tr><td><strong>Track</strong></td><td>One instrument.</td><td>Track 1 drums, track 2 bass.</td></tr>
-              <tr><td><strong>Pattern</strong></td><td>One loop that one track plays, P1–P8 (P1–P16 on tracks 1–4). You write its notes on NOTES.</td><td>Drums P1 a basic beat, drums P2 a busier one.</td></tr>
-              <tr><td><strong>Section</strong></td><td>One part of the song, named by a letter A–Z: the pattern every track plays (or <strong>REST</strong>, silent), its length, and optionally a sound and master FX punches per section.</td><td>B: drums P2 + bass P1, 4 bars.</td></tr>
+              <tr><td><strong>Pattern</strong></td><td>One loop that one track plays, numbered 1–16 (1–8 on MIDI tracks 5–8). You write its notes on NOTES.</td><td>Drums 1 a basic beat, drums 2 a busier one.</td></tr>
+              <tr><td><strong>Section</strong></td><td>One part of the song, named by a letter A–Z: the pattern every track plays (or <strong>REST</strong>, silent), its length, and optionally a sound and master FX punches per section.</td><td>B: drums 2 + bass 1, 4 bars.</td></tr>
               <tr><td><strong>Song</strong></td><td>Up to 64 columns, played left to right. Each column plays one section; a section can be placed as often as you like.</td><td>A B A C.</td></tr>
             </tbody>
           </table>
-          <p>A section has one definition. Every <strong>A</strong> in the song is the same A: change what A plays, its length, sound or punches, and every A changes. Use <strong>Copy as new section</strong> for a variation. A song only refers to patterns too: editing P1’s notes changes every section that uses P1.</p>
+          <p>A section has one definition. Every <strong>A</strong> in the song is the same A: change what A plays, its length, sound or punches, and every A changes. Use <strong>Copy as new section</strong> for a variation. A song only refers to patterns too: editing a pattern’s notes changes every section that uses it.</p>
+          <p>The three pages show each thing the same way:</p>
+          <ul>
+            <li><strong>Tracks:</strong> a numbered chip in the track’s colour, at the left of each row (filled: the selected track).</li>
+            <li><strong>Patterns:</strong> their number, in the track’s colour: a cell on PATTERNS and the section page, a block on SONG.</li>
+            <li><strong>Sections:</strong> their letter, A–Z.</li>
+            <li><strong>Rests:</strong> the word REST where the track’s pattern would be.</li>
+            <li><strong>Lengths:</strong> bars:beats on SONG’s cards (<strong>2:3</strong> is 2 bars 3 beats, <strong>4:0</strong> four bars); in words where there is room.</li>
+          </ul>
           <p>Sections are made on purpose, never recorded for you: on SONG, <kbd>OCT+</kbd> on the <strong>+</strong> column adds a section of what every track is playing now (see <a href="#songs">Songs</a>).</p>
           <h4>How long a section lasts</h4>
           <ul>
@@ -759,7 +767,7 @@
 
         <section id="patterns">
           <h3>Patterns</h3>
-          <p>Sixteen patterns per track on tracks 1–4, eight on MIDI tracks 5–8. The PATTERNS grid has one row for each track in use; the cells along a row are that track’s patterns. <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. While a song plays, its sections choose the patterns, so the knobs show <strong>STOP SONG TO SWITCH</strong>. <kbd>SELECT</kbd> goes on to SONG.</p>
+          <p>Sixteen patterns per track on tracks 1–4, eight on MIDI tracks 5–8. The PATTERNS grid has one row for each track in use; its cells are that track’s patterns, each showing its number: two rows of eight (1–8 above 9–16) on tracks 1–4, one row on MIDI tracks. The pattern playing is filled in the track’s colour, with a line showing how far it has played; patterns holding notes are raised, with their number in the track’s colour; empty ones are outlines; one waiting for its loop end is dashed. <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. While a song plays, its sections choose the patterns, so the knobs show <strong>STOP SONG TO SWITCH</strong>. <kbd>SELECT</kbd> goes on to SONG.</p>
           <div class="shots">
             <figure class="shot"><img src="patterns.png" alt="Patterns grid" width="240" height="240"><figcaption>PATTERNS: one row per track; the song’s letters at the foot.</figcaption></figure>
             <figure class="shot"><img src="patterns_sheet.png" alt="Patterns sheet" width="240" height="240"><figcaption>Pattern sheet: Copy to…, Delete.</figcaption></figure>
@@ -783,8 +791,8 @@
           </div>
           <h4>Reading the grid</h4>
           <ul>
-            <li><strong>Each column plays one section.</strong> Its card shows the section’s letter and length (<strong>3:2</strong> is 3 bars 2 beats). Columns play left to right; four show at a time, then a <strong>+</strong> column for adding one.</li>
-            <li><strong>Each row is a track</strong>, in its colour. Its block in a column is the pattern it plays there; <strong>--</strong> is a rest.</li>
+            <li><strong>Each column plays one section.</strong> Its card shows the section’s letter and length in bars:beats (<strong>3:2</strong> is 3 bars 2 beats, <strong>4:0</strong> four bars). Columns play left to right; four show at a time, then a <strong>+</strong> column for adding one.</li>
+            <li><strong>Each row is a track</strong>, in its colour. Its block in a column shows the number of the pattern it plays there; <strong>REST</strong> is a rest.</li>
             <li>The header shows the song’s length in minutes and seconds. The footer shows the picked column’s section, its length (<strong>AUTO</strong> when it follows its longest pattern), how often the song uses it, and how far the song has played.</li>
           </ul>
           <table>
@@ -803,7 +811,7 @@
           <p>Stop the song before editing; otherwise the screen shows <strong>STOP TO EDIT</strong>.</p>
           <h4>Make a song</h4>
           <ol>
-            <li>Write the patterns first, for example drums P1 and P2, bass P1 and P3.</li>
+            <li>Write the patterns first, for example drums 1 and 2, bass 1 and 3.</li>
             <li>Choose each track’s pattern for the first part (PATTERNS, or SEQ + a white key), then on SONG turn <kbd>KNOB 1</kbd> to <strong>+</strong> and tap <kbd>OCT+</kbd>. That adds section <strong>A</strong>: every track’s pattern as it is now, AUTO length.</li>
             <li>Change patterns for the next part and tap <kbd>OCT+</kbd> on <strong>+</strong> again: <strong>B</strong>. If the patterns already match a section, that section is placed again instead (<strong>PLACED A</strong>).</li>
             <li>To place a section again anywhere, pick a column and turn <kbd>KNOB 2</kbd>, or hold <kbd>OCT+</kbd> → Duplicate section.</li>
@@ -817,11 +825,11 @@
             <figure class="shot"><img src="song_preset_sheet.png" alt="Section sheet" width="240" height="240"><figcaption>Section sheet (OCT+).</figcaption></figure>
           </div>
           <ul>
-            <li>The rows are PATTERNS’ rows: the pattern the section plays on each track is filled. <kbd>KNOB 1</kbd>–<kbd>4</kbd> choose it for tracks 1–4 (turn below the first pattern for <strong>REST</strong>). <kbd>ALGORITHM</kbd> selects tracks as everywhere.</li>
-            <li>The top row shows the length, with <strong>AUTO</strong> while it follows the longest pattern. <kbd>SELECT</kbd> sets it a beat a detent (from AUTO: its current length); turned below one beat, it returns to AUTO. The sheet’s Length row does the same, and <kbd>OCT+</kbd> on it sets AUTO.</li>
+            <li>The rows are PATTERNS’ cells: the pattern the section plays on each track is filled; a resting track says REST across them. <kbd>KNOB 1</kbd>–<kbd>4</kbd> choose it for tracks 1–4 (turn below the first pattern for <strong>REST</strong>). <kbd>ALGORITHM</kbd> selects tracks as everywhere.</li>
+            <li>The top row shows the length, with <strong>AUTO</strong> while it follows the longest pattern, and at the right how many columns play this section. <kbd>SELECT</kbd> sets the length a beat a detent (from AUTO: its current length); turned below one beat, it returns to AUTO (<strong>LENGTH: AUTO</strong>).</li>
             <li>Under the rows, a lane per track shows how its pattern fills the length: the first loop bright, later loops lighter, a red mark where the section cuts a pattern, a dotted line for a rest.</li>
             <li><kbd>PLAY</kbd> loops just this section; the header shows <strong>LOOPING A</strong>. Pattern and length changes are heard from the next pass. Press <kbd>PLAY</kbd> again to stop.</li>
-            <li><kbd>OCT+</kbd> opens the section sheet: Length, Set preset and Remove preset (for the selected track), Punch FX, Copy as new section. Tap <kbd>FX</kbd> for the punches directly. <kbd>OCT−</kbd> returns to SONG.</li>
+            <li><kbd>OCT+</kbd> opens the section sheet: Set preset and Remove preset (for the selected track), Punch FX, Copy as new section. Tap <kbd>FX</kbd> for the punches directly. <kbd>OCT−</kbd> returns to SONG.</li>
           </ul>
           <h4>Live launch</h4>
           <ul>

@@ -161,16 +161,9 @@ static const sheet_row_t SHEET_SONG[] = {
     {"Delete section", 0, 0, 0, CF_DEL_ROW},
     {"Loop song", ps_song_loop_v, ps_song_loop_turn, ps_song_loop, 0},
     {"Clear song", 0, 0, 0, CF_CLEAR_SONG}};
-/* the section page, OCT+: its length (OCT+ AUTO), the selected track's sound in it, its punches, a new letter of it */
-static void ps_sect_len_v(char *b)
-{
-    sect_len_text(b, sp.row, 1);
-    if (!chain_config.len[sp.row]) str_cpy(b + str_len(b), " AUTO", 6);
-}
-static void ps_sect_len_turn(int32_t s) { sect_length(s); }
+/* the section page, OCT+: the selected track's sound in it, its punches, a new letter of it (its length: SELECT) */
 static void ps_sect_trk_v(char *b) { str_cpy(b, "T1", 3); b[1] = (char)('1' + song.sel % NTRK); }
 static const sheet_row_t SHEET_SECTION[] = {
-    {"Length", ps_sect_len_v, ps_sect_len_turn, sect_auto, 0},
     {"Set preset", ps_sect_trk_v, 0, song_preset_open, 0}, {"Remove preset", ps_sect_trk_v, 0, song_preset_remove, 0},
     {"Punch FX", 0, 0, song_punch_open, 0}, {"Copy as new section", 0, 0, ps_copy_new, 0}};
 static const sheet_row_t SHEET_SONG_RANGE[] = {

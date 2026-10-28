@@ -103,7 +103,7 @@ arena is 1.1 KB smaller than upstream's (it was 7.6 KB before steps 1 and 2). Th
 
 ### 3.2 Flash per feature
 
-Flash is the limit for new features: **21.2 KB** is left in the app slot (2026-10-28, the one build with M1/M2/M3 and
+Flash is the limit for new features: **22.6 KB** is left in the app slot (2026-10-28, the one build with M1/M2/M3 and
 the song sections), shared with upstream's growth.
 
 | Feature | Flash |

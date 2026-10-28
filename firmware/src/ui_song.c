@@ -329,13 +329,7 @@ static void sect_length(int32_t steps)
     if (to == len || !song_edit_begin()) return;
     chain_config.len[row] = (uint16_t)to;
     sect_sync(row); song_edit_end();
-}
-static void sect_auto(void)
-{
-    uint32_t row = sp.row;
-    if (!chain_config.len[row] || !song_edit_begin()) return;
-    chain_config.len[row] = 0; sect_sync(row); song_edit_end();
-    ui_message("LENGTH: AUTO");
+    if (!to) ui_message("LENGTH: AUTO");
 }
 /* PLAY on the section page: this section again and again (again: stop) */
 static void sect_play(void)

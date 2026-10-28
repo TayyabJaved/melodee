@@ -181,15 +181,23 @@ column only; a letter is free again when its last column goes. Duplicate section
 the column; Copy as new section places a new letter with the same contents (on the section page: then edits it).
 Range copy/move/duplicate/delete (OCT+ held + KNOB 1) keep the columns' letters.
 PLAY starts at step zero of the picked column and stops at the end; PLAY on "+" starts at the first column.
-Moving the cursor during playback does not seek. The SONG card strip shows each column's letter and length
-("4 bars", briefly "3:2" for bars:beats); the footer the picked column's section, length (AUTO), its use count
-and the song's progress. The header shows the song's length in minutes:seconds.
-The section page (OCT+ on a column) draws PATTERNS' rows with the section's pattern filled (a rest: REST across the
-cells), the length on top (AUTO chip), and a lane per track under the rows: the first loop bright, later loops
+Moving the cursor during playback does not seek. The SONG card strip shows each column's letter and length in
+bars:beats ("2:3", "4:0"); the blocks under it the pattern number each track plays (REST for a rest); the footer the
+picked column's section, length in words (AUTO), its use count and the song's progress. The header shows the song's
+length in minutes:seconds.
+One look across PATTERNS, the section page and SONG (2026-10-28): a track is its numbered chip in its colour, a
+pattern its number (1-16) in the track's colour, a section its letter, a rest the word REST, a length bars:beats on
+the cards and words elsewhere. PATTERNS' cells hold their numbers: a part's 16 in two rows of eight (1-8 above 9-16),
+23 x 19 px on a 26 px pitch, a MIDI-only track's 8 in one row, 23 x 40; the playing one filled with its progress
+line at the foot, ones holding notes raised (SURF, the number in the track's colour), empty ones outlined, a queued
+one dashed (`ui_patterns.c` `pt_cell`, shared by the section page). The column numbers above the grid are gone.
+The section page (OCT+ on a column) draws PATTERNS' cells with the section's pattern filled (16 px high; a rest: REST
+across them), the length on top (AUTO chip) with the section's use count at its right, and a lane per track at the
+foot: the first loop bright, later loops
 lighter, a REC-coloured edge where the section cuts a pattern, a dotted line for a rest. KNOB k sets track k's
 pattern in the section, SELECT the length (below one beat: AUTO), PLAY loops the section alone (`chain.solo`; header
-LOOPING A; pattern and length edits apply from the next pass), OCT+ its sheet (Length, Set/Remove preset for the
-selected track, Punch FX, Copy as new section), FX its punches, OCT- back to SONG.
+LOOPING A; pattern and length edits apply from the next pass), OCT+ its sheet (Set/Remove preset for the
+selected track, Punch FX, Copy as new section; the length is SELECT's alone, "LENGTH: AUTO" when it returns), FX its punches, OCT- back to SONG.
 Live launch: REC on SONG switches every track to the picked column's section together (seq.c `live_tick`): stopped,
 at once; patterns playing without the song, on the next bar, then at the end of the launched section. Patterns and
 rests only. The shared header shows "B NEXT" while queued and "A CHANGED" once a track is changed by hand (both on

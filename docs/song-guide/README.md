@@ -8,9 +8,11 @@ picture: the screen with numbered marks, and what to press. The full reference i
 The pictures are drawings of the device's screens, made by `tools/gen_song_guide.py`; run it again after the
 screens change.
 
-**The words:** a *pattern* is one track's loop (P1-P16). A *section* (A-Z) is one part of the song: the
-pattern or a rest for every track, and a length. The *song* is sections in columns, left to right; a
-section can be placed in as many columns as you like, and they all play the same.
+**The words:** a *pattern* is one track's loop, shown everywhere as its number (1-16) in the track's colour. A
+*section* is one part of the song, shown as its letter (A-Z): the
+pattern or a rest (REST) for every track, and a length (on SONG's cards bars:beats: 2:3 is 2 bars 3 beats). The
+*song* is sections in columns, left to right; a section can be placed in as many columns as you like, and
+they all play the same. A *track* is its numbered chip at the left of each row.
 
 ## Contents
 
@@ -46,10 +48,10 @@ section can be placed in as many columns as you like, and they all play the same
 ![Step 1: Open PATTERNS](01-patterns.svg)
 
 1. Hold **SEQ** for a moment (or press **SEQ** and turn **SELECT** to PATTERNS).
-2. Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead. The numbers on top are its patterns, 1 to 16.
-3. The filled cell is the pattern each track plays now.
+2. Each row is a track: 1 drums, 2 bass, 3 chords, 4 lead, in its colour. Its cells are its patterns, each with its number: 1-8 above, 9-16 below.
+3. The filled cell is the pattern the track plays now; the line under its number shows how far it has played.
 
-*You see:* A grid, a row a track. Cells with notes are raised; empty ones are outlines. At the foot: the song's sections.
+*You see:* Cells with notes are raised, their number in the track's colour; empty ones are outlines. At the foot: the song's sections, by letter.
 
 > A pattern is one track's loop. Write its notes on SEQ > NOTES; this page chooses which one plays.
 
@@ -74,7 +76,7 @@ section can be placed in as many columns as you like, and they all play the same
 
 *You see:* The sheet over the grid. **OCT−** closes it; hold **EDIT** to undo.
 
-> Copies are separate patterns. A song only points at patterns: editing P2's notes changes every section using P2.
+> Copies are separate patterns. A song only points at patterns: editing pattern 2's notes changes every section using it.
 
 ## SONG
 
@@ -93,18 +95,18 @@ section can be placed in as many columns as you like, and they all play the same
 
 ![Step 5: Add your first section (A)](05-add-first-section.svg)
 
-1. Set each track's pattern for the first part (step 2): drums P1, bass P1. On SONG, turn **KNOB 1** to the + card.
+1. Set each track's pattern for the first part (step 2): drums 1, bass 1. On SONG, turn **KNOB 1** to the + card.
 2. Tap **OCT+**: section A, a column of what every track plays.
 
-*You see:* Card A with its length (AUTO: its longest pattern), its column showing each track's pattern; -- is a rest. The cursor stays on + for the next one.
+*You see:* Card A with its length in bars:beats (2:0, two bars: AUTO, its longest pattern), its column showing each track's pattern number; REST is a resting track. The cursor stays on + for the next one.
 
-> A track can rest in a section: set it on the section page (step 10), turning below P1.
+> A track can rest in a section: set it on the section page (step 10), turning below pattern 1.
 
 ### 6. Add more sections
 
 ![Step 6: Add more sections](06-add-more-sections.svg)
 
-1. Hold **SEQ**, change patterns for the next part (drums P2, bass P2, chords P1), let go.
+1. Hold **SEQ**, change patterns for the next part (drums 2, bass 2, chords 1), let go.
 2. Turn **SELECT** back to SONG, **KNOB 1** to +, tap **OCT+**: section B.
 3. Patterns that match a section place it again: back to A's patterns, **OCT+** on +: A.
 
@@ -116,8 +118,8 @@ section can be placed in as many columns as you like, and they all play the same
 
 ![Step 7: Read the SONG grid](07-read-the-grid.svg)
 
-1. Cards: a column each, its section's letter and length (3:2 = 3 bars 2 beats).
-2. Rows: a track each, its pattern in each column; -- rests.
+1. Cards: a column each, its section's letter and length in bars:beats (2:3 = 2 bars 3 beats, 4:0 = 4 bars).
+2. Rows: a track each, the number of the pattern it plays in each column; REST rests.
 3. Footer: the picked column's section and length, AUTO when it follows its longest pattern.
 4. How often the song uses that section.
 
@@ -142,9 +144,9 @@ section can be placed in as many columns as you like, and they all play the same
 
 ![Step 9: Open a section](09-open-section.svg)
 
-1. On SONG, turn **KNOB 1** to a column and tap **OCT+**. The top row: its length (AUTO).
-2. Its tracks: PATTERNS' rows, the section's pattern filled; REST across a resting track.
-3. Under them a lane a track: how its pattern loops in the length (lighter: later loops).
+1. On SONG, turn **KNOB 1** to a column and tap **OCT+**. The top row: its length in words (AUTO).
+2. Its tracks: PATTERNS' numbered cells, the section's pattern filled; REST across a resting track.
+3. At the foot a lane a track: how its pattern loops in the length (lighter: later loops).
 4. How many columns play this section.
 
 *You see:* SECTION B in the header. Whatever you change here changes every column of B.
@@ -166,10 +168,10 @@ section can be placed in as many columns as you like, and they all play the same
 
 ![Step 11: Set the section's length](11-set-length.svg)
 
-1. Turn **SELECT**: one beat a click, from its AUTO length. Turn it below one beat for AUTO again.
+1. Turn **SELECT**: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).
 2. A pattern longer than the section is cut where it ends: the red mark.
 
-*You see:* The AUTO chip goes when you set a length. Shorter patterns loop to fill the section.
+*You see:* The AUTO chip goes when you set a length. On SONG its card shows it as bars:beats (3:0). Shorter patterns loop to fill the section.
 
 > There are no repeats: make a section longer, or place it twice. Every track starts again at each column.
 
@@ -190,7 +192,7 @@ section can be placed in as many columns as you like, and they all play the same
 2. Set preset: a sound for the selected track in this section (**ALGORITHM** picks the track).
 3. Punch FX (or **FX**): master effects at steps of the section.
 
-*You see:* On the Length row **KNOB 1** turns the length and **OCT+** sets AUTO. A section's sound plays in that section only; the normal one returns elsewhere and on STOP.
+*You see:* Set preset, Remove preset, Punch FX, Copy as new section. (The length is on **SELECT**, step 11.) A section's sound plays in that section only; the normal one returns elsewhere and on STOP.
 
 > Copy as new section makes the next letter with the same contents, then shows it, for a variation.
 
@@ -288,8 +290,8 @@ section can be placed in as many columns as you like, and they all play the same
 | SONG | REC | launch the picked column's section live |
 | SONG | FX | the picked section's master punches |
 | SONG | EDIT held | undo (EDIT + OCT- / OCT+: undo / redo) |
-| Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below P1: REST) |
+| Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below pattern 1: REST) |
 | Section page | SELECT | its length, a beat a click (below a beat: AUTO) |
 | Section page | PLAY | loop just this section / stop |
-| Section page | OCT+ | Length, Set / Remove preset, Punch FX, Copy as new section |
+| Section page | OCT+ | Set / Remove preset, Punch FX, Copy as new section |
 | Section page | OCT- | back to SONG |

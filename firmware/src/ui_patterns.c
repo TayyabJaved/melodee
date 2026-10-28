@@ -2,10 +2,11 @@
  * Copyright (C) 2026 Kerem Kilic (Ellic Studio) */
 /* SEQ > PATTERNS and SEQ > SONG, screens of their own drawn to the redesign's mockups (docs/design: concept_screens 3
  * and 4, ref/patterns, ref/song; the sections: mock/song_workflow_proposal.svg).
- * PATTERNS (SEQ held, or its page): the header, then a row per track: its number in a circle (the selected one
- * filled), a cell per pattern: the one playing filled in the track's colour (how far through it at its foot), the one
- * waiting for the bar dashed, the others with something in them as three bars (their thirds' notes), empty ones an
- * outline. At the foot the song as its columns' section letters, the column playing (else the one SONG picked) lit, a
+ * One look on PATTERNS, the section page and SONG: a track its numbered chip, a pattern its number in the track's
+ * colour, a section its letter, a rest REST, a length bars:beats on SONG's cards and words elsewhere.
+ * PATTERNS (SEQ held, or its page): the header, then a row per track: its chip (the selected one filled), a numbered
+ * cell per pattern (a part's 16 in two rows of eight): the one playing filled in the track's colour (how far through it
+ * at its foot), the one waiting for the bar dashed, ones holding notes raised, empty ones an outline. At the foot the song as its columns' section letters, the column playing (else the one SONG picked) lit, a
  * section queued live dashed. KNOB k queues track k's pattern.
  * OCT+ the selected track's pattern's sheet (Copy to.., Delete pattern). Copy to: the place it goes framed in the
  * theme's colour on the track's row (the first empty one first), any knob moves it, OCT+ copies (over a pattern in
@@ -15,8 +16,9 @@
  * outlined; a song playing: its playhead. At the foot the column's section, its length, how often the song uses it,
  * how far the song has played. KNOB 1 the column, 2 the section it plays; OCT+ opens the section (on "+": adds what
  * plays), PLAY starts at the cursor, REC launches the column's section live (ui_input.c, ui_song.c).
- * The section page (SONG OCT+ on a column): its length, PATTERNS' rows with the section's pattern filled, a timeline of
- * how each pattern loops (and is cut) in the length. KNOB k track k's pattern, SELECT the length, PLAY loops it.
+ * The section page (SONG OCT+ on a column): its length and use count, PATTERNS' cells with the section's pattern
+ * filled, a timeline of how each pattern loops (and is cut) in the length. KNOB k track k's pattern, SELECT the length,
+ * PLAY loops it.
  * Each part remembers what it drew. Included by ui_draw.c */
 
 static int ptc_on(void);                                /* PATTERNS' Copy to (below) */
@@ -71,31 +73,20 @@ static uint32_t pat_bars(uint32_t k, uint32_t b)
 static uint32_t fnv1(uint32_t h, uint32_t v) { return (h ^ v) * 16777619u; }
 
 /* ---------------------------------------------------------- PATTERNS --- */
-#define PT_NUM_Y H_HEAD                                 /* the patterns' numbers: rows 30 .. 49 */
-#define PT_ROW_Y 50                                     /* a track a row: 38 px, to 201 */
-#define PT_ROW_H 38
+#define PT_ROW_Y H_HEAD                                 /* a track a row: 43 px, 30 .. 201 */
+#define PT_ROW_H 43
 #define PT_SONG_Y (PT_ROW_Y + 4 * PT_ROW_H)             /* the song: 202 .. 239 */
-#define PT_COLS 8u                                      /* a page of patterns (a part's 16: two) */
-#define PT_CELL_X(b) (30 + 26 * (int32_t)((b) % PT_COLS))   /* a cell: 23 x 32 at row y 2 */
-static struct { uint32_t num, row[NTRK], prog[NTRK], song, focus; } ptv;
+/* A pattern is its number (1..16) on a cell, in its track's colour; the section page draws the same cells (sp_row).
+ * A part's 16: two rows of eight (1-8 above 9-16), 19 high; a MIDI-only track's 8: one row, 39 high; 23 wide on a
+ * 26 px pitch, room for two digits. */
+#define PT_CELL_W 23
+#define PT_CELL_X(b) (30 + 26 * (int32_t)((b) % 8u))
+#define PT_CELL_Y(k, b) (trk_npat(k) > 8u ? 2 + 21 * (int32_t)((b) / 8u) : 2)
+#define PT_CELL_H(k) (trk_npat(k) > 8u ? 19 : 40)
+static struct { uint32_t row[NTRK], prog[NTRK], song; } ptv;
 
-/* the pattern a track's row is about: the one waiting for the bar, else the one playing */
-static uint32_t pt_focus(uint32_t k) { return trk[k].pattern_next < NPAT ? trk[k].pattern_next : trk[k].pattern; }
-/* the page the rows show: Copy to's place; else the selected track's pattern's, whenever that changes (KNOB k on
- * another row: that row's, patgrid_edit) */
-static uint32_t pt_page(void)
-{
-    uint32_t k = song.sel % NTRK, f = pt_focus(k), sig = k * 64u + f + 1u;
-    if (trk_npat(pt_track()) <= PT_COLS)
-        return 0;
-    if (ptc_on())
-        ui.pt_page = (uint8_t)(ui.ptc_dst / PT_COLS);
-    else if (ui.pt_page >= NPAT / PT_COLS || sig != ptv.focus)
-        ui.pt_page = (uint8_t)(f / PT_COLS);
-    ptv.focus = sig;
-    return ui.pt_page;
-}
-static uint32_t pt_prog(const track_t *t)               /* px through the pattern playing (of 17), 0 stopped */
+static uint32_t pt_prog_w(const track_t *t) { (void)t; return PT_CELL_W - 6u; }   /* the bar's width */
+static uint32_t pt_prog(const track_t *t)               /* px through the pattern playing (of the bar), 0 stopped */
 {
     uint32_t len = (uint32_t)t->p[P_SLEN];
     return song.playing && len ? (t->seq_idx % len + 1u) * 17u / len : 0u;
@@ -103,56 +94,47 @@ static uint32_t pt_prog(const track_t *t)               /* px through the patter
 static void pt_prog_bar(int32_t x, int32_t y, uint32_t prog, uint16_t tc)   /* at the playing cell's foot */
 {
     uint16_t tr = ux_mix(tc, T_BG, 35);
-    cv_rrect(x, y, 17, 3, 1, tr, tc);
-    cv_rrect(x, y, prog < 2u ? 2 : (int32_t)prog, 3, 1, T_BG, tr);
+    cv_rrect(x, y, (int32_t)w, 2, 1, tr, tc);
+    cv_rrect(x, y, prog < 2u ? 2 : (int32_t)prog, 2, 1, T_BG, tr);
 }
-/* pattern b's notes as three bars, its thirds (up to 14 px; none: a dot) */
-static void pt_bars(uint32_t k, uint32_t b, int32_t x, int32_t y, uint16_t c)
+/* track k's pattern b as a cell at x, y (h high): playing filled, holding notes raised, empty an outline, its number in
+ * each; dst: a Copy to place (framed); next: waiting for its loop end (dashed) */
+static void pt_cell(uint32_t k, uint32_t b, int32_t x, int32_t y, int32_t h, int playing, int next, int dst, uint16_t tc)
 {
-    uint32_t len, div, i, n[3] = {0, 0, 0}, m = 1;
-    pattern_t p;
-    pattern_read(k, b, &p);
-    const step_t *s = p.step;
-    len = (uint32_t)p.timing[0]; div = (uint32_t)p.timing[1];
-    len = len > NSTEP ? NSTEP : len ? len : 1u;
-    for (i = 0; i < len; i++)
-        if (step_on(&s[i]))
-            n[i * 3u / len]++;
-    for (i = 0; i < 3u; i++)
-        if (n[i] > m) m = n[i];
-    for (i = 0; i < 3u; i++) {
-        int32_t h = n[i] ? 4 + (int32_t)(n[i] * 10u / m) : 2;
-        cv_rrect(x + 5 + 5 * (int32_t)i, y + 26 - h, 3, h, 1, c, T_SURF);
+    char n[3];
+    pat_num(n, b);
+    const aafont_t *f = h < 24 ? ty_fit(TY_LB, n, PT_CELL_W - 4) : TY_LB;
+    int32_t ny = ty_y(y + (playing && h < 24 ? h / 2 - 1 : h / 2), f);
+    if (dst)                                            /* Copy to: the place, framed in the theme's colour */
+        cv_rrect(x - 2, y - 2, PT_CELL_W + 4, h + 4, 6, T_THEME, T_BG);
+    if (playing) {
+        cv_rrect(x, y, PT_CELL_W, h, 4, tc, dst ? T_THEME : T_BG);
+        cv_text_c(x + PT_CELL_W / 2, ny, f, n, T_INK, tc);
+    } else if (pattern_used(k, b) || next) {
+        cv_rrect(x, y, PT_CELL_W, h, 4, T_SURF, dst ? T_THEME : T_BG);
+        cv_text_c(x + PT_CELL_W / 2, ny, f, n, pattern_used(k, b) ? tc : T_MID, T_SURF);
+    } else {                                            /* empty: an outline, its number dim */
+        cv_rrect(x, y, PT_CELL_W, h, 4, dst ? T_BG : T_LINE, dst ? T_THEME : T_BG);
+        cv_rrect(x + 1, y + 1, PT_CELL_W - 2, h - 2, 3, T_BG, dst ? T_BG : T_LINE);
+        cv_text_c(x + PT_CELL_W / 2, ny, f, n, dst ? T_THEME : T_DIM, T_BG);
     }
+    if (next)                                           /* waiting for the bar: dashed */
+        cv_dashed(x, y, PT_CELL_W, h, 4, tc);
 }
-/* the page's eight numbers (1 .. 8, 9 .. 16); two pages: their dots over the tracks' numerals, the page's a pill */
-static void pt_numbers(uint32_t pg)
+/* the track's chip: its number, the selected one filled */
+static void pt_chip(uint32_t k, int32_t h, uint16_t tc, int sel)
 {
-    uint32_t b, two = trk_npat(pt_track()) > PT_COLS, sig = ux.gen * 977u + ux.pal * 31u + 1u + 2u * two + 4u * pg;
-    int32_t x;
-    if (!ui.force && sig == ptv.num)
-        return;
-    ptv.num = sig;
-    cv_begin(240, PT_ROW_Y - PT_NUM_Y, T_BG);
-    for (b = pg * PT_COLS; b < pg * PT_COLS + PT_COLS; b++) {
-        char n[3] = {(char)('0' + (b + 1u) / 10u), (char)('0' + (b + 1u) % 10u), 0};
-        cv_text_c(PT_CELL_X(b) + 11, ty_y((PT_ROW_Y - PT_NUM_Y) / 2, TY_LB), TY_LB, b < 9u ? n + 1 : n, T_MID, T_BG);
-    }
-    for (b = 0, x = 4; two && b < NPAT / PT_COLS; b++) {   /* (as the header's, head_pages: over the numerals) */
-        int32_t w = b == pg ? 12 : 6;
-        cv_rrect(x, (PT_ROW_Y - PT_NUM_Y) / 2 - 3, w, 6, 3, b == pg ? T_THEME : T_LINE, T_BG);
-        x += w + 2;
-    }
-    cv_blit(0, PT_NUM_Y);
+    char n[2] = {(char)('1' + k), 0};
+    cv_rrect(2, 2, 24, h - 4, 6, tc, T_BG);
+    if (!sel) cv_rrect(4, 4, 20, h - 8, 4, T_BG, tc);
+    cv_text_c(14, ty_y(h / 2, TY_TX), TY_TX, n, sel ? T_INK : tc, sel ? tc : T_BG);
 }
 static void pt_row(uint32_t k, uint32_t pg)
 {
     const track_t *t = &trk[k];
     uint16_t tc = t->p[P_MUTE] ? T_DIM : T_TRK(k);
-    uint32_t b, on = t->pattern / PT_COLS == pg, prog = on ? pt_prog(t) : 0u, sel = k == song.sel, h;
-    uint32_t off = !on || (t->pattern_next < NPAT && t->pattern_next / PT_COLS != pg);   /* (on the other page) */
-    int32_t y0 = PT_ROW_Y + (int32_t)(k % NPART) * PT_ROW_H;
-    char n[2] = {(char)('1' + k), 0};
+    uint32_t b, prog = pt_prog(t), sel = k == song.sel, h;
+    int32_t y0 = PT_ROW_Y + (int32_t)(k % NPART) * PT_ROW_H, ch = PT_CELL_H(k);
     h = fnv1(fnv1(fnv1(2166136261u, steps_hash(t)), t->pattern_gen), t->pattern + 16u * t->pattern_next + 8192u * sel +
             16384u * (uint32_t)(t->p[P_MUTE] != 0) + 65536u * (uint32_t)t->p[P_SLEN]);
     h = fnv1(h, ux.gen * 977u + ux.pal * 31u + (uint32_t)song.playing + 2u * pg);
@@ -161,48 +143,22 @@ static void pt_row(uint32_t k, uint32_t pg)
     if (!ui.force && h == ptv.row[k]) {
         if (prog != ptv.prog[k]) {                      /* playing: the bar at the cell's foot only */
             ptv.prog[k] = prog;
-            cv_begin(17, 3, tc);
-            pt_prog_bar(0, 0, prog, tc);
-            cv_blit((uint32_t)(PT_CELL_X(t->pattern) + 3), (uint32_t)(y0 + 2 + 25));
+            cv_begin(pt_prog_w(t), 2, tc);
+            pt_prog_bar(0, 0, prog, tc, pt_prog_w(t));
+            cv_blit((uint32_t)(PT_CELL_X(t->pattern) + 3), (uint32_t)(y0 + PT_CELL_Y(k, t->pattern) + ch - 4));
         }
         return;
     }
     ptv.row[k] = h;
     ptv.prog[k] = prog;
     cv_begin(240, PT_ROW_H, T_BG);
-    if (sel) {                                          /* the track: its numeral in a chip, the selected one filled */
-        cv_rrect(2, 2, 24, 32, 6, tc, T_BG);
-        cv_text_c(14, ty_y(18, TY_TX), TY_TX, n, T_INK, tc);
-    } else {
-        cv_rrect(2, 2, 24, 32, 6, tc, T_BG);
-        cv_rrect(4, 4, 20, 28, 4, T_BG, tc);
-        cv_text_c(14, ty_y(18, TY_TX), TY_TX, n, tc, T_BG);
-    }
-    if (off)                                            /* its pattern on the other page: a tick on that side */
-        cv_rrect(pg ? 27 : 236, 12, 2, 12, 1, tc, T_BG);
-    for (b = pg * PT_COLS; b < pg * PT_COLS + PT_COLS && b < trk_npat(k); b++) {
-        int32_t x = PT_CELL_X(b), y = 2;
-        int dst = ptc_on() && k == ui.ptc_to && b == ui.ptc_dst;
-        if (dst)                                        /* Copy to: the place, framed in the theme's colour */
-            cv_rrect(x - 2, y - 2, 27, 36, 6, T_THEME, T_BG);
-        if (b == t->pattern) {                          /* playing: filled, how far through it */
-            cv_rrect(x, y, 23, 32, 4, tc, dst ? T_THEME : T_BG);
-            if (prog)
-                pt_prog_bar(x + 3, y + 25, prog, tc);
-            continue;
-        }
-        if (pattern_used(k, b) || b == t->pattern_next) {
-            cv_rrect(x, y, 23, 32, 4, T_SURF, dst ? T_THEME : T_BG);
-            if (pattern_used(k, b))
-                pt_bars(k, b, x, y, ux_mix(T_SURF, tc, 60));
-        } else {                                        /* empty: an outline */
-            cv_rrect(x, y, 23, 32, 4, dst ? T_BG : T_LINE, dst ? T_THEME : T_BG);
-            cv_rrect(x + 1, y + 1, 21, 30, 3, T_BG, dst ? T_BG : T_LINE);
-            if (dst)                                    /* (Copy to: an empty place) */
-                cv_text_c(x + 11, ty_y(y + 16, TY_TX), TY_TX, "+", T_THEME, T_BG);
-        }
-        if (b == t->pattern_next)                       /* waiting for the bar: dashed */
-            cv_dashed(x, y, 23, 32, 4, tc);
+    pt_chip(k, PT_ROW_H, tc, (int)sel);
+    for (b = 0; b < trk_npat(k); b++) {
+        int32_t x = PT_CELL_X(b), y = PT_CELL_Y(k, b);
+        int dst = ptc_on() && k == ui.ptc_trk && b == ui.ptc_dst;
+        pt_cell(k, b, x, y, ch, b == t->pattern, b == t->pattern_next, dst, tc);
+        if (b == t->pattern && prog)
+            pt_prog_bar(x + 3, y + ch - 4, prog, tc, pt_prog_w(t));
     }
     cv_blit(0, (uint32_t)y0);
 }
@@ -244,8 +200,7 @@ static void pt_song(void)
 }
 static void patterns_draw(void)
 {
-    uint32_t k, pg = pt_page();
-    pt_numbers(pg);
+    uint32_t k;
     pt_song();
     uint32_t g = pt_group(), n = trk_n() - g < NPART ? trk_n() - g : NPART;    /* (the selected track's four) */
     for (k = 0; k < n; k++)
@@ -361,17 +316,17 @@ static void ptc_paste(int asked)                        /* OCT+: copy it there (
 static struct { uint32_t top, lab, row[NTRK], foot; } sgv;
 static struct { uint32_t first, ncols, sel, play_col, bars, play; uint64_t total; int32_t px; } sg;   /* this frame's (bars, play: 1/384 of 4 bars) */
 
-/* a section's length in words: "4 bars", "1 bar", "2 beats", "3 bars 2 beats" (brief, a card's: "3:2", "12:0"; brief 2:
- * always bars:beats, "4:0") */
+/* a section's length in words: "4 bars", "1 bar", "2 beats", "3 bars 2 beats"; brief, a card's: bars:beats, "3:2",
+ * "4:0", "0:2" */
 static void sect_len_text(char *b, uint32_t row, int brief)
 {
     uint32_t beats = (sect_len_u(row) + 12u) / 24u, bars, rest;
     if (!beats) beats = 1;
     bars = beats / 4u; rest = beats % 4u;
     b[0] = 0;
+    if (brief) { fmt_int(b, bars); str_cpy(b + str_len(b), ":", 2); fmt_int(b + str_len(b), rest); return; }
     if (!bars) { fmt_int(b, rest); str_cpy(b + str_len(b), rest == 1u ? " beat" : " beats", 8); return; }
     fmt_int(b, bars);
-    if ((rest || bars > 9u || brief == 2) && brief) { str_cpy(b + str_len(b), ":", 2); fmt_int(b + str_len(b), rest); return; }
     str_cpy(b + str_len(b), bars == 1u ? " bar" : " bars", 6);
     if (rest) { str_cpy(b + str_len(b), " ", 2); fmt_int(b + str_len(b), rest); str_cpy(b + str_len(b), rest == 1u ? " beat" : " beats", 8); }
 }
@@ -467,8 +422,7 @@ static void sg_labels(void)
         char l[2] = {(char)('A' + chain_config.sect[r]), 0}, b[16];
         cv_rrect(x, 1, w, SG_LAB_H - 4, 6, fill, T_BG);
         cv_text_on(x + 4, ty_y(11, TY_LB), TY_LB, l, ink, fill);
-        sect_len_text(b, r, 1);
-        if (text_w(TY_LB, b) > w - 6) sect_len_text(b, r, 2);   /* (a wide face: "4:0") */
+        sect_len_text(b, r, 1);                         /* (bars:beats) */
         const aafont_t *f = ty_fit(TY_LB, b, w - 6);
         cv_text_on(x + 3, ty_y(26, f), f, b, sel || on ? T_BG : T_MID, fill);
         if (r == live.next) cv_dashed(x - 1, 0, w + 2, SG_LAB_H - 2, 7, T_THEME);
@@ -550,9 +504,9 @@ static void sg_row(uint32_t k)
         int pick = r == sg.sel && k == song.sel;
         int used = pattern_used(k, p);
         int32_t x = 9 + SG_COL_W * (int32_t)j, w = SG_COL_W - 2;
-        char l[4] = {'P', (char)('0' + (p % NPAT + 1u) / 10u), (char)('0' + (p % NPAT + 1u) % 10u), 0};
-        if (p % NPAT < 9u) { l[1] = l[2]; l[2] = 0; }
-        if (p >= NPAT) str_cpy(l, "--", sizeof l);
+        char l[5];                                      /* (a pattern: its number, as PATTERNS shows it) */
+        if (p >= NPAT) str_cpy(l, "REST", sizeof l);
+        else pat_num(l, p);
         if (used) {
             if (pick)
                 cv_rrect(x - 1, 1, w + 2, 30, 6, T_TEXT, T_BG);
@@ -563,7 +517,7 @@ static void sg_row(uint32_t k)
             cv_over = 0;
         } else {
             if (p < NPAT || pick) cv_dashed(x, 2, w, 28, 5, tc);
-            cv_text_on(x + 6, ty_y(16, TY_LB), TY_LB, l, pick ? tc : T_DIM, T_BG);
+            cv_text_on(x + 6, ty_y(16, TY_LB), TY_LB, l, p < NPAT ? tc : pick ? T_MID : T_DIM, T_BG);
         }
     }
     if (sg.px >= 0)
@@ -605,33 +559,38 @@ static void sg_foot(void)                               /* the column picked: it
 }
 
 /* ------------------------------------------------------- SONG > section --- */
-/* The section page: PATTERNS' rows for the column's section (the one it plays filled, a rest dimmed), its length on
- * top, and how each pattern fills the length (loops: lighter after the first; cut: a red edge). */
-#define SP_LEN_Y H_HEAD                                 /* the length: 30 .. 55 */
-#define SP_ROW_Y 56                                     /* a track a row: 28 px, 56 .. 167 */
-#define SP_ROW_H 28
-#define SP_TL_Y (SP_ROW_Y + 4 * SP_ROW_H)               /* the timeline (its bars' numbers, then a lane a track): 168 .. 217 */
-#define SP_TL_H 50
-#define SP_LANE_Y 20                                    /* (its lanes: 8 px apart) */
-#define SP_FOOT_Y (SP_TL_Y + SP_TL_H)                   /* the hint: 218 .. 239 */
-static struct { uint32_t len, row[NTRK], tl, foot; } sgp;
+/* The section page: its length on top (how often the song plays it at the right), PATTERNS' cells for each track
+ * (the section's pattern filled, a rest said across them), then how each pattern fills the length (loops: lighter
+ * after the first; cut: a red edge). */
+#define SP_LEN_Y H_HEAD                                 /* the length: 30 .. 53 */
+#define SP_ROW_Y 54                                     /* a track a row: 36 px, 54 .. 197 */
+#define SP_ROW_H 36
+#define SP_CELL_Y(k, b) (trk_npat(k) > 8u ? 1 + 18 * (int32_t)((b) / 8u) : 1)   /* (PATTERNS' cells, 16 high) */
+#define SP_CELL_H(k) (trk_npat(k) > 8u ? 16 : 34)
+#define SP_TL_Y (SP_ROW_Y + 4 * SP_ROW_H)               /* the timeline, a lane a track: 198 .. 239 */
+#define SP_TL_H 42
+#define SP_LANE_Y 6                                     /* (its lanes: 8 px apart) */
+static struct { uint32_t len, row[NTRK], tl; } sgp;
 static void sp_len(void)
 {
     char b[24];
-    uint32_t row = sp.row, sig = sect_len_u(row) * 7u + chain_config.len[row] * 131u + ux.gen * 977u + ux.pal * 31u;
+    uint32_t row = sp.row, uses = sect_uses(chain_config.sect[row]);
+    uint32_t sig = sect_len_u(row) * 7u + chain_config.len[row] * 131u + uses * 8191u + ux.gen * 977u + ux.pal * 31u;
     if (!ui.force && sig == sgp.len)
         return;
     sgp.len = sig;
     cv_begin(240, SP_ROW_Y - SP_LEN_Y, T_BG);
-    cv_rrect(4, 1, 232, 24, 5, T_SURF, T_BG);
-    cv_text_on(10, ty_y(13, TY_LB), TY_LB, "LENGTH", T_MID, T_SURF);
+    cv_rrect(4, 1, 232, 22, 5, T_SURF, T_BG);
+    cv_text_on(10, ty_y(12, TY_LB), TY_LB, "LENGTH", T_MID, T_SURF);
     sect_len_text(b, row, 0);
-    const aafont_t *f = ty_fit(TY_TX, b, 112);
-    int32_t x = cv_text_on(80, ty_y(13, f), f, b, T_TEXT, T_SURF);
+    const aafont_t *f = ty_fit(TY_TX, b, 90);
+    int32_t x = cv_text_on(80, ty_y(12, f), f, b, T_TEXT, T_SURF);
     if (!chain_config.len[row]) {                       /* (its longest pattern's: AUTO) */
-        cv_rrect(x + 6, 4, 44, 18, 5, T_THEME, T_SURF);
-        cv_text_c(x + 28, ty_y(13, TY_LB), TY_LB, "AUTO", T_BG, T_THEME);
+        cv_rrect(x + 5, 4, 40, 16, 5, T_THEME, T_SURF);
+        cv_text_c(x + 25, ty_y(12, TY_LB), TY_LB, "AUTO", T_BG, T_THEME);
     }
+    fmt_int(b, uses); str_cpy(b + str_len(b), "x", 2);
+    cv_text_r(230, ty_y(12, TY_LB), TY_LB, b, T_MID, T_SURF);
     cv_blit(0, SP_LEN_Y);
 }
 static void sp_row(uint32_t k)
@@ -648,26 +607,13 @@ static void sp_row(uint32_t k)
     sgp.row[k] = h;
     cv_begin(240, SP_ROW_H, T_BG);
     if (k < trk_n()) {
-        char nm[2] = {(char)('1' + k), 0};
-        cv_rrect(2, 2, 24, 24, 6, tc, T_BG);
-        if (k != song.sel) cv_rrect(4, 4, 20, 20, 4, T_BG, tc);
-        cv_text_c(14, ty_y(14, TY_LB), TY_LB, nm, k == song.sel ? T_INK : tc, k == song.sel ? tc : T_BG);
-        int32_t w = PT_CELL_W(k), r = w > 12 ? 4 : 2;
+        pt_chip(k, SP_ROW_H, tc, k == song.sel);
         if (bank >= NPAT) {                             /* a rest: said in words where its cells would be */
-            int32_t x0 = PT_CELL_X(k, 0), x1 = PT_CELL_X(k, n - 1u) + w;
-            cv_rrect(x0, 3, x1 - x0, 22, 4, T_SURF, T_BG);
-            cv_text_c((x0 + x1) / 2, ty_y(14, TY_LB), TY_LB, "REST", T_MID, T_SURF);
-        } else for (b = 0; b < n; b++) {
-            int32_t x = PT_CELL_X(k, b);
-            if (b == bank) {
-                cv_rrect(x, 3, w, 22, r, tc, T_BG);
-            } else if (pattern_used(k, b)) {
-                cv_rrect(x, 3, w, 22, r, T_SURF, T_BG);
-            } else {
-                cv_rrect(x, 3, w, 22, r, T_LINE, T_BG);
-                cv_rrect(x + 1, 4, w - 2, 20, r - 1, T_BG, T_LINE);
-            }
-        }
+            int32_t x0 = PT_CELL_X(0), x1 = PT_CELL_X(7u) + PT_CELL_W;
+            cv_rrect(x0, 1, x1 - x0, SP_ROW_H - 2, 4, T_SURF, T_BG);
+            cv_text_c((x0 + x1) / 2, ty_y(SP_ROW_H / 2, TY_LB), TY_LB, "REST", T_MID, T_SURF);
+        } else for (b = 0; b < n; b++)
+            pt_cell(k, b, PT_CELL_X(b), SP_CELL_Y(k, b), SP_CELL_H(k), b == bank, 0, 0, tc);
     }
     cv_blit(0, (uint32_t)y0);
 }
@@ -686,14 +632,10 @@ static void sp_timeline(void)
         return;
     sgp.tl = sig;
     cv_begin(240, SP_TL_H, T_BG);
-    uint32_t bars = (total + 95u) / 96u;               /* a rule a bar (most: sixteen) */
-    uint32_t stride = bars <= 8u ? 1u : bars <= 16u ? 2u : bars <= 32u ? 4u : 8u;
-    for (uint32_t bar = 0; bar < bars; bar += stride) {
-        int32_t x = 30 + (int32_t)(bar * 96u * 202u / total);
-        cv_rect(x, SP_LANE_Y - 3, 1, SP_TL_H - SP_LANE_Y + 3, T_LINE);
-        char nb[6]; fmt_int(nb, bar + 1u);
-        if (x + 2 + text_w(TY_LB, nb) <= 236) cv_text_on(x + 2, ty_y(9, TY_LB), TY_LB, nb, T_DIM, T_BG);
-    }
+    uint32_t bars = (total + 95u) / 96u;               /* a rule a bar (at most sixteen) */
+    uint32_t stride = bars <= 16u ? 1u : bars <= 32u ? 2u : bars <= 64u ? 4u : 8u;
+    for (uint32_t bar = 0; bar < bars; bar += stride)
+        cv_rect(30 + (int32_t)(bar * 96u * 202u / total), SP_LANE_Y - 3, 1, 4 * 8 + 4, T_LINE);
     for (k = g; k < g + NPART && k < NTRK; k++) {
         int32_t y = SP_LANE_Y + (int32_t)(k - g) * 8;
         if (k >= trk_n()) continue;
@@ -713,22 +655,8 @@ static void sp_timeline(void)
             if (end < at + loop) cv_rect(x1 - 2, y - 1, 2, 8, T_REC);   /* cut where the section ends */
         }
     }
-    if (play >= 0) cv_rect(play, SP_LANE_Y - 3, 2, SP_TL_H - SP_LANE_Y + 3, T_TEXT);
+    if (play >= 0) cv_rect(play, SP_LANE_Y - 3, 2, 4 * 8 + 4, T_TEXT);
     cv_blit(0, SP_TL_Y);
-}
-static void sp_foot(void)                               /* what SELECT does; how often the song plays the section */
-{
-    char b[16];
-    uint32_t uses = sect_uses(chain_config.sect[sp.row]);
-    uint32_t sig = ux.gen * 977u + ux.pal * 31u + (uint32_t)sect_looping() * 3u + uses * 131u;
-    if (!ui.force && sig == sgp.foot)
-        return;
-    sgp.foot = sig;
-    cv_begin(240, 240 - SP_FOOT_Y, T_BG);
-    cv_text_on(8, ty_y(11, TY_LB), TY_LB, "SELECT length", T_MID, T_BG);
-    str_cpy(b, "in song ", sizeof b); fmt_int(b + 8, uses); str_cpy(b + str_len(b), "x", 2);
-    cv_text_r(232, ty_y(11, TY_LB), TY_LB, b, T_MID, T_BG);
-    cv_blit(0, SP_FOOT_Y);
 }
 static void sect_draw(void)
 {
@@ -738,7 +666,6 @@ static void sect_draw(void)
     for (k = trk_group(); k < trk_group() + NPART; k++)
         sp_row(k);
     sp_timeline();
-    sp_foot();
 }
 static void song_draw(void)
 {

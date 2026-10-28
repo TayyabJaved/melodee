@@ -338,7 +338,7 @@ measured against the slot and overstated the room by about 4.3 KB.
 
 | Region | Size | Used | Left | What lives there | When it is exceeded |
 | --- | ---: | ---: | ---: | --- | --- |
-| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 556,068 B | 21,180 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
+| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 554,652 B | 22,596 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
 | Low SRAM (`RAMTEXT`) | 32,512 B | 30,728 B | 1,784 B (to the arena) | code that runs while flash is busy, DSP kernels and tables | link fails |
 | **Bank** (`.data` + `.bss`) | 98,304 B | 96,792 B | **1,512 B** (to the arena) | ordinary globals | link fails: "region `RAM' overflowed" |
 | **Pool** region | 357,888 B | `.pool` 134,032 B, resident audio code, CPU1 stacks 4,096 B | arena 96,320 B | `.pool` buffers, audio code, then the audio working arena | build fails if the arena drops under 49,152 B or the pool's headroom under 8,192 B |
@@ -434,7 +434,7 @@ in brackets; 2026-10-28, with the song sections):
 
 | | Upstream 1.6.0-rc.5 | With our stack | Ours | Our budget |
 | --- | ---: | ---: | ---: | ---: |
-| Flash image | 543,112 B | 556,068 B | +12,956 B (+12,364 B) | 20,000 B |
+| Flash image | 543,112 B | 554,652 B | +11,540 B (+10,968 B) | 20,000 B |
 | Bank | 96,824 B | 96,792 B | −32 B (−48 B) | 64 B |
 | Pool (`.pool`) | 132,868 B | 134,032 B | +1,164 B (+1,100 B) | 4,096 B |
 | Audio arena | 92,448 B | 96,320 B | +3,872 B (+4,160 B) | |
@@ -449,7 +449,8 @@ The BLE fix is one line since upstream merged PR #90 in rc.5.
   removing upstream's jam log more than pays for them.
 - **Audio arena:** the song sections take 960 B of it: the section clock, live launch and section lengths run in the
   audio interrupt (`chain_tick`, `live_tick`, `chain_row_samples_of`), so they are resident audio code.
-- **Flash** limits new features: 21.2 KB is left for upstream's growth and ours together.
+- **Flash** limits new features: 22.6 KB is left for upstream's growth and ours together (PATTERNS' numbered cells
+  replaced its note-bar drawing: 1.4 KB back).
   Prefer `static const` tables, short strings and small pictures (`pv_gen` alone is 1.8 KB), and reuse upstream
   helpers instead of copying them.
 - Before this setup, the generators were inlined into the sequencer tick: 6.9 KB of resident audio code, and `gn` in
