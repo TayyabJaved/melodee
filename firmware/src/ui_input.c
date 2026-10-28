@@ -2563,9 +2563,16 @@ static void ui_input(void)
         fm6_opsel = (uint8_t)clamp((int32_t)fm6_opsel + (s > 0 ? 1 : -1), 0, 5);
         ui.force = 1;
     }
-    if ((s = panel_enc(EN_ALGO)) != 0) {           /* ALGORITHM: the selected track, on every page */
+    if ((s = panel_enc(EN_ALGO)) != 0) {           /* ALGORITHM: the selected track, on every page (PATTERNS' Copy
+                                                     * to: the track it goes to, the page showing its four) */
         step_edit_combo();
-        track_select((uint32_t)clamp((int32_t)song.sel + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1));
+        if (ptc_on()) {
+            uint32_t k = (uint32_t)clamp((int32_t)ui.ptc_to + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1);
+            if (k != ui.ptc_to)
+                ptc_row(k);
+        } else {
+            track_select((uint32_t)clamp((int32_t)song.sel + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1));
+        }
     }
     if (!glo_select_layer && (s = panel_enc(EN_SELECT)) != 0) { /* SELECT: pages; with SEQ / a step key / ENV / SCL: below */
         step_edit_combo();

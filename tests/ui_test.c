@@ -2298,6 +2298,25 @@ static int test_init_scales_patterns(void)
     for (i = 0; i < NSTEP; i++)
         ok &= !memcmp(&pattern_at(1, b + 1u)->step[i], &t->step[i], sizeof t->step[i]);
     bad += check("..OCT+ copies it to that track", ok && !ptc_on() && msg_is("PATTERN COPIED") && song.sel == 0u);
+    uint32_t ntrk0 = song.ntrk;
+    song.ntrk = NTRK;                                   /* (all eight: 5..8 the MIDI-only tracks) */
+    sheet_do("Copy to\x85");
+    turn(EN_ALGO, 1);
+    ok = ptc_on() && ui.ptc_to == 1u && song.sel == 0u && pt_group() == 0u;
+    for (i = 0; i < 3; i++)
+        turn(EN_ALGO, 1);
+    bad += check("..ALGORITHM: the track it goes to, past the four shown (the page shows its four)", ok && ptc_on() &&
+                 ui.ptc_to == 4u && song.sel == 0u && pt_group() == 4u);
+    turn(EN_K2, 1);
+    b = ui.ptc_dst;
+    ok = ui.ptc_to == 5u && b < NPAT_MIDI;
+    press(B_OCTUP);
+    if (ui.confirm == CF_PASTE_PAT)
+        press(B_OCTUP);
+    for (i = 0; i < NSTEP; i++)
+        ok &= !memcmp(&pattern_at(5, b)->step[i], &t->step[i], sizeof t->step[i]);
+    bad += check("..there KNOB 2: track 6's row; OCT+ copies it there", ok && !ptc_on() && msg_is("PATTERN COPIED"));
+    song.ntrk = (uint8_t)ntrk0;
     sheet_do("Delete pattern");
     bad += check("..Delete pattern asks", ui.confirm == CF_DEL_PAT && !seq_is_empty(t));
     press(B_OCTUP);

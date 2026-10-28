@@ -21,6 +21,10 @@
 static int ptc_on(void);                                /* PATTERNS' Copy to (below) */
 static int dq_defer(uint32_t cf, uint32_t k, uint32_t a, uint32_t b);   /* ui_input.c: playing, at the loop end */
 static uint32_t ptc_next(uint32_t from, int32_t dir);
+static void ptc_row(uint32_t k);
+/* the track whose four rows the page shows: the selected one's (Copy to: the four of the track it goes to) */
+static uint32_t pt_track(void) { return ptc_on() ? ui.ptc_to % NTRK : song.sel % NTRK; }
+static uint32_t pt_group(void) { return pt_track() / NPART * NPART; }
 
 /* ------------------------------------------------------------ shared --- */
 /* pattern b of track k holds something: a note, a hit, a recorded note's step */
@@ -136,7 +140,7 @@ static void pt_bars(uint32_t k, uint32_t b, int32_t x, int32_t y, uint16_t c)
 }
 static void pt_numbers(void)
 {
-    uint32_t b, k = song.sel % NTRK, n16 = PT_NARROW(k), sig = ux.gen * 977u + ux.pal * 31u + 1u + 2u * n16;
+    uint32_t b, k = pt_track(), n16 = PT_NARROW(k), sig = ux.gen * 977u + ux.pal * 31u + 1u + 2u * n16;
     if (!ui.force && sig == ptv.num)
         return;
     ptv.num = sig;
@@ -255,7 +259,7 @@ static void patterns_draw(void)
     uint32_t k;
     pt_numbers();
     pt_song();
-    uint32_t g = trk_group(), n = trk_n() - g < NPART ? trk_n() - g : NPART;   /* (the selected track's four) */
+    uint32_t g = pt_group(), n = trk_n() - g < NPART ? trk_n() - g : NPART;    /* (the selected track's four) */
     for (k = 0; k < n; k++)
         pt_row(g + k);
     if (ui.force && n < NPART)                          /* (the rows of tracks not in use: empty) */
@@ -275,18 +279,15 @@ static int patterns_queued(void)
 static void patgrid_edit(uint32_t k, int32_t steps)
 {
     track_t *t;
-    k = trk_group() + k % NPART;                        /* (KNOB k: the selected track's four) */
+    k = pt_group() + k % NPART;                         /* (KNOB k: the four shown) */
     t = &trk[k];
     if (k >= trk_n())                                   /* (no track there) */
         return;
     if (ptc_on()) {
-        if (k != ui.ptc_to) {
-            uint32_t b = ui.ptc_dst < trk_npat(k) ? ui.ptc_dst : trk_npat(k) - 1u;
-            ui.ptc_to = (uint8_t)k;
-            ui.ptc_dst = (uint8_t)(k == ui.ptc_trk && b == ui.ptc_src ? ptc_next(b, b ? -1 : 1) : b);
-        } else {
+        if (k != ui.ptc_to)
+            ptc_row(k);
+        else
             ui.ptc_dst = (uint8_t)ptc_next(ui.ptc_dst, steps > 0 ? 1 : -1);
-        }
         ui.force = 1;
         return;
     }
@@ -306,6 +307,15 @@ static uint32_t ptc_next(uint32_t from, int32_t dir)    /* the next place on its
     if (ui.ptc_to == ui.ptc_trk && b == (int32_t)ui.ptc_src)
         b += dir;
     return b < 0 || b >= (int32_t)trk_npat(ui.ptc_to) ? from : (uint32_t)b;
+}
+/* Copy to: the place onto track k's row (KNOB k; ALGORITHM, past the four shown too), the same number (or the one
+ * beside the pattern copied) */
+static void ptc_row(uint32_t k)
+{
+    uint32_t b = ui.ptc_dst < trk_npat(k) ? ui.ptc_dst : trk_npat(k) - 1u;
+    ui.ptc_to = (uint8_t)k;
+    ui.ptc_dst = (uint8_t)(k == ui.ptc_trk && b == ui.ptc_src ? ptc_next(b, b ? -1 : 1) : b);
+    ui.force = 1;
 }
 static void ptc_start(void)                             /* the pattern sheet's Copy to: the selected track's pattern */
 {
