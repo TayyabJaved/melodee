@@ -62,6 +62,16 @@ in one part of the song, and the song places sections in up to 64 columns.
   GLO still shows it only while held. The GLO double-tap lock is gone (a tap
   does it).
 
+## M3: every panel button on the white keys
+
+- Hold **F#5** (M3) and press the white keys **F3 .. D4** for FX, SCL, ENV,
+  LFO, EDIT and GLO, and **F4 .. D5** for HOME, SAVE, ARP, SEQ, PLAY and REC;
+  E4 is left free as a gap between the two groups. A key
+  held holds its button, so long presses work as on the panel.
+- While M3 is held, each key shows the same light as its button (bright,
+  dim, pulsing); one whose button is dark glows faintly. On the ARP page in
+  SHAPE mode the white keys stay SHAPE's steps.
+
 ## Projects: one shared storage pool
 
 - **32 projects** instead of four fixed slots. An empty slot occupies nothing;

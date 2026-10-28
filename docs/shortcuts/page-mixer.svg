@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="286" viewBox="0 0 860 286" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="MIXER">
+<rect x="0" y="0" width="860" height="286" rx="0" fill="#17141F"/>
+<text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">GLO › MIXER</text>
+<text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">The selected track's mix; ALGORITHM picks the track.</text>
+<rect x="28" y="88" width="192" height="96" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="124" cy="122" r="20" fill="#262033" stroke="#FF7A5C" stroke-width="3"/>
+<line x1="124" y1="122" x2="134" y2="106" stroke="#FF7A5C" stroke-width="3" stroke-linecap="round"/>
+<text x="124" y="162" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 1</text>
+<text x="124" y="180" font-size="14" fill="#FF7A5C" text-anchor="middle" font-weight="600">LEVEL</text>
+<rect x="232" y="88" width="192" height="96" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="328" cy="122" r="20" fill="#262033" stroke="#FF9A82" stroke-width="3"/>
+<line x1="328" y1="122" x2="338" y2="106" stroke="#FF9A82" stroke-width="3" stroke-linecap="round"/>
+<text x="328" y="162" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 2</text>
+<text x="328" y="180" font-size="14" fill="#FF9A82" text-anchor="middle" font-weight="600">PAN</text>
+<rect x="436" y="88" width="192" height="96" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="532" cy="122" r="20" fill="#262033" stroke="#5A5468" stroke-width="3"/>
+<line x1="532" y1="122" x2="542" y2="106" stroke="#5A5468" stroke-width="3" stroke-linecap="round"/>
+<text x="532" y="162" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 3</text>
+<text x="532" y="180" font-size="14" fill="#5A5468" text-anchor="middle" font-weight="600">—</text>
+<rect x="640" y="88" width="192" height="96" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="736" cy="122" r="20" fill="#262033" stroke="#FFD5CA" stroke-width="3"/>
+<line x1="736" y1="122" x2="746" y2="106" stroke="#FFD5CA" stroke-width="3" stroke-linecap="round"/>
+<text x="736" y="162" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 4</text>
+<text x="736" y="180" font-size="14" fill="#FFD5CA" text-anchor="middle" font-weight="600">MUTE</text>
+<rect x="28" y="200" width="396" height="62" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="28" y="200" width="5" height="62" rx="2" fill="#C9C2D6"/>
+<text x="44" y="220" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="700">SELECT</text>
+<text x="44" y="238" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">GLO's pages as one list: main, MIXER, GLOBAL … WEIGHTS</text>
+<text x="44" y="254" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">2</text>
+<rect x="436" y="200" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="436" y="200" width="5" height="46" rx="2" fill="#7FE0FF"/>
+<text x="452" y="220" font-size="12" fill="#7FE0FF" text-anchor="start" font-weight="700">GLO</text>
+<text x="452" y="238" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the next page</text>
+</svg>

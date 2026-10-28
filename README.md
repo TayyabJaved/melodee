@@ -1297,8 +1297,10 @@ them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)
   pitch, length and sound are on **DRUM HIT**. For precise timing edits of recorded hits, hold OCT+ for the pattern
   sheet and set **Drum view** to **Notes** (the piano roll; programmed hits do not show there), back to **Grid** the
   same way. It starts as Grid at power-on.
+- **All shortcuts, page by page, with pictures:** [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
 - **Keyboard shortcuts (built in):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
-  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press C#5 / D#5 for OCT− / OCT+, or A#4 to hear the note or chord at the NOTES
+  ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press the white keys F3 .. D5 for all twelve, FX SCL ENV LFO EDIT GLO, a gap at E4, HOME SAVE ARP SEQ PLAY
+  REC (each key lit as its button is; in ARP > SHAPE they stay its steps), C#5 / D#5 for OCT− / OCT+, or A#4 to hear the note or chord at the NOTES
   cursor (also with NOTE PREVIEW off). While M3 is
   held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). While one is held, its keys and
   the buttons they press light up. Momentary edits:

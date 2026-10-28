@@ -189,6 +189,48 @@ int main(void)
     ok &= quiet();
     check("M3 held: F5 and G5 are keys (notes), not M1 / M2; C#5 still OCT-", ok);
 
+    {   /* M3's white keys F3 .. D5: the twelve buttons in one row, M1's, E4 a gap, then M2's (panel.c) */
+        static const uint8_t WHITE[FM1_NAV_WHITES] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+        reset(MAP);
+        down(M3);
+        take();
+        ok = quiet();
+        for (i = 0; i < FM1_NAV_WHITES; i++) {          /* (no table yet: notes) */
+            down(FM1_NAV_WHITE[i]); take();
+            ok &= noted == 1u << FM1_NAV_WHITE[i] && !fm1_in.buttons;
+            up(FM1_NAV_WHITE[i]); take();
+        }
+        fm1_input_nav_whites(WHITE);
+        for (i = 0; i < FM1_NAV_WHITES; i++) {
+            down(FM1_NAV_WHITE[i]); take();
+            ok &= pressed == 1u << WHITE[i] && fm1_in.buttons == 1u << WHITE[i] && !noted && !fm1_in.notes;
+            up(FM1_NAV_WHITE[i]); take();
+            ok &= released == 1u << WHITE[i] && !fm1_in.buttons;
+        }
+        down(FM1_NAV_WHITE[10]); take();                 /* B4: PLAY, held past M3's release */
+        up(M3); take();
+        ok &= fm1_in.buttons == 1u << WHITE[10];
+        up(FM1_NAV_WHITE[10]); take();
+        ok &= released == 1u << WHITE[10] && !fm1_in.buttons && !fm1_in.notes;
+        down(11); take();                                /* E4: the gap between GLO and HOME, a note */
+        ok &= noted == 1u << 11 && !fm1_in.buttons;
+        up(11); take();
+        check("M3 + F3 .. D4 FX SCL ENV LFO EDIT GLO, E4 a note, F4 .. D5 HOME SAVE ARP SEQ PLAY REC, held as long as the key",
+              ok);
+
+        down(M1); down(FM1_NAV_WHITE[0]); take();
+        ok = noted == 1u << FM1_NAV_WHITE[0] && !fm1_in.buttons;
+        up(FM1_NAV_WHITE[0]); up(M1); take();
+        down(M3); fm1_input_nav_whites_on(0); down(FM1_NAV_WHITE[3]); take();
+        ok &= noted == 1u << FM1_NAV_WHITE[3] && !fm1_in.buttons;   /* (ARP > SHAPE: its steps) */
+        up(FM1_NAV_WHITE[3]); fm1_input_nav_whites_on(1); down(FM1_NAV_WHITE[3]); take();
+        ok &= pressed == 1u << WHITE[3];
+        up(FM1_NAV_WHITE[3]); up(M3); take();
+        ok &= released == 1u << WHITE[3];
+        ok &= quiet();
+        check("..only with M3: M1's white keys play; kept notes (ARP > SHAPE) they play too", ok);
+    }
+
     reset(MAP);
     fm1_input_nav_keep(1);
     down(M3);

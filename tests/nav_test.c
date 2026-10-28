@@ -435,10 +435,19 @@ static int test_modifier_lights(void)
     fm1_nav.mod = 1u << 26; ui_leds();                  /* M2 (G5) */
     bad += check("M2 held: HOME .. REC lit, FX dark", lit(panel.btn[B_HOME]) && lit(panel.btn[B_REC]) && lit(panel.btn[B_ARP]) &&
                  !lit(panel.btn[B_FX]) && lit(14 + 26) && lit(14 + 13));
-    fm1_nav.mod = 1u << 25; ui_leds();                  /* M3 (F#5) */
-    bad += check("M3 held: F#5, A#4 (hear), C#5 and D#5 lit, OCT- and OCT+ lit, nothing else",
-                 lit(14 + 25) && lit(14 + 17) && lit(14 + 20) && lit(14 + 22) && !lit(14 + 13) && !lit(14 + 15) && lit(panel.btn[B_OCTDN]) &&
-                 lit(panel.btn[B_OCTUP]) && !lit(panel.btn[B_FX]) && !lit(panel.btn[B_HOME]));
+    fm1_nav.mod = 1u << 25; frame(); ui_leds();         /* M3 (F#5) */
+    bad += check("M3 held: F#5 and A#4 (hear) lit, the buttons their usual lights (ARP's page), M1's black keys dark",
+                 lit(14 + 25) && lit(14 + 17) && !lit(14 + 13) && !lit(14 + 15) && lit(panel.btn[B_ARP]) &&
+                 !lit(panel.btn[B_FX]) && !lit(panel.btn[B_OCTUP]));
+    bad += check("..each key as its button: A4 (ARP) lit, F3 (FX) C5 (PLAY) D#5 (OCT+) dark but glowing, E4 (the gap) dark",
+                 lit(14 + 16) && !lit(14 + 0) && !lit(14 + 19) && !lit(14 + 22) && !lit(14 + 11) &&
+                 !led_get(fm1_led_dim[1], 14 + 11) &&
+                 led_get(fm1_led_dim[1], 14 + 0) == led_get(fm1_led_dim[1], panel.btn[B_FX]) &&
+                 led_get(fm1_led_dim[1], 14 + 0) && led_get(fm1_led_dim[1], 14 + 19));
+    TSEL->p[P_AMODE] = AM_SHAPE; frame(); ui_leds();
+    bad += check("..ARP > SHAPE: the white keys its steps (notes), not buttons", fm1_nav.whites_off);
+    TSEL->p[P_AMODE] = 0; frame();
+    bad += check("..elsewhere the buttons again", !fm1_nav.whites_off);
     fm1_nav.mod = (1u << 24) | (1u << 26); ui_leds();
     bad += check("two modifiers: the usual lights (keys do nothing then)", lit(panel.btn[B_ARP]) && !lit(panel.btn[B_FX]));
     fm1_nav.mod = 0; ui_leds();

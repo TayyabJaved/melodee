@@ -23,7 +23,9 @@ static int fm1_enc_take(unsigned k) { (void)k; return 0; }
 #define FM1_NAV_N 6u
 #define FM1_NAV_ROWS 3u
 #define FM1_NAV_ACTION 14u
+#define FM1_NAV_WHITES 12u
 static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N]) { (void)btn; }
+static void fm1_input_nav_whites(const uint8_t *btn) { (void)btn; }
 #endif
 static void lcd_sync(void) {}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c) { (void)x; (void)y; (void)w; (void)h; (void)c; }

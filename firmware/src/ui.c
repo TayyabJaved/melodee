@@ -298,6 +298,7 @@ static void nav_dview_v(char *b);
 static void nav_dview_turn(int32_t s);
 static void nav_dview(void);
 static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play);
+static void nav_mirror(uint8_t *const pl[4]);
 static uint32_t cseq_page(void);                        /* SEQ > CHORDS (ui_chords.c) */
 static int cseq_page_i(uint32_t i);
 static uint32_t cseq_roll(const track_t *t, const step_t *st, uint8_t *out, int32_t *at, uint32_t period);

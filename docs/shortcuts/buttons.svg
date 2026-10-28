@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="496" viewBox="0 0 860 496" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="The panel's buttons">
+<rect x="0" y="0" width="860" height="496" rx="0" fill="#17141F"/>
+<text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">The panel's buttons</text>
+<text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">Tap and hold, in the panel's two rows (the M1 and M2 rows); one colour a button, the same on its shortcut</text>
+<text x="28" y="82" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">keys.</text>
+<rect x="28" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="28" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="28" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="94" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">FX</text>
+<text x="35" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: SHARED rack,</text>
+<text x="35" y="172" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">then NOTE FX</text>
+<text x="35" y="186" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: punches on</text>
+<text x="35" y="200" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">the keys</text>
+<rect x="166" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="166" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="166" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="232" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">SCL</text>
+<text x="173" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: SCALES, SCL,</text>
+<text x="173" y="172" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">CHORD</text>
+<text x="173" y="186" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: root on the</text>
+<text x="173" y="200" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">keys</text>
+<rect x="304" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="304" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="304" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="370" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">ENV</text>
+<text x="311" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: ENV, ENV DEST</text>
+<text x="311" y="172" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: + SELECT on</text>
+<text x="311" y="186" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">NOTES: length</text>
+<rect x="442" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="442" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="442" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="508" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">LFO</text>
+<text x="449" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: LFO pages, MOD</text>
+<text x="449" y="172" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: + a knob: a</text>
+<text x="449" y="186" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">temporary change</text>
+<rect x="580" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="580" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="580" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="646" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">EDIT</text>
+<text x="587" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: the engine's</text>
+<text x="587" y="172" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">pages (again: its</text>
+<text x="587" y="186" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">map); NOTES: delete</text>
+<text x="587" y="200" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: undo</text>
+<rect x="718" y="114" width="132" height="104" rx="8" fill="#221E2C" stroke="#7FE0FF" stroke-width="2"/>
+<rect x="718" y="114" width="132" height="26" rx="8" fill="#7FE0FF"/>
+<rect x="718" y="132" width="132" height="8" rx="0" fill="#7FE0FF"/>
+<text x="784" y="132" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">GLO</text>
+<text x="725" y="158" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: main page,</text>
+<text x="725" y="172" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">MIXER, GLOBAL …</text>
+<text x="725" y="186" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: main page</text>
+<text x="725" y="200" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">while held</text>
+<rect x="28" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#F5A623" stroke-width="2"/>
+<rect x="28" y="224" width="132" height="26" rx="8" fill="#F5A623"/>
+<rect x="28" y="242" width="132" height="8" rx="0" fill="#F5A623"/>
+<text x="94" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">HOME</text>
+<text x="35" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: Stage (again:</text>
+<text x="35" y="282" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">chord view)</text>
+<text x="35" y="296" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: the menu</text>
+<rect x="166" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#F5A623" stroke-width="2"/>
+<rect x="166" y="224" width="132" height="26" rx="8" fill="#F5A623"/>
+<rect x="166" y="242" width="132" height="8" rx="0" fill="#F5A623"/>
+<text x="232" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">SAVE</text>
+<text x="173" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: PRESETS / USER</text>
+<text x="173" y="282" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">/ PROJECT</text>
+<text x="173" y="296" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: save the</text>
+<text x="173" y="310" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">project</text>
+<rect x="304" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#F5A623" stroke-width="2"/>
+<rect x="304" y="224" width="132" height="26" rx="8" fill="#F5A623"/>
+<rect x="304" y="242" width="132" height="8" rx="0" fill="#F5A623"/>
+<text x="370" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">ARP</text>
+<text x="311" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: ARP, ARP 2</text>
+<rect x="442" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#F5A623" stroke-width="2"/>
+<rect x="442" y="224" width="132" height="26" rx="8" fill="#F5A623"/>
+<rect x="442" y="242" width="132" height="8" rx="0" fill="#F5A623"/>
+<text x="508" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">SEQ</text>
+<text x="449" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: NOTES … SONG</text>
+<text x="449" y="282" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: PATTERNS</text>
+<rect x="580" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#46D9B0" stroke-width="2"/>
+<rect x="580" y="224" width="132" height="26" rx="8" fill="#46D9B0"/>
+<rect x="580" y="242" width="132" height="8" rx="0" fill="#46D9B0"/>
+<text x="646" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">PLAY</text>
+<text x="587" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: start / stop</text>
+<text x="587" y="282" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: with REC:</text>
+<text x="587" y="296" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">record</text>
+<rect x="718" y="224" width="132" height="104" rx="8" fill="#221E2C" stroke="#FF5A6E" stroke-width="2"/>
+<rect x="718" y="224" width="132" height="26" rx="8" fill="#FF5A6E"/>
+<rect x="718" y="242" width="132" height="8" rx="0" fill="#FF5A6E"/>
+<text x="784" y="242" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">REC</text>
+<text x="725" y="268" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">tap: arm (SONG:</text>
+<text x="725" y="282" font-size="11" fill="#C9C2D6" text-anchor="start" font-weight="400">launch)</text>
+<text x="725" y="296" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">hold: capture</text>
+<rect x="28" y="344" width="408" height="40" rx="8" fill="#221E2C" stroke="#9D8CFF" stroke-width="2"/>
+<rect x="28" y="344" width="64" height="40" rx="8" fill="#9D8CFF"/>
+<text x="60" y="369" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">OCT−</text>
+<text x="104" y="369" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">back, cancel; Stage: octave down</text>
+<rect x="442" y="344" width="408" height="40" rx="8" fill="#221E2C" stroke="#9D8CFF" stroke-width="2"/>
+<rect x="442" y="344" width="64" height="40" rx="8" fill="#9D8CFF"/>
+<text x="474" y="369" font-size="13" fill="#17141F" text-anchor="middle" font-weight="700">OCT+</text>
+<text x="518" y="369" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">enter, confirm; hold: the page's sheet; Stage: octave up</text>
+<text x="28" y="402" font-size="12" fill="#9A93A8" text-anchor="start" font-weight="400">Both octave buttons on Stage: reset. Held together at power-on: calibration.</text>
+<rect x="28" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="54" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
+<line x1="54" y1="449" x2="54" y2="437" stroke="#C9C2D6" stroke-width="2"/>
+<text x="78" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">SELECT</text>
+<text x="78" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">pages (Stage: BPM …)</text>
+<rect x="231.5" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="257.5" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
+<line x1="257.5" y1="449" x2="257.5" y2="437" stroke="#C9C2D6" stroke-width="2"/>
+<text x="281.5" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">PRESETS</text>
+<text x="281.5" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">sounds; EDIT: sections</text>
+<rect x="435" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="461" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
+<line x1="461" y1="449" x2="461" y2="437" stroke="#C9C2D6" stroke-width="2"/>
+<text x="485" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">ALGORITHM</text>
+<text x="485" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">the track</text>
+<rect x="638.5" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="664.5" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
+<line x1="664.5" y1="449" x2="664.5" y2="437" stroke="#C9C2D6" stroke-width="2"/>
+<text x="688.5" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">KNOB 1–4</text>
+<text x="688.5" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">the page's four controls</text>
+</svg>

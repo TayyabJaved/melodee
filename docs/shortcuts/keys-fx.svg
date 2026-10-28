@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="428" viewBox="0 0 860 428" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Hold FX: master punches">
+<rect x="0" y="0" width="860" height="428" rx="0" fill="#17141F"/>
+<text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">Hold FX: a punch effect on each key</text>
+<text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">The effect lasts while the key is held, on the whole master. Double-tap FX to lock the layer; KNOB 1 browses</text>
+<text x="28" y="82" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">this reference on the screen.</text>
+<rect x="31" y="160" width="48" height="172" rx="5" fill="#FF7A5C" stroke="#2E2939" stroke-width="1"/>
+<text x="55" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">LOOP</text>
+<text x="55" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">1/4</text>
+<text x="55" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F3</text>
+<rect x="81" y="160" width="48" height="172" rx="5" fill="#FF7A5C" stroke="#2E2939" stroke-width="1"/>
+<text x="105" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">LOOP</text>
+<text x="105" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">1/8</text>
+<text x="105" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G3</text>
+<rect x="131" y="160" width="48" height="172" rx="5" fill="#FF7A5C" stroke="#2E2939" stroke-width="1"/>
+<text x="155" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">LOOP</text>
+<text x="155" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">1/16</text>
+<text x="155" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">A3</text>
+<rect x="181" y="160" width="48" height="172" rx="5" fill="#FF7A5C" stroke="#2E2939" stroke-width="1"/>
+<text x="205" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">LOOP</text>
+<text x="205" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">1/32</text>
+<text x="205" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">B3</text>
+<rect x="231" y="160" width="48" height="172" rx="5" fill="#FF7A5C" stroke="#2E2939" stroke-width="1"/>
+<text x="255" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">STUT-</text>
+<text x="255" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">TER</text>
+<text x="255" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">C4</text>
+<rect x="281" y="160" width="48" height="172" rx="5" fill="#FFC145" stroke="#2E2939" stroke-width="1"/>
+<text x="305" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">REV</text>
+<text x="305" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">D4</text>
+<rect x="331" y="160" width="48" height="172" rx="5" fill="#FFC145" stroke="#2E2939" stroke-width="1"/>
+<text x="355" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">STOP</text>
+<text x="355" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">E4</text>
+<rect x="381" y="160" width="48" height="172" rx="5" fill="#FFC145" stroke="#2E2939" stroke-width="1"/>
+<text x="405" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">HALF</text>
+<text x="405" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F4</text>
+<rect x="431" y="160" width="48" height="172" rx="5" fill="#46D9B0" stroke="#2E2939" stroke-width="1"/>
+<text x="455" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">LOW</text>
+<text x="455" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">PASS</text>
+<text x="455" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G4</text>
+<rect x="481" y="160" width="48" height="172" rx="5" fill="#46D9B0" stroke="#2E2939" stroke-width="1"/>
+<text x="505" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">HIGH</text>
+<text x="505" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">PASS</text>
+<text x="505" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">A4</text>
+<rect x="531" y="160" width="48" height="172" rx="5" fill="#46D9B0" stroke="#2E2939" stroke-width="1"/>
+<text x="555" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">PHONE</text>
+<text x="555" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">B4</text>
+<rect x="581" y="160" width="48" height="172" rx="5" fill="#FFB8A6" stroke="#2E2939" stroke-width="1"/>
+<text x="605" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">CRUSH</text>
+<text x="605" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">C5</text>
+<rect x="631" y="160" width="48" height="172" rx="5" fill="#FFB8A6" stroke="#2E2939" stroke-width="1"/>
+<text x="655" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">ALIAS</text>
+<text x="655" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">D5</text>
+<rect x="681" y="160" width="48" height="172" rx="5" fill="#9D8CFF" stroke="#2E2939" stroke-width="1"/>
+<text x="705" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">GATE</text>
+<text x="705" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">E5</text>
+<rect x="731" y="160" width="48" height="172" rx="5" fill="#C9BFFF" stroke="#2E2939" stroke-width="1"/>
+<text x="755" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">ECHO</text>
+<text x="755" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F5</text>
+<rect x="781" y="160" width="48" height="172" rx="5" fill="#9D8CFF" stroke="#2E2939" stroke-width="1"/>
+<text x="805" y="284" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">WOB-</text>
+<text x="805" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">BLE</text>
+<text x="805" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G5</text>
+<rect x="65" y="160" width="30" height="106" rx="4" fill="#46D9B0" stroke="#17141F" stroke-width="2"/>
+<text x="80" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#3</text>
+<text x="80" y="139" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">KILL</text>
+<text x="80" y="152" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">LOW</text>
+<rect x="115" y="160" width="30" height="106" rx="4" fill="#46D9B0" stroke="#17141F" stroke-width="2"/>
+<text x="130" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">G#3</text>
+<text x="130" y="139" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">KILL</text>
+<text x="130" y="152" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">MID</text>
+<rect x="165" y="160" width="30" height="106" rx="4" fill="#46D9B0" stroke="#17141F" stroke-width="2"/>
+<text x="180" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">A#3</text>
+<text x="180" y="139" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">KILL</text>
+<text x="180" y="152" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">HIGH</text>
+<rect x="265" y="160" width="30" height="106" rx="4" fill="#FFC145" stroke="#17141F" stroke-width="2"/>
+<text x="280" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">C#4</text>
+<text x="280" y="152" font-size="10.5" fill="#FFC145" text-anchor="middle" font-weight="600">RWD</text>
+<rect x="315" y="160" width="30" height="106" rx="4" fill="#FFC145" stroke="#17141F" stroke-width="2"/>
+<text x="330" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">D#4</text>
+<text x="330" y="139" font-size="10.5" fill="#FFC145" text-anchor="middle" font-weight="600">OCT</text>
+<text x="330" y="152" font-size="10.5" fill="#FFC145" text-anchor="middle" font-weight="600">UP</text>
+<rect x="415" y="160" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="430" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#4</text>
+<text x="430" y="139" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">FLAN-</text>
+<text x="430" y="152" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">GER</text>
+<rect x="465" y="160" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="480" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">G#4</text>
+<text x="480" y="152" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">PAN</text>
+<rect x="515" y="160" width="30" height="106" rx="4" fill="#C9BFFF" stroke="#17141F" stroke-width="2"/>
+<text x="530" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">A#4</text>
+<text x="530" y="139" font-size="10.5" fill="#C9BFFF" text-anchor="middle" font-weight="600">FREE-</text>
+<text x="530" y="152" font-size="10.5" fill="#C9BFFF" text-anchor="middle" font-weight="600">ZE</text>
+<rect x="615" y="160" width="30" height="106" rx="4" fill="#FF7A5C" stroke="#17141F" stroke-width="2"/>
+<text x="630" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">C#5</text>
+<text x="630" y="139" font-size="10.5" fill="#FF7A5C" text-anchor="middle" font-weight="600">LOOP</text>
+<text x="630" y="152" font-size="10.5" fill="#FF7A5C" text-anchor="middle" font-weight="600">1/8T</text>
+<rect x="665" y="160" width="30" height="106" rx="4" fill="#9A93A8" stroke="#17141F" stroke-width="2"/>
+<text x="680" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">D#5</text>
+<text x="680" y="152" font-size="10.5" fill="#9A93A8" text-anchor="middle" font-weight="600">MONO</text>
+<rect x="765" y="160" width="30" height="106" rx="4" fill="#9A93A8" stroke="#17141F" stroke-width="2"/>
+<text x="780" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#5</text>
+<text x="780" y="139" font-size="10.5" fill="#9A93A8" text-anchor="middle" font-weight="600">FADE</text>
+<text x="780" y="152" font-size="10.5" fill="#9A93A8" text-anchor="middle" font-weight="600">OUT</text>
+<rect x="28" y="343" width="14" height="14" rx="3" fill="#FF7A5C"/>
+<text x="48" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">REPEAT</text>
+<rect x="107" y="343" width="14" height="14" rx="3" fill="#FFC145"/>
+<text x="127" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">TAPE</text>
+<rect x="171" y="343" width="14" height="14" rx="3" fill="#46D9B0"/>
+<text x="191" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">FILTER</text>
+<rect x="250" y="343" width="14" height="14" rx="3" fill="#FFB8A6"/>
+<text x="270" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">DIRT</text>
+<rect x="314" y="343" width="14" height="14" rx="3" fill="#9D8CFF"/>
+<text x="334" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">MOTION</text>
+<rect x="393" y="343" width="14" height="14" rx="3" fill="#C9BFFF"/>
+<text x="413" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">SPACE</text>
+<rect x="464.5" y="343" width="14" height="14" rx="3" fill="#9A93A8"/>
+<text x="484.5" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">MIX</text>
+<text x="28" y="378" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">F5 (ECHO), G5 (WOBBLE) and F#5 (FADE OUT) are M1, M2 and M3 with the key shortcuts built in: reach those three</text>
+<text x="28" y="396" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">in a section's punch editor with KNOB 1.</text>
+</svg>

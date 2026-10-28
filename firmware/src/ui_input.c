@@ -487,6 +487,10 @@ static void ui_leds(void)
     }
     for (k = 0; lights != LIGHTS_OFF && k < NB; k++)   /* the buttons glow when idle (one breathing: not under it) */
         led_put(nb, panel.btn[k], !led_get(nw, panel.btn[k]));
+    {
+        uint8_t *const pl[4] = {nl, nd, nb, nw};
+        nav_mirror(pl);                                 /* (M3 held: the keys as their buttons, ui_nav.c) */
+    }
     fm1_led_dim_mask[0] = LIGHTS_MASK[lights];
     fm1_led_dim_mask[1] = BTN_DIM_MASK;
     fm1_led_dim_mask[2] = BREATH[(fm1_ms / 125u) & 7u];

@@ -242,7 +242,8 @@ static void fm1_input_init(void)
 
 #if MELODEE_KEY_NAV
 /* F5 / G5 / F#5 held (M1 / M2 / M3): black keys press panel buttons, M1 the top row, M2 the bottom row, M3 OCT- and
- * OCT+ (C#5, D#5). F#5 is M3 only when pressed alone: with M1 / M2 held it is their GLO / REC. A key's route is
+ * OCT+ (C#5, D#5); M3 also the white keys F3 .. D5, the twelve buttons in one row, FX .. GLO, E4 a gap, HOME .. REC (but
+ * where the UI keeps them notes: fm1_input_nav_whites_on, ARP > SHAPE's steps). F#5 is M3 only when pressed alone: with M1 / M2 held it is their GLO / REC. A key's route is
  * chosen at its press and undone at its release; two modifiers held: new keys do nothing. While a momentary edit is
  * on (fm1_input_nav_keep), F#5 keeps it instead (fm1_nav.keep). Armed by fm1_input_nav */
 #define FM1_NAV_N 6u
@@ -251,6 +252,9 @@ static void fm1_input_init(void)
                                           * own (M3 + A#4: hear the note at the cursor, ui_input.c) */
 static const uint8_t FM1_NAV_MOD[FM1_NAV_ROWS] = {24, 26, 25};                 /* F5 M1, G5 M2, F#5 M3 */
 static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};       /* F#4 G#4 A#4 C#5 D#5 F#5 */
+#define FM1_NAV_WHITES 12u
+static const uint8_t FM1_NAV_WHITE[FM1_NAV_WHITES] = {0, 2, 4, 6, 7, 9, 12, 14, 16, 18, 19, 21};   /* F3 G3 A3 B3 C4 D4,
+                                                                                     * (E4: a note) F4 G4 A4 B4 C5 D5: M3's */
 #ifdef __ELF__
 #define FM1_NAV_POOL __attribute__((section(".pool")))   /* zeroed at boot; off the full .bss bank */
 #else
@@ -262,6 +266,8 @@ static volatile struct {
     uint8_t on, keep_on, keep;       /* armed; a momentary edit on (F#5 keeps it); F#5 pressed for it */
     uint8_t row[FM1_NAV_ROWS][FM1_NAV_N];   /* matrix button ids, M1 M2 M3 rows; FM1_NAV_ACTION: the UI's; above it:
                                              * none (a note) */
+    uint8_t white[FM1_NAV_WHITES];          /* M3's white keys: matrix button ids, as row */
+    uint8_t whites, whites_off;             /* that table set; the keys kept notes for now (the UI, each pass) */
 } fm1_nav FM1_NAV_POOL;
 
 /* arm the layer with the matrix buttons of its rows, 0: off (keys already routed still release). No lock: the
@@ -275,7 +281,16 @@ static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N])
             fm1_nav.row[r][i] = btn[r][i];
     fm1_nav.on = btn != 0;
 }
+static void fm1_input_nav_whites(const uint8_t *btn)    /* M3's white keys (as fm1_input_nav; 0: all notes) */
+{
+    uint32_t i;
+    fm1_nav.whites = 0;
+    for (i = 0; btn && i < FM1_NAV_WHITES; i++)
+        fm1_nav.white[i] = btn[i];
+    fm1_nav.whites = btn != 0;
+}
 static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }   /* (main loop) */
+static void fm1_input_nav_whites_on(int on) { fm1_nav.whites_off = (uint8_t)(on == 0); }   /* (main loop) */
 #define FM1__NOTES fm1_in.keys
 #define FM1__BUTTONS fm1_in.panel
 
@@ -289,7 +304,7 @@ static void fm1__buttons(void)
 
 static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a note */
 {
-    uint32_t bit = 1u << k, m1 = 1u << FM1_NAV_MOD[0], m2 = 1u << FM1_NAV_MOD[1], m3 = 1u << FM1_NAV_MOD[2], i;
+    uint32_t bit = 1u << k, m1 = 1u << FM1_NAV_MOD[0], m2 = 1u << FM1_NAV_MOD[1], m3 = 1u << FM1_NAV_MOD[2], i, to;
     if (!down) {
         if (fm1_nav.held & bit) {
             fm1_nav.held &= ~bit;
@@ -320,17 +335,20 @@ static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a 
         fm1_nav.mute |= bit;
         return 1;
     }
+    to = 0xFFu;
     for (i = 0; fm1_nav.mod && i < FM1_NAV_N; i++)
-        if (k == FM1_NAV_KEY[i]) {
-            fm1_nav.to[k] = fm1_nav.row[fm1_nav.mod & m1 ? 0 : fm1_nav.mod & m2 ? 1 : 2][i];
-            if (fm1_nav.to[k] > FM1_NAV_ACTION)
-                return 0;
-            fm1_nav.held |= bit;
-            fm1_nav.btn |= 1u << fm1_nav.to[k];
-            fm1__buttons();
-            return 1;
-        }
-    return 0;
+        if (k == FM1_NAV_KEY[i])
+            to = fm1_nav.row[fm1_nav.mod & m1 ? 0 : fm1_nav.mod & m2 ? 1 : 2][i];
+    for (i = 0; fm1_nav.mod == m3 && fm1_nav.whites && !fm1_nav.whites_off && i < FM1_NAV_WHITES; i++)
+        if (k == FM1_NAV_WHITE[i])
+            to = fm1_nav.white[i];
+    if (to > FM1_NAV_ACTION)                             /* (none: a note) */
+        return 0;
+    fm1_nav.to[k] = (uint8_t)to;
+    fm1_nav.held |= bit;
+    fm1_nav.btn |= 1u << fm1_nav.to[k];
+    fm1__buttons();
+    return 1;
 }
 #else
 #define FM1__NOTES fm1_in.notes

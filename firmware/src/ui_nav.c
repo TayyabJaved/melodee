@@ -215,6 +215,7 @@ static void nav_keep(void)                             /* (ui_input.c, each pass
 {
 #if MELODEE_KEY_NAV
     fm1_input_nav_keep(momentary.active);
+    fm1_input_nav_whites_on(!shape_page_on());          /* (M3's white keys: ARP > SHAPE's steps there, ui.c) */
     if (fm1_nav.keep) {
         fm1_nav.keep = 0;
         if (momentary.active) {
@@ -238,8 +239,9 @@ static void nav_dview_turn(int32_t s) { nav_drum_roll = (uint8_t)(s > 0); ui.for
 static void nav_dview(void) { nav_dview_turn(!nav_drum_roll); }   /* (OCT+: the other view) */
 
 /* M1 / M2 / M3 held (MELODEE_KEY_NAV): the keys light their map, the modifier and its black keys, and the panel buttons
- * light the ones those keys press (M1: FX .. GLO, M2: HOME .. REC, M3: OCT- OCT+, and A#4 for hearing the cursor's
- * note, no button), in place of the usual lights, until it is let go (ui_input.c ui_leds) */
+ * light the ones those keys press (M1: FX .. GLO, M2: HOME .. REC), in place of the usual lights, until it is let go
+ * (ui_input.c ui_leds). M3 presses them all (its white keys) and OCT- OCT+: the buttons keep their lights and each key
+ * shows its button's (nav_mirror), A#4 lit for hearing the cursor's note (no button) */
 static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
 {
 #if MELODEE_KEY_NAV
@@ -250,6 +252,14 @@ static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
         ;
     if (r == FM1_NAV_ROWS)
         return;
+    if (r == 2u) {                                      /* M3: the modifier, A#4; the rest nav_mirror's */
+        *keys = mod;
+        *play = 0;
+        for (i = 0; i < FM1_NAV_N; i++)
+            if (fm1_nav.row[r][i] == FM1_NAV_ACTION)
+                *keys |= 1u << FM1_NAV_KEY[i];
+        return;
+    }
     for (b = 0; b < 14u; b++)                           /* (led_put only lights: the button plane cleared) */
         if (led_pos[b] != 0xFFu)
             nl[led_pos[b] >> 3] &= (uint8_t)~(1u << (led_pos[b] & 7u));
@@ -263,5 +273,30 @@ static void nav_leds(uint8_t *nl, uint32_t *keys, uint32_t *play)
         }
 #else
     (void)nl; (void)keys; (void)play;
+#endif
+}
+/* M3 held: each key that presses a button lit as that button is, plane by plane (pl: lit, dim, glow, breathing), so
+ * key and button match; one whose button is dark (LIGHTS OFF, idle) glows to show it is there */
+static void nav_mirror(uint8_t *const pl[4])
+{
+#if MELODEE_KEY_NAV
+    uint32_t i, p, b, k, q, on;
+    if (fm1_nav.mod != 1u << FM1_NAV_MOD[2])
+        return;
+    for (i = 0; i < FM1_NAV_WHITES + FM1_NAV_N; i++) {
+        k = i < FM1_NAV_WHITES ? FM1_NAV_WHITE[i] : FM1_NAV_KEY[i - FM1_NAV_WHITES];
+        b = i >= FM1_NAV_WHITES ? fm1_nav.row[2][i - FM1_NAV_WHITES] :
+            fm1_nav.whites && !fm1_nav.whites_off ? fm1_nav.white[i] : 0xFFu;
+        if (b >= FM1_NAV_ACTION || (q = led_pos[14u + k]) == 0xFFu)
+            continue;
+        for (p = 0, on = 0; p < 4u; p++) {
+            pl[p][q >> 3] &= (uint8_t)~(1u << (q & 7u));
+            led_put(pl[p], 14u + k, led_get(pl[p], b));
+            on |= (uint32_t)led_get(pl[p], b);
+        }
+        led_put(pl[2], 14u + k, !on);
+    }
+#else
+    (void)pl;
 #endif
 }

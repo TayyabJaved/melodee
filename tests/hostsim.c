@@ -38,11 +38,16 @@ static struct { volatile uint32_t notes, buttons; } fm1_in;
 #define FM1_NAV_ACTION 14u
 static const uint8_t FM1_NAV_MOD[FM1_NAV_ROWS] = {24, 26, 25};
 static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};
-static struct { uint32_t mod; uint8_t keep_on, keep, row[FM1_NAV_ROWS][FM1_NAV_N]; } fm1_nav;   /* (the layer itself:
+#define FM1_NAV_WHITES 12u
+static const uint8_t FM1_NAV_WHITE[FM1_NAV_WHITES] = {0, 2, 4, 6, 7, 9, 12, 14, 16, 18, 19, 21};
+static struct { uint32_t mod; uint8_t keep_on, keep, row[FM1_NAV_ROWS][FM1_NAV_N], white[FM1_NAV_WHITES], whites, whites_off; } fm1_nav;   /* (the layer itself:
                                                                            * key_nav_test.c; its rows, the keep) */
 static void fm1_input_nav(const uint8_t (*btn)[FM1_NAV_N])
 { for (uint32_t r = 0; btn && r < FM1_NAV_ROWS; r++) for (uint32_t i = 0; i < FM1_NAV_N; i++) fm1_nav.row[r][i] = btn[r][i]; }
 static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }
+static void fm1_input_nav_whites(const uint8_t *btn)
+{ for (uint32_t i = 0; btn && i < FM1_NAV_WHITES; i++) fm1_nav.white[i] = btn[i]; fm1_nav.whites = btn != 0; }
+static void fm1_input_nav_whites_on(int on) { fm1_nav.whites_off = (uint8_t)(on == 0); }
 #endif
 /* Serial host fixtures retain their established admission policy. Dedicated
  * resident/dual-core tests select the target policy explicitly. */

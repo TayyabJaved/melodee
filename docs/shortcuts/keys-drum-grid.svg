@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="404" viewBox="0 0 860 404" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="The drum grid">
+<rect x="0" y="0" width="860" height="404" rx="0" fill="#17141F"/>
+<text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">The drum grid (NOTES on a drum track)</text>
+<text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">White keys: the page's 16 steps (a tap sets the selected lane there). Black keys 1–8: the lane (and play it).</text>
+<text x="28" y="82" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">C#5 held: ACC, the white keys set accents. D#5: the next page (wraps).</text>
+<rect x="31" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="55" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">1</text>
+<text x="55" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F3</text>
+<rect x="81" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="105" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">2</text>
+<text x="105" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G3</text>
+<rect x="131" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="155" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">3</text>
+<text x="155" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">A3</text>
+<rect x="181" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="205" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">4</text>
+<text x="205" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">B3</text>
+<rect x="231" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="255" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">5</text>
+<text x="255" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">C4</text>
+<rect x="281" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="305" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">6</text>
+<text x="305" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">D4</text>
+<rect x="331" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="355" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">7</text>
+<text x="355" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">E4</text>
+<rect x="381" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="405" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">8</text>
+<text x="405" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F4</text>
+<rect x="431" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="455" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">9</text>
+<text x="455" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G4</text>
+<rect x="481" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="505" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">10</text>
+<text x="505" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">A4</text>
+<rect x="531" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="555" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">11</text>
+<text x="555" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">B4</text>
+<rect x="581" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="605" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">12</text>
+<text x="605" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">C5</text>
+<rect x="631" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="655" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">13</text>
+<text x="655" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">D5</text>
+<rect x="681" y="160" width="48" height="172" rx="5" fill="#C9C2D6" stroke="#2E2939" stroke-width="1"/>
+<text x="705" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">14</text>
+<text x="705" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">E5</text>
+<rect x="731" y="160" width="48" height="172" rx="5" fill="#9A93A8" stroke="#2E2939" stroke-width="1"/>
+<text x="755" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">15</text>
+<text x="755" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">F5</text>
+<rect x="781" y="160" width="48" height="172" rx="5" fill="#9A93A8" stroke="#2E2939" stroke-width="1"/>
+<text x="805" y="298" font-size="11" fill="#17141F" text-anchor="middle" font-weight="600">16</text>
+<text x="805" y="322" font-size="10" fill="#17141F" text-anchor="middle" font-weight="400">G5</text>
+<rect x="65" y="160" width="30" height="106" rx="4" fill="#FF7A5C" stroke="#17141F" stroke-width="2"/>
+<text x="80" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#3</text>
+<text x="80" y="152" font-size="10.5" fill="#FF7A5C" text-anchor="middle" font-weight="600">KICK</text>
+<rect x="115" y="160" width="30" height="106" rx="4" fill="#FFC145" stroke="#17141F" stroke-width="2"/>
+<text x="130" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">G#3</text>
+<text x="130" y="152" font-size="10.5" fill="#FFC145" text-anchor="middle" font-weight="600">SNARE</text>
+<rect x="165" y="160" width="30" height="106" rx="4" fill="#46D9B0" stroke="#17141F" stroke-width="2"/>
+<text x="180" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">A#3</text>
+<text x="180" y="152" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">CLAP</text>
+<rect x="265" y="160" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="280" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">C#4</text>
+<text x="280" y="139" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">HAT</text>
+<text x="280" y="152" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">CL</text>
+<rect x="315" y="160" width="30" height="106" rx="4" fill="#FF7A5C" stroke="#17141F" stroke-width="2"/>
+<text x="330" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">D#4</text>
+<text x="330" y="139" font-size="10.5" fill="#FF7A5C" text-anchor="middle" font-weight="600">HAT</text>
+<text x="330" y="152" font-size="10.5" fill="#FF7A5C" text-anchor="middle" font-weight="600">OP</text>
+<rect x="415" y="160" width="30" height="106" rx="4" fill="#FFC145" stroke="#17141F" stroke-width="2"/>
+<text x="430" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#4</text>
+<text x="430" y="152" font-size="10.5" fill="#FFC145" text-anchor="middle" font-weight="600">TOM</text>
+<rect x="465" y="160" width="30" height="106" rx="4" fill="#46D9B0" stroke="#17141F" stroke-width="2"/>
+<text x="480" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">G#4</text>
+<text x="480" y="152" font-size="10.5" fill="#46D9B0" text-anchor="middle" font-weight="600">RIM</text>
+<rect x="515" y="160" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="530" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">A#4</text>
+<text x="530" y="152" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">BELL</text>
+<rect x="615" y="160" width="30" height="106" rx="4" fill="#F5A623" stroke="#17141F" stroke-width="2"/>
+<text x="630" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">C#5</text>
+<text x="630" y="152" font-size="10.5" fill="#F5A623" text-anchor="middle" font-weight="600">ACC</text>
+<rect x="665" y="160" width="30" height="106" rx="4" fill="#7FE0FF" stroke="#17141F" stroke-width="2"/>
+<text x="680" y="257" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">D#5</text>
+<text x="680" y="152" font-size="10.5" fill="#7FE0FF" text-anchor="middle" font-weight="600">PAGE</text>
+<rect x="765" y="160" width="30" height="106" rx="4" fill="#262033" stroke="#17141F" stroke-width="2"/>
+<text x="780" y="257" font-size="8" fill="#5A5468" text-anchor="middle" font-weight="400">F#5</text>
+<text x="28" y="354" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">Steps 15 and 16 are F5 and G5, M1 and M2: hold M3 (F#5) to tap them. F#5 (page up) is M3; D#5 goes round. KNOB</text>
+<text x="28" y="372" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">1 STEP, 2 LANE, 3 HIT, 4 ACC edit the cursor's step; tap EDIT clears it.</text>
+</svg>

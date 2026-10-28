@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="374" viewBox="0 0 860 374" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="Stage">
+<rect x="0" y="0" width="860" height="374" rx="0" fill="#17141F"/>
+<text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">Stage (HOME)</text>
+<text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">The live screen: a lane a track. The four knobs are the selected track's sound, by engine (here the</text>
+<text x="28" y="82" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">Prophet's).</text>
+<rect x="28" y="106" width="192" height="112" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="124" cy="140" r="20" fill="#262033" stroke="#FF7A5C" stroke-width="3"/>
+<line x1="124" y1="140" x2="134" y2="124" stroke="#FF7A5C" stroke-width="3" stroke-linecap="round"/>
+<text x="124" y="180" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 1</text>
+<text x="124" y="198" font-size="14" fill="#FF7A5C" text-anchor="middle" font-weight="600">CUTOFF</text>
+<text x="124" y="216" font-size="12" fill="#C9C2D6" text-anchor="middle" font-weight="400">the filter</text>
+<rect x="232" y="106" width="192" height="112" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="328" cy="140" r="20" fill="#262033" stroke="#FF9A82" stroke-width="3"/>
+<line x1="328" y1="140" x2="338" y2="124" stroke="#FF9A82" stroke-width="3" stroke-linecap="round"/>
+<text x="328" y="180" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 2</text>
+<text x="328" y="198" font-size="14" fill="#FF9A82" text-anchor="middle" font-weight="600">RES</text>
+<text x="328" y="216" font-size="12" fill="#C9C2D6" text-anchor="middle" font-weight="400">resonance</text>
+<rect x="436" y="106" width="192" height="112" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="532" cy="140" r="20" fill="#262033" stroke="#FFB8A6" stroke-width="3"/>
+<line x1="532" y1="140" x2="542" y2="124" stroke="#FFB8A6" stroke-width="3" stroke-linecap="round"/>
+<text x="532" y="180" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 3</text>
+<text x="532" y="198" font-size="14" fill="#FFB8A6" text-anchor="middle" font-weight="600">ENV</text>
+<text x="532" y="216" font-size="12" fill="#C9C2D6" text-anchor="middle" font-weight="400">filter envelope amount</text>
+<rect x="640" y="106" width="192" height="112" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<circle cx="736" cy="140" r="20" fill="#262033" stroke="#FFD5CA" stroke-width="3"/>
+<line x1="736" y1="140" x2="746" y2="124" stroke="#FFD5CA" stroke-width="3" stroke-linecap="round"/>
+<text x="736" y="180" font-size="11" fill="#9A93A8" text-anchor="middle" font-weight="400">KNOB 4</text>
+<text x="736" y="198" font-size="14" fill="#FFD5CA" text-anchor="middle" font-weight="600">RELEASE</text>
+<text x="736" y="216" font-size="12" fill="#C9C2D6" text-anchor="middle" font-weight="400">amp release</text>
+<rect x="28" y="234" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="28" y="234" width="5" height="46" rx="2" fill="#C9C2D6"/>
+<text x="44" y="254" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="700">SELECT</text>
+<text x="44" y="272" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the HOME SELECT value (BPM by default)</text>
+<rect x="436" y="234" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="436" y="234" width="5" height="46" rx="2" fill="#9D8CFF"/>
+<text x="452" y="254" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">OCT− / OCT+</text>
+<text x="452" y="272" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">octave; both: reset</text>
+<rect x="28" y="288" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="28" y="288" width="5" height="46" rx="2" fill="#F5A623"/>
+<text x="44" y="308" font-size="12" fill="#F5A623" text-anchor="start" font-weight="700">tap HOME</text>
+<text x="44" y="326" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the chord view; again: back</text>
+<rect x="436" y="288" width="396" height="62" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="436" y="288" width="5" height="62" rx="2" fill="#9D8CFF"/>
+<text x="452" y="308" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">hold OCT+</text>
+<text x="452" y="326" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">Init sound, Save as user…, Favourite, Undo last load,</text>
+<text x="452" y="342" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">Sound designer, Add track, Remove track</text>
+</svg>

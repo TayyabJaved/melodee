@@ -212,8 +212,9 @@ Build options are environment variables such as `MELODEE_USB_HOST=0 ./build.sh`;
 The keyboard navigation layer is built in: `./build.sh` makes **one package, `build/melodee.fwsc`**, with it and every
 other change of ours (`MELODEE_KEY_NAV` defaults to 1 in `firmware/src/melodee.c`; `MELODEE_KEY_NAV=0 ./build.sh` builds
 upstream's keyboard, version `-nonav`, for comparisons only). M1 (F5), M2 (G5) and M3 (F#5, alone) with the black keys
-press panel buttons, and F#5 keeps a
-momentary edit. M3 + A#4 presses no panel button: the layer's `FM1_NAV_ACTION` bit (14 of `fm1_in.buttons`, past the
+press panel buttons, M3 also with the white keys F3 .. D5 (all twelve in one row, E4 a gap after GLO, `FM1_NAV_WHITE`,
+`fm1_input_nav_whites`; kept notes on ARP > SHAPE by `nav_keep`'s `fm1_input_nav_whites_on`; each key lit as its
+button, plane by plane: `ui_nav.c` `nav_mirror`), and F#5 keeps a momentary edit. M3 + A#4 presses no panel button: the layer's `FM1_NAV_ACTION` bit (14 of `fm1_in.buttons`, past the
 matrix's 0..13; `panel.c` `B_NAV_HEAR`) makes `ui_input.c` call `notes_preview_key()` (`seq_notes.c`): the step at the
 cursor heard, its whole chord, with NOTE PREVIEW off too. While M3 is held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). Key mapping: [BUILDING.md → Build options](BUILDING.md#build-options); the code is in
 `firmware/hal/fm1_input.h` (`FM1_NAV_*`, three rows), the rows in `panel.c` `panel_nav()`, the keep in
@@ -303,6 +304,8 @@ clock, a jam log taken with REC held). Ours is columns of **sections** A–Z (mo
   sets are converted the same way (`editor.c`).
 - **Guide:** [docs/song-guide](docs/song-guide/README.md), twenty step pictures and their page, written by
   `tools/gen_song_guide.py` (drawings, not renders: change its steps with the controls; `--check` lists stale files).
+  `docs/SHORTCUTS.md`'s pictures, `docs/shortcuts/`, are `tools/gen_shortcuts.py`'s (the keyboard maps follow
+  `hal/fm1_input.h`, `panel.c`, `ui_layer.c`, `punch.c`; `--check` the same way).
 - **Tests:** `song_mode_test.c` (rewritten: lengths, rests, columns, adding, persistence, older songs),
   `song_preset_test.c`, `song_punch_test.c`, `ui_test.c` (live launch, the section page, SONG keys),
   `ui_render.c` (the scenes converted; `song_section` shows the section page), `editor_test.c`,
@@ -527,7 +530,8 @@ work is a stack of commits kept on top of an upstream release tag, in this order
 | 18 | FX: SHARED first, then the track's NOTE FX | SHARED (audio) is the first FX page and FX opens it; the track's rack is NOTE FX, its send row "Send" | `params.c` (`PAGES` order, title), `ui.c` (`fx_rack_page`, the FX button), `ui_input.c` (`fx_rack_enter` / `fx_rack_back`), `ui_draw.c`, `ui_pages.c`, `docs/design/README.md`, `web/manual/index.html`; `fx_test.c`, `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` | never (ours) |
 | 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1 | `core.h` (`chain_config_t.sect`, `.len`), `song_chain.c` (sections, `song_sections_normalize`, section clock, `chain.solo`, `live_*`), `seq.c` (`live_tick`, no `jam`), `pattern_store.c` (SEC1, `pattern_room`), `project.c` (`chain_prepare_solo`), `editor.c` (rows converted), `tracks.c`, `ui_song.c` (rewritten), `ui_patterns.c` (SONG, the section page), `ui_popup.c`, `ui_input.c`, `ui_song_sound.c`, `ui_song_punch.c`, `ui_draw.c`, `ui.c`; tests `song_mode_test.c`, `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
 | 20 | GLO: its main page first | a GLO tap opens the GLO layer locked open as its main page (mutes, solos, TAP, levels); GLO again: MIXER, GLOBAL .. WEIGHTS 2, then the main page; SELECT: the six as one list, no wrap (GLO SELECT only with GLO held); held: the layer while held; no double-tap lock for GLO | `ui_layer.c` (`glo_main`, `glo_open`, `glo_scroll`, `layer_lock_input`, the footer), `ui_nav.c` (MIXER in GLO's `nav_pages`, `nav_pos`), `ui_input.c`, `ui.c` (`open_global`'s comment); tests `ui_test.c`, `layer_screen_test.c`, `ui_render.c` (`layer_glo_main`) | never (ours) |
-| 21 | DEV.md, plan.md | this file, the plan, task.md, README's sections on our features | `README.md` | never (ours); keep it last |
+| 21 | M3: the white keys press all twelve buttons | M3 + F3 .. D4: FX SCL ENV LFO EDIT GLO, E4 a gap (a note), F4 .. D5: HOME SAVE ARP SEQ PLAY REC, held as long as the key; on ARP > SHAPE they stay its steps; M3's keys lit as their buttons (lit, dim, glow, breathing; dark ones glow), the buttons their usual lights | `hal/fm1_input.h` (`FM1_NAV_WHITE`, `fm1_input_nav_whites`, `_whites_on`), `panel.c` (`panel_nav`), `ui_nav.c` (`nav_keep`, `nav_leds`, `nav_mirror`), `ui_input.c` (`ui_leds`), `ui.c`; tests `key_nav_test.c`, `nav_test.c`, `hostsim.c` and `settings_test.c` stand-ins | never (ours) |
+| 22 | DEV.md, plan.md | this file, the plan, task.md, README's sections on our features | `README.md` | never (ours); keep it last |
 
 Replayed onto 1.6.0-rc.5 on 2026-10-27 (`tj/1.6.0-rc.5`): PR #90's own commit dropped (upstream merged it), the
 SHAPE commits squashed, the docs commit last again. Conflicts met: `melodee.c` (the version), `project_stream.c`
