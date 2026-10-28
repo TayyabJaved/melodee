@@ -59,13 +59,15 @@ build provenance; hardware validation is a separate check.
 
 ## 1.6 release candidate
 
-**[Melodee 1.6.0-rc.5](https://github.com/keremimo/melodee/releases/tag/v1.6.0-rc.5)** adds
-16 patterns on the synth tracks (all on the white keys), 32 projects in one shared
-storage pool with the preset banks, the Rubik font again, and a Bluetooth radio
-that calibrates itself. It includes the section presets, timed punch FX,
-64-section arrangements and Bluetooth MIDI from earlier candidates.
+**[Melodee 1.6.0-rc.6](https://github.com/keremimo/melodee/releases/tag/v1.6.0-rc.6)** adds
+CR-78 and FM drum kits, a preset for each pattern, note lengths editable while
+playing, range and copy PITCH edits, pattern copy to another track,
+nearest-degree SNAP for microtonal scales and OCTAVE on SELECT. MASTER now sets
+the final output level, and USB HOST finds audio+MIDI devices and devices on
+two-chip hubs. It includes the 16 patterns, shared project
+storage, section presets, timed punch FX and Bluetooth MIDI from earlier candidates.
 Stable remains 1.5.1; choose the candidate channel to try the RC. Read the
-[candidate release notes](docs/RELEASE_1.6.0-rc.5.md) for storage, project-format
+[candidate release notes](docs/RELEASE_1.6.0-rc.6.md) for project-format
 compatibility and hardware-validation limits.
 
 ## What's new in 1.5.1
