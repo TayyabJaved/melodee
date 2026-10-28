@@ -80,7 +80,7 @@ static void edits_and_cache(void)
     r=recording[2];recorded_set_note(&r,61);recording_unlink(2);recording_restore_note(&trk[3],2,r);
     trk[3].seq_idx=95;
     assert(!(recording_step_skip(&trk[3],&trk[3].step[95],0)&1u));
-    assert(!recording_copy(&trk[3],15,0,1));recording_reindex();
+    assert(!recording_copy(&trk[3],15,&trk[3],0,1));recording_reindex();
     int found=0;
     for(uint32_t i=0;i<RECORD_MAX;i++)if(recording[i].vel && recorded_owner(&recording[i])==48u){
         assert(recorded_step(&recording[i])>=64 && recorded_exponent(&recording[i])==7);

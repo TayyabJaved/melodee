@@ -121,7 +121,7 @@ static int preferences(void)
     uint8_t a[4] = {0, 2, 0, 0};
     reset();
     uint32_t n = request(ED_INFO, a, 0);
-    const uint8_t caps[]={0,0x55,1,57,0x4d,2,MOTION_MAX,1,0x42,1,3,0x50,4,NPAT,CHAIN_ROWS,0x46,1,FM6_NFAC,0,0x43,1,16,1,0,0,0x35,1,19,16,17,18,20,0,1,0x4e,1,64,0,0,1,0x55,1,0,3};
+    const uint8_t caps[]={0,0x55,1,121,0x4d,2,MOTION_MAX,1,0x42,1,3,0x50,4,NPAT,CHAIN_ROWS,0x46,1,FM6_NFAC,0,0x43,1,16,1,0,0,0x35,1,19,16,17,18,20,0,1,0x4e,1,64,0,0,1,0x55,1,0,3};
     bad+=check("INFO preserves existing IDs and advertises the shared 384-slot library",ED_SONG==33&&ED_FAV_SET==38&&n>sizeof caps&&!memcmp(host_wire+n-sizeof caps-1,caps,sizeof caps));
     request(ED_UI_SET, a, 2);
     bad += check("UI_SET updates the actual palette and reports RAM-only saving",
@@ -130,8 +130,13 @@ static int preferences(void)
     bad += check("out-of-range palette leaves the display unchanged", host_wire[5] == 1 && settings.palette == 2);
     a[0] = 1; a[1] = 1; request(ED_UI_SET, a, 2);
     bad += check("the retired font weight is not supported (rc 2), UI_STATE says 127",
-        host_wire[5] == 2 && host_wire[8] == 57 && host_wire[10] == 127);
-    a[0] = 9; request(ED_UI_SET, a, 2);
+        host_wire[5] == 2 && host_wire[8] == 121 && host_wire[10] == 127);
+    a[0] = 5; a[1] = 100; request(ED_UI_SET, a, 2);
+    bad += check("UI_SET click level takes a percentage up to 100", host_wire[5] == 3 && settings_click_level == 100u);
+    a[1] = 101; request(ED_UI_SET, a, 2);
+    bad += check("click level above 100 % is refused", host_wire[5] == 1 && settings_click_level == 100u);
+    settings_click_level = CLICK_LEVEL_DEFAULT;
+    a[0] = 9; a[1] = 1; request(ED_UI_SET, a, 2);
     bad += check("retired FX latch cannot be enabled", host_wire[5] == 2);
     a[0] = 2; request(ED_UI_SET, a, 2);
     bad += check("unsupported preference is reported without applying it", host_wire[5] == 2);

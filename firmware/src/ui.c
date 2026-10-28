@@ -90,9 +90,19 @@ static void sound_name(const track_t *t, char *b);
 #define TY_PIXEL ty_pixel()
 static uint32_t ty_pixel(void) { return (PREF_BITS & PREF_PIXEL) != 0u || !RES_OK(); }   /* (gfx.c TY_*; Rubik: res.c) */
 /* HOME SELECT (the menu): what SELECT turns on HOME, kept in favorites.factory[15][25] (0, any other: BPM) */
-enum { HS_BPM, HS_MOD, HS_LEVEL, HS_SWING, HS_TRANS, HS_CHORD, HS_ARATE, HS_PATTERN, HS_OFF, HS_N };
+enum { HS_BPM, HS_MOD, HS_LEVEL, HS_SWING, HS_TRANS, HS_CHORD, HS_ARATE, HS_PATTERN, HS_OFF, HS_OCT, HS_N };
 static const char *const HS_NAME[HS_N] = {"BPM", "MOD WHEEL", "LEVEL", "SWING", "TRANSPOSE", "CHORD", "ARP RATE", "PATTERN",
-                                          "OFF"};
+                                          "OFF", "OCTAVE"};
+/* the menu's order: OCTAVE beside TRANSPOSE, OFF last (the saved numbers stay: OCTAVE came after OFF) */
+static const uint8_t HS_ORDER[HS_N] = {HS_BPM, HS_MOD, HS_LEVEL, HS_SWING, HS_TRANS, HS_OCT, HS_CHORD, HS_ARATE,
+                                       HS_PATTERN, HS_OFF};
+static uint32_t hs_step(uint32_t v, int32_t s)  /* KNOB 1 steps, 0 (OCT+): steps and wraps */
+{
+    uint32_t i = 0;
+    while (i + 1u < HS_N && HS_ORDER[i] != v) i++;
+    i = s > 0 ? (i + 1u < HS_N ? i + 1u : i) : s < 0 ? (i ? i - 1u : 0u) : (i + 1u) % HS_N;
+    return HS_ORDER[i];
+}
 #define HOME_SELECT (favorites.factory[15][25])
 static uint32_t home_select(void) { return HOME_SELECT < HS_N ? HOME_SELECT : HS_BPM; }
 /* GLO SELECT (the menu): what SELECT turns with GLO held, on any page (the same choices), kept in bits 1..4 of
@@ -146,9 +156,10 @@ static struct {
     uint8_t pat_tap, pat_dlg, pat_did;             /* .. the key last tapped (+1), the one held to its dialog, its
                                                     * length changed there (Cancel: Done) */
     uint32_t pat_ms, pat_tap_ms;                   /* .. when it went down, when the tapped one was let go */
-    uint8_t ptc_on, ptc_trk, ptc_src, ptc_dst;     /* PATTERNS' Copy to: track ptc_trk's pattern src to dst
-                                                    * (ui_patterns.c) */
+    uint8_t ptc_on, ptc_trk, ptc_src, ptc_dst, ptc_to;   /* PATTERNS' Copy to: track ptc_trk's pattern src to
+                                                          * track ptc_to's dst (ui_patterns.c) */
     uint8_t preset_audition;     /* Patterns' temporary preset picker; navigation cancels it */
+    uint8_t pt_page;             /* PATTERNS' page of eight (a part's 16: two; 0xFF: the selected track's, ui_patterns.c) */
     uint8_t cursor;              /* SEQ: step being edited (STEP page KNOB 1 moves it) */
     uint16_t note_pick;          /* NOTES: event index + 1; zero chooses the first hit */
     uint8_t erase_gesture, erase_owner; /* an EDIT press captures one track/bank until released */
@@ -403,6 +414,7 @@ static void page_entered(void)
     ui.act = 0;
     ui.proj_new = 0;
     ui.ptc_on = 0;
+    ui.pt_page = 0xFF;
     if (pg->graph == GR_BROWSE) {                /* (OCT- goes back to the sound from before: its loads, a level */
         browse_mark = browse_loads;              /* of their own) */
         undo_seal();

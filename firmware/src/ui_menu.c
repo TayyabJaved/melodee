@@ -308,7 +308,7 @@ static void draw_menu(void)
                 menu_words(w, MI_NAME[i], sizeof w);
                 if (i >= MI_CLICK && i <= MI_ADD)
                     value = i==MI_CLICK?(const char *const[]){"OFF","REC","ON"}[settings_click%3u]:
-                      i==MI_CLICK_LEVEL?(const char *const[]){"LOW","MID","HIGH"}[settings_click_level%3u]:
+                      i==MI_CLICK_LEVEL?(fmt_int(b,settings_click_level),str_cpy(b+str_len(b),"%",4),b):
                       i==MI_COUNTIN?(const char *const[]){"OFF","1 BAR","2 BARS"}[settings_countin%3u]:
                       i==MI_PREVIEW?(settings_preview?"ON":"OFF"):(settings_chord_add?"ADD":"HOLD");
                 if (i == MI_ACCEL) value = PREF_BITS & PREF_ACCEL_OFF ? "OFF" : "ON";
@@ -450,11 +450,16 @@ static void menu_input(uint32_t oct)                  /* oct: ui_input.c oct_tap
         settings_hold = (uint8_t)(s > 0 ? (v < 3u ? v + 1u : 3u) : s < 0 ? (v ? v - 1u : 0u) : (v + 1u) % 4u);
         ok = 0;
     }
-    if((s || ok) && ui.menu==1 && ui.menu_sel>=MI_CLICK && ui.menu_sel<=MI_ADD){
+    if((s || ok) && ui.menu==1 && ui.menu_sel==MI_CLICK_LEVEL){   /* KNOB 1 steps 5 %, OCT+ steps and wraps */
+        int32_t v=(int32_t)settings_click_level;
+        settings_click_level=(uint8_t)(s?clamp(v+s*5,0,100):v+5>100?0:v+5);
+        ok=0;ui.force=1;
+    }
+    if((s || ok) && ui.menu==1 && ui.menu_sel>=MI_CLICK && ui.menu_sel<=MI_ADD && ui.menu_sel!=MI_CLICK_LEVEL){
         uint32_t id=ui.menu_sel-MI_CLICK,top=id<3?2:1;
-        uint32_t value=id==0?settings_click:id==1?settings_click_level:id==2?settings_countin:id==3?settings_preview:settings_chord_add;
+        uint32_t value=id==0?settings_click:id==2?settings_countin:id==3?settings_preview:settings_chord_add;
         value=s>0?(value<top?value+1:value):s<0?(value?value-1:0):(value+1)%(top+1);
-        if(id==0)settings_click=value;else if(id==1)settings_click_level=value;else if(id==2)settings_countin=value;else if(id==3)settings_preview=value;else settings_chord_add=value;
+        if(id==0)settings_click=value;else if(id==2)settings_countin=value;else if(id==3)settings_preview=value;else settings_chord_add=value;
         ok=0;ui.force=1;
     }
     if ((s || ok) && ui.menu == 1 && ui.menu_sel == MI_AUTOSAVE) {
@@ -478,8 +483,7 @@ static void menu_input(uint32_t oct)                  /* oct: ui_input.c oct_tap
         ui.force=1; ok=0;
     }
     if ((s || ok) && ui.menu == 1 && ui.menu_sel == MI_HOME_SEL) {   /* KNOB 1 steps, OCT+ steps and wraps */
-        uint32_t v = home_select();
-        HOME_SELECT = (uint8_t)(s > 0 ? (v + 1u < HS_N ? v + 1u : v) : s < 0 ? (v ? v - 1u : 0u) : (v + 1u) % HS_N);
+        HOME_SELECT = (uint8_t)hs_step(home_select(), s);
         ui.force = 1; ok = 0;
     }
     if ((s || ok) && ui.menu == 1 && ui.menu_sel == MI_TRACKS) {     /* KNOB 1 right HIDE, left SHOW; OCT+ toggles */
@@ -488,8 +492,7 @@ static void menu_input(uint32_t oct)                  /* oct: ui_input.c oct_tap
         ui.force = 1; ok = 0;
     }
     if ((s || ok) && ui.menu == 1 && ui.menu_sel == MI_GLO_SEL) {    /* .. GLO SELECT the same */
-        uint32_t v = glo_select();
-        glo_select_set(s > 0 ? (v + 1u < HS_N ? v + 1u : v) : s < 0 ? (v ? v - 1u : 0u) : (v + 1u) % HS_N);
+        glo_select_set(hs_step(glo_select(), s));
         ui.force = 1; ok = 0;
     }
     if ((s || ok) && ui.menu==1 && ui.menu_sel==MI_SCREEN) {

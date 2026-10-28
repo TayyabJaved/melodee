@@ -517,7 +517,8 @@ static int test_rec(void)
     frame();
     fm1_in.notes = 0;
     frame();
-    bad += check("STEP, not armed: the key writes the cursor step (and moves on)", trk[0].step[0].n == 1 && ui.cursor == 1);
+    bad += check("STEP, playing, not armed: a key only plays (no step, no STOP TO EDIT)", !trk[0].step[0].n && ui.cursor == 0 &&
+                 !msg_is("STOP TO EDIT"));
     /* ARP: the arp's notes are recorded, not the key */
     ui_power_on();
     {
@@ -2188,6 +2189,15 @@ static int test_patterns_queue(void)
     press(B_OCTDN);
     bad += check("..OCT- again: Stage", ui.home);
     stop_transport();
+    /* a part's 16 patterns: two pages of eight, the page goes with the pattern turned to */
+    go_title("PATTERNS"); frame();
+    pattern_switch(&trk[0], 7); ui.force = 1; frame();
+    bad += check("PATTERNS: track 1 on 8, the first page", pt_page() == 0u);
+    turn(EN_K1, 1); frame();
+    bad += check("..KNOB 1 to 9: the second page", trk[0].pattern == 8u && pt_page() == 1u);
+    turn(EN_K2, 1); frame();
+    bad += check("..KNOB 2 (track 2 to 2): back to the first", trk[1].pattern == 1u && pt_page() == 0u);
+    pattern_switch(&trk[1], 0); pattern_switch(&trk[0], 0); frame();
     return bad;
 }
 
@@ -2258,10 +2268,10 @@ static int test_init_scales_patterns(void)
     sheet_do("Copy to\x85");
     bad += check("..Copy to: the pattern, the first empty place", ptc_on() && ui.ptc_src == t->pattern &&
                  ui.ptc_dst == first && first < NPAT);
-    turn(EN_K3, 1);
-    ok = ui.ptc_dst == first + 1u && t->pattern == 0u;
+    turn(EN_K1, 1);
+    ok = song.sel == 0u && ui.ptc_dst == first + 1u && t->pattern == 0u;
     turn(EN_K1, -1);
-    bad += check("..any knob moves the place (no pattern switched)", ok && ui.ptc_dst == first && t->pattern == 0u);
+    bad += check("..its row's knob moves the place (no pattern switched)", ok && ui.ptc_dst == first && t->pattern == 0u);
     hold(B_OCTUP);
     bad += check("..OCT+ held: no sheet while copying", pop.on != POP_SHEET);
     ok = 1;
@@ -2280,6 +2290,42 @@ static int test_init_scales_patterns(void)
     sheet_do("Copy to\x85");
     press(B_OCTDN);
     bad += check("..OCT- leaves Copy to, PATTERNS stays", !ptc_on() && !ui.home && str_eq(cur_page()->title, "PATTERNS"));
+    sheet_do("Copy to\x85");
+    b = ui.ptc_dst;
+    turn(EN_K2, 1);
+    {
+        char c[20];
+        head_chip_text(c);
+        ok = ptc_on() && ui.ptc_to == 1u && ui.ptc_dst == b && trk[1].pattern == 0u && !memcmp(c, "copy 1 to T2 ", 13);
+    }
+    bad += check("..another row's knob: the place on that track, the same number (\"copy 1 to T2 ..\")", ok);
+    turn(EN_K2, 1);
+    ok = ui.ptc_dst == b + 1u;
+    press(B_OCTUP);
+    if (ui.confirm == CF_PASTE_PAT)
+        press(B_OCTUP);
+    for (i = 0; i < NSTEP; i++)
+        ok &= !memcmp(&pattern_at(1, b + 1u)->step[i], &t->step[i], sizeof t->step[i]);
+    bad += check("..OCT+ copies it to that track", ok && !ptc_on() && msg_is("PATTERN COPIED") && song.sel == 0u);
+    uint32_t ntrk0 = song.ntrk;
+    song.ntrk = NTRK;                                   /* (all eight: 5..8 the MIDI-only tracks) */
+    sheet_do("Copy to\x85");
+    turn(EN_ALGO, 1);
+    ok = ptc_on() && ui.ptc_to == 1u && song.sel == 0u && pt_group() == 0u;
+    for (i = 0; i < 3; i++)
+        turn(EN_ALGO, 1);
+    bad += check("..ALGORITHM: the track it goes to, past the four shown (the page shows its four)", ok && ptc_on() &&
+                 ui.ptc_to == 4u && song.sel == 0u && pt_group() == 4u);
+    turn(EN_K2, 1);
+    b = ui.ptc_dst;
+    ok = ui.ptc_to == 5u && b < NPAT_MIDI;
+    press(B_OCTUP);
+    if (ui.confirm == CF_PASTE_PAT)
+        press(B_OCTUP);
+    for (i = 0; i < NSTEP; i++)
+        ok &= !memcmp(&pattern_at(5, b)->step[i], &t->step[i], sizeof t->step[i]);
+    bad += check("..there KNOB 2: track 6's row; OCT+ copies it there", ok && !ptc_on() && msg_is("PATTERN COPIED"));
+    song.ntrk = (uint8_t)ntrk0;
     sheet_do("Delete pattern");
     bad += check("..Delete pattern asks", ui.confirm == CF_DEL_PAT && !seq_is_empty(t));
     press(B_OCTUP);
@@ -5718,6 +5764,35 @@ static int test_seq_keys(void)
     ui_power_on();
     return bad;
 }
+/* HOME SELECT / GLO SELECT OCTAVE (last in main: its frames move the breathing lights' clock phase) */
+static int test_select_octave(void)
+{
+    int bad = 0;
+    ui_power_on();
+    go_home(); frame();
+    HOME_SELECT = HS_OCT;
+    song.octave = 0;
+    turn(EN_SELECT, 2);
+    bad += check("HOME SELECT OCTAVE: the keys' octave, every detent, said in the header", song.octave == 2 &&
+                 !memcmp(ui.msg, "OCTAVE +2", 10));
+    turn(EN_SELECT, 5);
+    bad += check("  .. held at +3", song.octave == 3);
+    turn(EN_SELECT, -4);
+    bad += check("  .. and down to -1", song.octave == -1 && !memcmp(ui.msg, "OCTAVE -1", 10));
+    HOME_SELECT = 0;
+    glo_select_set(HS_OCT);
+    go_title("ENV"); frame();
+    uint32_t pg = ui.page;
+    btn_down(B_GLO); frame(); turn(EN_SELECT, 1); btn_up(B_GLO); frame();
+    bad += check("  GLO SELECT OCTAVE on a page: up one, the page stays", song.octave == 0 && !ui.home && ui.page == pg);
+    glo_select_set(0);
+    song.octave = 0;
+    bad += check("  the menu lists OCTAVE beside TRANSPOSE, OFF still last, the saved numbers kept",
+                 hs_step(HS_TRANS, 1) == HS_OCT && hs_step(HS_OCT, 1) == HS_CHORD && hs_step(HS_PATTERN, 1) == HS_OFF &&
+                 hs_step(HS_OFF, 1) == HS_OFF && hs_step(HS_OFF, 0) == HS_BPM && HS_OFF == 8);
+    ui_power_on();
+    return bad;
+}
 int main(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -5793,6 +5868,7 @@ int main(void)
     bad += test_piano_roll();
     bad += test_fm6_charts();
     bad += test_stage_knobs_after_drum();
+    bad += test_select_octave();
 
     if (getenv("UI_SCREEN_DIR")) chain_screens(getenv("UI_SCREEN_DIR"));
     printf(bad ? "ui: %d FAILED\n" : "ui: all passed\n", bad);

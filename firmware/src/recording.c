@@ -759,11 +759,11 @@ static void recording_drop(track_t *t, uint32_t owner)
         memset(&recording_run[i], 0, sizeof recording_run[i]); recording_flags[i] = 0;
     }
 }
-/* Copy recordings atomically with a bank. Check capacity before mutating
+/* Copy recordings atomically with a bank (from track from's to track t's). Check capacity before mutating
  * either the destination's steps, automation or performance. */
-static int recording_copy(track_t *t, uint32_t source, uint32_t dest, int apply)
+static int recording_copy(const track_t *from, uint32_t source, track_t *t, uint32_t dest, int apply)
 {
-    uint32_t src = trk_index(t) * NPAT + source, dst = trk_index(t) * NPAT + dest, count = 0, free = 0;
+    uint32_t src = trk_index(from) * NPAT + source, dst = trk_index(t) * NPAT + dest, count = 0, free = 0;
     for (uint32_t i = 0; i < RECORD_MAX; i++) {
         if (recording[i].vel && recorded_owner(&recording[i]) == src) count++;
         if (!recording[i].vel || recorded_owner(&recording[i]) == dst) free++;

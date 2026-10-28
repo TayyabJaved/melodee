@@ -613,7 +613,7 @@ const parse = {
     const trailer = a.slice(r.i);
     if (trailer[0] === 16) o.chainRows = 16;       /* existing v6 SONG capability */
     if (trailer.length >= 4 && [0, 16].includes(trailer[0]) && trailer[1] === 0x55 && trailer[2] === 1)
-      o.uiCaps = trailer[3] & 63;                 /* tagged preferences; never interpret old PR bytes as SONG */
+      o.uiCaps = trailer[3] & 127;                /* tagged preferences; never interpret old PR bytes as SONG */
     o.motionMax = 0; o.chance = false; o.backupCaps = 0;
     if (o.uiCaps && trailer[4] === 0x4d && [1,2].includes(trailer[5]) && trailer[6] === 64) {
       o.motionMax = 64; o.motionVersion = trailer[5]; o.chance = trailer[7] === 1;
@@ -2183,8 +2183,8 @@ function makeMockDevice(opt = {}) {
     slots: [null, null, null, null], songRows: [], chainPlaying: false, chainRow: 0, chainRemaining: 0,
     smp: [0, 1, 2].map(() => ({ flash: new Uint8Array(SMP.SLOT_SIZE).fill(0xFF), zones: 0, name: "", len: 0, next: SMP.DATA_OFF })),
     bank: new Array(opt.shared?384:(opt.slots||64)).fill(null),     /* user presets: {engine, name, p, pattern, grid} */
-    uiCaps: opt.legacy || opt.v3 || opt.v5 ? 0 : opt.uiCaps ?? 57,
-    palette: 0, font: 0, monitor: 0, filter: 0, bankSig: 0, click:0, clickLevel:1, countin:0, preview:0, chordAdd:0, retiredPreference:127, screenOff:0,
+    uiCaps: opt.legacy || opt.v3 || opt.v5 ? 0 : opt.uiCaps ?? 121,
+    palette: 0, font: 0, monitor: 0, filter: 0, bankSig: 0, click:0, clickLevel:(opt.uiCaps ?? 121) & 64 ? 12 : 1, countin:0, preview:0, chordAdd:0, retiredPreference:127, screenOff:0,
     palettes: ["MONO", "GREEN", "AMBER", "ICE", "VIOLET", "ROSE", "PAPER", "HI-CON"],
     favorites: Array.from({ length: ENG.length + 3 }, () => []),
     watch: false, v4: false, lastReq: 0,
@@ -2418,7 +2418,7 @@ function makeMockDevice(opt = {}) {
       case CMD.UI_PALETTES: b(st.palettes.length); st.palettes.forEach(s); break;
       case CMD.UI_SET: {
         const id = a[0], val = a[1], key = ["palette", "font", "monitor", "filter", "click", "clickLevel", "countin", "preview", "chordAdd", null, "screenOff"][id];
-        const rc = a.length !== 2 ? 1 : id===9 ? 2 : !key ? 1 : !(st.uiCaps & (id>=9?32:id>=4?16:1 << id)) ? 2 : val >= (id === 0 ? st.palettes.length : id===10 ? 5 : id === 2 || (id>=4 && id<=6) ? 3 : 2) ? 1 : 0;
+        const rc = a.length !== 2 ? 1 : id===9 ? 2 : !key ? 1 : !(st.uiCaps & (id>=9?32:id>=4?16:1 << id)) ? 2 : val >= (id === 0 ? st.palettes.length : id===10 ? 5 : id===5 && st.uiCaps & 64 ? 101 : id === 2 || (id>=4 && id<=6) ? 3 : 2) ? 1 : 0;
         if (!rc) st[key] = val;
         b(rc || (opt.noFlash ? 3 : opt.deferSettings ? 4 : 0)); b(id ?? 127); b(val ?? 127); uiState(); break;
       }
@@ -4511,7 +4511,7 @@ function renderPreferences(force = false) {
     [1, "deviceFont", [t("deviceRegular"), t("deviceBold")], p.state.font],
     [2, "deviceMonitor", [t("deviceOff"), t("deviceEvents"), t("deviceNotes")], p.state.monitor],
     [4, "Audio click", ["OFF","REC","ON"], p.state.click],
-    [5, "Click level", ["LOW","MID","HIGH"], p.state.clickLevel],
+    [5, "Click level", p.state.caps & 64 ? null : ["LOW","MID","HIGH"], p.state.clickLevel],   /* null: 0..100 % */
     [6, "Count-in", ["OFF","1 BAR","2 BARS"], p.state.countin],
     [7, "Note preview", ["OFF","ON"], p.state.preview],
     [8, "Chord entry", ["HOLD","ADD"], p.state.chordAdd],
@@ -4521,6 +4521,17 @@ function renderPreferences(force = false) {
   for (const [id, key, options, value] of defs) {
     if (!(p.state.caps & (id>=9?32:id>=4?16:1 << id))) continue;
     const label=id>=4?key:t(key);
+    if (!options) {                                  /* a percentage: the level apart from MASTER and the mixer */
+      const input = el("input", { type: "number", min: 0, max: 100, step: 1, "aria-label": label + " (%)" });
+      input.value = value;
+      input.addEventListener("change", () => {
+        const v = Math.round(+input.value);
+        if (!Number.isFinite(v) || v < 0 || v > 100) { input.value = value; return; }
+        changePreference(id, v);
+      });
+      recordingControls.push(el("label", { class: "bar" }, el("span", { text: label + " (%)" }), input));
+      continue;
+    }
     const select = el("select", { "aria-label": label });
     select.replaceChildren(...options.map((text, i) => el("option", { value: i, text })));
     select.value = value;

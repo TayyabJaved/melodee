@@ -689,8 +689,8 @@ from an experimental firmware is not a SONG or preference capability.
 Command 33 remains SONG. Older editors can ignore the additional INFO bytes.
 
 `uiCaps`: bit 0 palette, bit 1 font weight (retired: firmware since the 1.0 UI has one
-weight and no longer sets it), bit 2 reserved for a MIDI monitor, bit 3 favorites, bit 4 recording preferences, bit 5 layer/screen preferences. This build
-advertises 57. Layer preference 9 is retired; screen preference 10 remains.
+weight and no longer sets it), bit 2 reserved for a MIDI monitor, bit 3 favorites, bit 4 recording preferences, bit 5 layer/screen preferences, bit 6 click level in percent. This build
+advertises 121. Layer preference 9 is retired; screen preference 10 remains.
 
 | cmd | Request args | Reply args |
 | --- | --- | --- |
@@ -703,8 +703,8 @@ advertises 57. Layer preference 9 is retired; screen preference 10 remains.
 UI_SET ids: 0 palette (0..count-1, the order of UI_PALETTES: MONO GREEN AMBER ICE VIOLET ROSE PAPER
 HI-CON), 1 font (retired: rc 2), 2 reserved, 3 preset filter (0 all, 1 favorites). Unsupported state
 fields are 127. With capability bit 4, UI_STATE appends five bytes after its
-13-byte prefix. UI_SET ids 4 click (0 OFF, 1 REC, 2 ON), 5 click level (0 LOW,
-1 MID, 2 HIGH), 6 count-in (0 OFF, 1 BAR, 2 BARS), 7 note preview (0/1), and
+13-byte prefix. UI_SET ids 4 click (0 OFF, 1 REC, 2 ON), 5 click level (with bit 6:
+0..100 %; without it: 0 LOW, 1 MID, 2 HIGH), 6 count-in (0 OFF, 1 BAR, 2 BARS), 7 note preview (0/1), and
 8 chord entry (0 HOLD, 1 ADD) all share capability bit 4. Older clients may
 ignore the suffix; newer clients require both the bit and the full suffix.
 Both u28 signatures are four least-significant-first 7-bit bytes; compare them

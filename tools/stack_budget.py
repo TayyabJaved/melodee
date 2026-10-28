@@ -21,8 +21,9 @@ def analyze(ir, dis, src):
     usb = (src / 'usb_host.c').read_text()
     if not ("if (song.playing || cin_left" in seq and
             "if (started) seq_advance(0);" in seq and
-            "return depth == 0u ? uh_hub_probe" in usb and
-            "uh_probe(1, m)" in usb):
+            "#define UH_HUB_LEVELS 2u" in usb and
+            "return depth < UH_HUB_LEVELS ? uh_hub_probe" in usb and
+            "uh_probe((uint8_t)(level + 1u), m)" in usb):
         raise ValueError(
             'review stack re-entry bounds after transport/USB changes')
     source = '\n'.join(p.read_text()
@@ -201,11 +202,12 @@ def analyze(ir, dis, src):
             starts_note = name == 'input_on' and target == 'seq_advance'
             if starts_note and note_started:
                 continue
-            # Only one hub level is supported. The port helper calls the
-            # child probe with depth=1, which rejects hubs. Depending on
-            # inlining, that call can also appear inside uh_probe itself.
+            # Two hub levels are supported (UH_HUB_LEVELS). The port helper
+            # calls the child probe one level down; at depth 2 it rejects
+            # hubs. Depending on inlining, that call can also appear inside
+            # uh_probe itself.
             probes_child = name in {'uh_probe', 'uh_hub_port_probe'} and target == 'uh_probe'
-            if probes_child and hub_depth:
+            if probes_child and hub_depth >= 2:
                 continue
             children.append(depth(target, note_started or starts_note,
                                   hub_depth + int(probes_child)))

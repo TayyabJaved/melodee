@@ -160,7 +160,8 @@ static uint32_t pattern_leds(uint32_t *dim, uint32_t *breath)
 #define DQ_N 8u
 static struct { uint8_t cf, trk, a, b; uint16_t loop, epoch; } dq[DQ_N];   /* cf: CF_DEL_PAT, CF_CLEAR_SEQ,
                                                                             * CF_CLEAR_TRK (bank a), CF_CLEAR_MOTION (a),
-                                                                            * CF_PASTE_PAT (b over a); epoch: its
+                                                                            * CF_PASTE_PAT (track b / NPAT's bank
+                                                                            * b % NPAT over a); epoch: its
                                                                             * project's (pattern_epoch) */
 static uint8_t dq_n;
 /* the pattern playing on track k cleared (its notes, motion, the latched chord), undoably */
@@ -202,7 +203,7 @@ static void dq_do(uint32_t cf, uint32_t k, uint32_t a, uint32_t b)
         load_end(t);
         ui_message("MOTION CLEARED");
     } else if (cf == CF_PASTE_PAT) {
-        rc = pattern_copy_at(t, b, a, 1);
+        rc = pattern_copy_to(&trk[b / NPAT % NTRK], b % NPAT, t, a, 1);
         ui_message(rc == 4 ? "PATTERN STORAGE FULL" : rc == 2 ? "PATTERN DATA FULL" : rc ? "STOP TO COPY" : "PATTERN COPIED");
     } else if (a == t->pattern) {
         seq_clear_now(cf, k);
@@ -272,7 +273,7 @@ static void dq_poll(void)
 static void pattern_copy_ui(uint32_t k, uint32_t src, uint32_t dst)
 {
     int rc;
-    if (src != dst && (dst == trk[k].pattern || !pattern_empty(k, dst)) && dq_defer(CF_PASTE_PAT, k, dst, src))
+    if (src != dst && (dst == trk[k].pattern || !pattern_empty(k, dst)) && dq_defer(CF_PASTE_PAT, k, dst, k * NPAT + src))
         return;
     rc = pattern_copy(&trk[k], src, dst);
     ui_message(rc == 4 ? "PATTERN STORAGE FULL" : rc == 2 ? "PATTERN DATA FULL" : rc ? "STOP TO COPY" : "PATTERN COPIED");
@@ -952,6 +953,19 @@ static void drum_hit_key(uint32_t accent)
     notes_preview();
 }
 
+/* OCT+ on an empty NOTES place (ui_popup.c step_enter): the last note played goes there. PITCH never adds one */
+static void notes_place(void)
+{
+    if (chain_busy()) { ui_message("STOP TO EDIT"); return; }
+    if (live_rec_sel()) { ui_message("STOP RECORDING"); return; }
+    fm1_irq_off();
+    uint32_t at = notes_manual_start(TSEL);
+    step_t *st = &TSEL->step[at < NSTEP ? at : ui.cursor];
+    if (at >= NSTEP && (st->flags & SF_RECORDED)) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
+    if (!st->n) { st->note[0] = last_note; st->n = 1; st->time = ST_NOTE; }
+    fm1_irq_on();
+}
+
 static void step_edit(uint32_t slot, int32_t steps)
 {
     if (slot == 0u) {                                   /* KNOB 1: the notes one by one, the steps (empty ones too) */
@@ -962,27 +976,28 @@ static void step_edit(uint32_t slot, int32_t steps)
         return;
     }
     if (live_rec_sel()) { ui_message("STOP RECORDING"); return; }
+    if (slot == 1u && !grid_on() && (bulk.on || ui.note_copy || (ui.note_move && notes_selected(TSEL) < RECORD_MAX))) {
+        notes_range_pitch(steps);                       /* a range, or a note being moved / copied */
+        return;
+    }
     if (notes_selected(TSEL) < RECORD_MAX) {
         uint32_t fine = slot == 2u ? ui.step_mods & (1u << panel.btn[B_ENV]) : 0u;
         ui.step_used |= (uint16_t)fine;
         notes_event_edit(fine ? 4u : slot, steps);
+        if (slot == 1u) notes_preview();                /* the new pitch heard (PREVIEW on) */
         return;
     }
     if (grid_on()) { grid_edit(slot, steps); return; }
     if(slot==2u){uint32_t fine=ui.step_mods&(1u<<panel.btn[B_ENV]);ui.step_used|=(uint16_t)fine;note_manual_length(steps,fine?RECORD_UNIT/16u:RECORD_UNIT/4u);return;}
     fm1_irq_off();
     uint32_t at = notes_manual_start(TSEL);
-    if (at >= NSTEP && (slot != 1u || (TSEL->step[ui.cursor].flags & SF_RECORDED))) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
-    step_t *st = &TSEL->step[at < NSTEP ? at : ui.cursor];
+    if (at >= NSTEP || (slot == 1u && !TSEL->step[at].n)) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }   /* PITCH never adds a note */
+    step_t *st = &TSEL->step[at];
     if (slot == 1u) {
-        if (!st->n) {
-            if (st->flags & SF_RECORDED) { fm1_irq_on(); ui_message("SELECT A NOTE"); return; }
-            st->note[0] = last_note; st->n = 1; st->time = ST_NOTE;
-        } else {
-            uint32_t j = notes_manual_slot(st);
-            st->note[j] = (uint8_t)clamp((int32_t)st->note[j] + steps, 1, 127);
-        }
-        last_note = st->note[notes_manual_slot(st)];
+        uint32_t j = notes_manual_slot(st);
+        st->note[j] = (uint8_t)clamp((int32_t)st->note[j] + steps, 1, 127);
+        last_note = st->note[j];
+        fm1_irq_on(); notes_preview(); return;
     } else if (slot == 2u) {
         ui.step_used |= (uint16_t)(ui.step_mods & (1u << panel.btn[B_ENV]));
         step_note_resize(TSEL, at, (int32_t)step_note_length(TSEL, at) + steps);
@@ -1888,6 +1903,7 @@ static int bulk_jog(int32_t delta)
 {
     if(!bulk_context()||!(fm1_in.buttons&(1u<<panel.btn[B_OCTUP])))return 0;
     uint32_t slots=slot_kind(),cur=slots?slot_cur(slots):ui.cursor;
+    if(!slots)notes_pitch_seal();                       /* a new range: its own PITCH undo */
     if(!bulk.on||bulk.on==2u){bulk.anchor=(uint16_t)cur;bulk.engine=(uint8_t)library_engine();bulk.track=song.sel;bulk.pattern=TSEL->pattern;bulk.generation=TSEL->pattern_gen;}
     bulk.on=1;uint32_t limit=slots?UP_SLOTS:step_pattern_len(TSEL);
     uint32_t to=(uint32_t)clamp((int32_t)cur+delta,0,(int32_t)limit-1);
@@ -1913,7 +1929,7 @@ static void notes_bulk_sheet_open(void){sheet_open("Selected notes","",SHEET_NOT
 /* SELECT on HOME (both its pages): the menu's HOME SELECT (ui.c home_select); with GLO held, on any page, its GLO SELECT
  * (glo_select): BPM (the header shows it), the selected track's MOD WHEEL (as MIDI CC1 on its channel: the matrix's MW, FM6's and the Prophet's wheel; sent to MIDI OUT as
  * its keys are), LEVEL, the song's SWING, TRANSPOSE, the CHORD its keys play (SCL > CHORD's CHRD: a name a detent),
- * ARP RATE, its next PATTERN (as SEQ held + SELECT), or nothing.
+ * ARP RATE, its next PATTERN (as SEQ held + SELECT), the keys' OCTAVE (as OCT- / OCT+ on Stage), or nothing.
  * What it set: a header message ("MOD WHEEL 64") */
 static void select_turn(uint32_t hs, int32_t s)
 {
@@ -1975,6 +1991,14 @@ static void select_turn(uint32_t hs, int32_t s)
         fmt_int(v, x + 1);
         ui_say(song.playing ? "NEXT PATTERN " : "PATTERN ", v);
         ui.force = 1;
+        return;
+    }
+    case HS_OCT: {
+        int8_t *o = octave_control();                   /* (MPC: the bank's own) */
+        *o = (int8_t)clamp(*o + s, -3, 3);              /* (every detent an octave, no acceleration) */
+        v[0] = '+';
+        fmt_int(v + (*o > 0), *o);
+        ui_say("OCTAVE ", v);
         return;
     }
     default:
@@ -2499,8 +2523,8 @@ static void ui_input(void)
         if (!seq_erase_active(TSEL)) grid_keys(notes);
         else seq_midi_events(0);
     } else if (song.seq_mode && cur_page()->graph == GR_ROLL) {   /* NOTES */
-        if (live_rec_sel()) {                           /* armed and playing: the keys and MIDI record live, */
-            ui.entry_open = 0;                          /* not into the cursor step too */
+        if (live_rec_sel() || song.playing) {           /* armed: the keys and MIDI record live; playing: they only */
+            ui.entry_open = 0;                          /* play. Neither enters the cursor step */
             seq_midi_events(0);
         } else if (!chain_busy() && notes_selected(TSEL) >= RECORD_MAX && !(TSEL->step[ui.cursor].flags & SF_RECORDED)) {
             seq_entry(notes);
@@ -2539,9 +2563,16 @@ static void ui_input(void)
         fm6_opsel = (uint8_t)clamp((int32_t)fm6_opsel + (s > 0 ? 1 : -1), 0, 5);
         ui.force = 1;
     }
-    if ((s = panel_enc(EN_ALGO)) != 0) {           /* ALGORITHM: the selected track, on every page */
+    if ((s = panel_enc(EN_ALGO)) != 0) {           /* ALGORITHM: the selected track, on every page (PATTERNS' Copy
+                                                     * to: the track it goes to, the page showing its four) */
         step_edit_combo();
-        track_select((uint32_t)clamp((int32_t)song.sel + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1));
+        if (ptc_on()) {
+            uint32_t k = (uint32_t)clamp((int32_t)ui.ptc_to + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1);
+            if (k != ui.ptc_to)
+                ptc_row(k);
+        } else {
+            track_select((uint32_t)clamp((int32_t)song.sel + (s > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1));
+        }
     }
     if (!glo_select_layer && (s = panel_enc(EN_SELECT)) != 0) { /* SELECT: pages; with SEQ / a step key / ENV / SCL: below */
         step_edit_combo();

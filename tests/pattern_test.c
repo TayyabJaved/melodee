@@ -157,7 +157,7 @@ static void rec_put(track_t *t, uint32_t actual, uint32_t note, uint32_t bits, u
 static int rec_has(const track_t *t, uint32_t note, uint32_t step)   /* (step: the byte as stored) */
 {
     for (uint32_t i = 0; i < RECORD_MAX; i++)
-        if (recording[i].vel && (recording[i].owner & 31u) == recording_owner(t) && recorded_note(&recording[i]) == note &&
+        if (recording[i].vel && recorded_owner(&recording[i]) == recording_owner(t) && recorded_note(&recording[i]) == note &&
             recording[i].step == step) return 1;
     return 0;
 }
@@ -239,8 +239,35 @@ static int doubled_banks(void)
     seq_stop();
     return bad;
 }
+/* PATTERNS' Copy to another track (motion.c pattern_copy_to): its steps, LEN and recorded notes; its motion only
+ * between parts of one engine (on the track's own places), what the place had gone; the pattern sound stays behind;
+ * a MIDI-only track holds 8 patterns */
+static int cross_track_copy(void)
+{
+    int bad = 0; ui_power_on(); track_t *s = &trk[0], *d = &trk[1], *o = &trk[2];
+    uint8_t e = d->eng_req;
+    track_defaults_steps(s); track_defaults_steps(d); track_defaults_steps(o); s->p[P_SLEN] = 12;
+    s->step[5] = (step_t){{65}, 1, ST_NOTE, 0, 100};
+    rec_put(s, 3, 70, 0, 3);
+    motion_set_event(s, 2, P_LEVEL, 50);
+    pattern_sound[0][0] = 1;
+    d->eng_req = s->eng_req;
+    bad += check("to a track of the same engine: steps, LEN, recorded notes, motion (its own places), no pattern sound",
+        !pattern_copy_to(s, 0, d, 0, 0) && d->p[P_SLEN] == 12 && d->step[5].note[0] == 65 && rec_has(d, 70, 3) &&
+        rec_has(s, 70, 3) && motion_count(d) == 1 && motion_at(1, 2, 50) && motion_count(s) == 1 &&
+        !pattern_sound[1][0] && pattern_sound[0][0] == 1);
+    d->eng_req = e; pattern_sound[0][0] = 0;
+    motion_set_event(o, 1, P_LEVEL, 30);
+    bad += check("  another engine: the notes, not the motion (the place's own gone)", s->eng_req != o->eng_req &&
+        !pattern_copy_to(s, 0, o, 0, 0) && o->step[5].note[0] == 65 && rec_has(o, 70, 3) && !motion_count(o) &&
+        motion_count(s) == 1);
+    bad += check("  a MIDI-only track: the notes on its 8 patterns, no motion", !pattern_copy_to(s, 0, &trk[NPART], 7, 0) &&
+        pattern_at(NPART, 7)->step[5].note[0] == 65 && pattern_at(NPART, 7)->timing[0] == 12 && motion.count == 2 &&
+        pattern_copy_to(s, 0, &trk[NPART], NPAT_MIDI, 0) == 1);
+    return bad;
+}
 int main(void)
 {
-    int bad = banks_and_chords()+independent_switches()+all_banks_persist()+panel_banks()+arranged_chords()+replaced_motion()+migrated_bank_rename()+doubled_banks();
+    int bad = banks_and_chords()+independent_switches()+all_banks_persist()+panel_banks()+arranged_chords()+replaced_motion()+migrated_bank_rename()+doubled_banks()+cross_track_copy();
     printf("%s\n",bad ? "PATTERN TEST FAILED" : "pattern bank tests passed"); return !!bad;
 }
