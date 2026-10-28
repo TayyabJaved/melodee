@@ -42,7 +42,7 @@ static void midi_tracks_stream(void)
         recorded_set_owner(&r,owners[i%n]); recorded_set_step(&r,63,0,0);
         recording[i]=r;
     }
-    recording_reindex(); chain_config.count=2; chain_patterns[1][NTRK-1u]=7;
+    recording_reindex(); chain_config.count=2; chain_patterns[1][NTRK-1u]=7; chain_config.sect[1]=1;   /* (two sections, A B) */
     project_capture(&proj_scratch); assert(bank_pack(oracle,&proj_scratch,1));
     assert(bank_wide);
     uint32_t hash; project_capture(&proj_scratch);
@@ -84,20 +84,22 @@ static void extended_songs_stream(int punches)
     reset(); song.ntrk = NTRK;
     for (uint32_t k = NPART; k < NTRK; k++) trk[k].p[P_E0] = (int16_t)(k + 1u);
     chain_config.count = CHAIN_ROWS;
-    for (uint32_t r = 0; r < CHAIN_ROWS; r++) {
-        chain_config.row[r] = (chain_row_t){r % NPAT, (r % 16u) + 1u};
+    for (uint32_t r = 0; r < CHAIN_ROWS; r++) {             /* 24 sections over 64 columns, each its length */
+        chain_config.row[r] = (chain_row_t){r % NPAT, 1u};
         for (uint32_t k = 0; k < NTRK; k++) {               /* every bank of the track and a rest */
-            uint32_t v = (r + k) % (trk_npat(k) + 1u);
+            uint32_t v = (r % 24u + k) % (trk_npat(k) + 1u);
             chain_patterns[r][k] = (uint8_t)(v == trk_npat(k) ? CHAIN_REST : v);
         }
         chain_config.row[r].slot = chain_patterns[r][0];
+        chain_config.len[r] = (uint16_t)(r % 24u * 4u);
     }
     chain_config.rsv[CHAIN_LOOP] = 1;
     if (punches) {
         chain_config.fx[0][0] = (chain_fx_t){PX_REV + 1, 3, 8};
         chain_config.fx[63][3] = (chain_fx_t){PX_FREEZE + 1, 63, 1};
     }
-    chain_patterns[1][1] = CHAIN_HOLD; chain_patterns[63][2] = CHAIN_HOLD;
+    assert(!song_sections_normalize(1));                /* (the letters: one a distinct column) */
+    assert(chain_config.count == CHAIN_ROWS && chain_config.sect[24] == chain_config.sect[48]);
     chain_config_t expected = chain_config;
     uint8_t patterns[CHAIN_ROWS][NTRK]; memcpy(patterns, chain_patterns, sizeof patterns);
     project_capture(&proj_scratch); assert(bank_pack(oracle, &proj_scratch, 1));
@@ -129,7 +131,7 @@ static void extended_songs_stream(int punches)
 }
 static void song_sounds_stream(int patterns)
 {
-    reset(); chain_config.count = 3;
+    reset(); chain_config.count = 3; chain_config.sect[1] = 1; chain_config.sect[2] = 2;
     engine_load_of(&trk[0], ENGI_PROPHET, 1);
     for (uint32_t k = NPART; k < NTRK; k++) trk[k].p[P_E0] = (int16_t)(k + 1u);
     song_sound_t sound;

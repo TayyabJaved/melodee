@@ -111,6 +111,7 @@
       <a href="#arp">Arpeggiator</a>
       <a href="#sequencer">Sequencer</a>
       <a class="sub" href="#notes">Notes</a>
+      <a class="sub" href="#arranging">Patterns, sections, songs</a>
       <a class="sub" href="#patterns">Patterns</a>
       <a class="sub" href="#songs">Songs</a>
       <a class="sub" href="#motion">Motion</a>
@@ -188,7 +189,7 @@
             <tr><td><kbd>HOME</kbd></td><td>Return to Stage. On Stage, tap again for the chord view. Hold for the menu.</td></tr>
             <tr><td><kbd>SAVE</kbd></td><td>Tap for PRESETS / USER / PROJECT. Hold to write the project back to its slot. Playing stops first.</td></tr>
             <tr><td><kbd>PLAY/STOP</kbd></td><td>Start and stop the tracks in use.</td></tr>
-            <tr><td><kbd>REC</kbd></td><td>Arm or disarm the selected track. While playing, recording starts at the next pattern start and continues across loops until you disarm or stop. Hold to capture (or take a jam on SONG).</td></tr>
+            <tr><td><kbd>REC</kbd></td><td>Arm or disarm the selected track. While playing, recording starts at the next pattern start and continues across loops until you disarm or stop. Hold to capture. On SONG, REC launches the picked section live.</td></tr>
             <tr><td><kbd>OCT−</kbd> <kbd>OCT+</kbd></td><td>On Stage: shift octave (both together reset). In menus and everywhere else: go back / enter or confirm.</td></tr>
           </tbody>
         </table>
@@ -673,8 +674,8 @@
             <tr><td>NOTES</td><td>Edit entered steps and recorded takes (piano roll; drum grid on Drum).</td></tr>
             <tr><td>PATTERN</td><td>How long the selected track’s loop is, how fast its steps run, and its own swing and note length.</td></tr>
             <tr><td>TEMPO</td><td>Project speed (BPM) and song swing; the project-wide quantize grid for the next recorded take on any track.</td></tr>
-            <tr><td>PATTERNS</td><td>One row per track in use, eight patterns each.</td></tr>
-            <tr><td>SONG</td><td>Arrangement of sections.</td></tr>
+            <tr><td>PATTERNS</td><td>Play live: choose which pattern each track plays now. One row per track in use, a cell per pattern.</td></tr>
+            <tr><td>SONG</td><td>Arrange: columns of sections, played left to right; each section’s own page.</td></tr>
             <tr><td>MOTION</td><td>Knob automation for the selected pattern (shown once that pattern has some automation saved).</td></tr>
             <tr><td>DRUM HIT</td><td>On a Drum track: the macros of a selected recorded hit.</td></tr>
           </tbody>
@@ -730,11 +731,37 @@
           <p>Hold <kbd>OCT+</kbd> and turn <kbd>SELECT</kbd>, <kbd>KNOB 1</kbd> or <kbd>KNOB 2</kbd> to select a range, then turn <kbd>KNOB 1</kbd> to move those notes at quarter-step boundaries. Tap or hold <kbd>OCT+</kbd> for <strong>Copy: KNOB 1</strong>, <strong>Quantize</strong>, <strong>Delete selected</strong> or <strong>Clear selection</strong>. Delete selected removes manual and recorded notes in the range. A single note’s <strong>Move note</strong> or <strong>Copy note</strong> works the same way: choose it, then turn <kbd>KNOB 1</kbd>. Copies and moves wrap around the loop. Hold <kbd>OCT+</kbd> without a range for the pattern tools: <strong>Quantize</strong> (the whole pattern, or the selection if there is one), <strong>Clear pattern</strong> and <strong>Clear motion</strong>. On Quantize, <kbd>KNOB 1</kbd> chooses <strong>1</strong>, <strong>0.5</strong> or <strong>0.25</strong> step and <kbd>OCT+</kbd> applies it. Durations and velocities stay. Each operation is one undo. Moving, copying and quantizing notes need the transport stopped. Clear pattern and Clear motion requested during playback wait for the track’s loop end.</p>
         </section>
 
+        <section id="arranging">
+          <h3>Patterns, sections and songs</h3>
+          <p>Each term builds on the one before it.</p>
+          <table>
+            <thead><tr><th>Term</th><th>What it is</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Track</strong></td><td>One instrument.</td><td>Track 1 drums, track 2 bass.</td></tr>
+              <tr><td><strong>Pattern</strong></td><td>One loop that one track plays, P1–P8 (P1–P16 on tracks 1–4). You write its notes on NOTES.</td><td>Drums P1 a basic beat, drums P2 a busier one.</td></tr>
+              <tr><td><strong>Section</strong></td><td>One part of the song, named by a letter A–Z: the pattern every track plays (or <strong>REST</strong>, silent), its length, and optionally a sound and master FX punches per section.</td><td>B: drums P2 + bass P1, 4 bars.</td></tr>
+              <tr><td><strong>Song</strong></td><td>Up to 64 columns, played left to right. Each column plays one section; a section can be placed as often as you like.</td><td>A B A C.</td></tr>
+            </tbody>
+          </table>
+          <p>A section has one definition. Every <strong>A</strong> in the song is the same A: change what A plays, its length, sound or punches, and every A changes. Use <strong>Copy as new section</strong> for a variation. A song only refers to patterns too: editing P1’s notes changes every section that uses P1.</p>
+          <p>Sections are made on purpose, never recorded for you: on SONG, <kbd>OCT+</kbd> on the <strong>+</strong> column adds a section of what every track is playing now (see <a href="#songs">Songs</a>).</p>
+          <h4>How long a section lasts</h4>
+          <ul>
+            <li>A section’s length is in bars and beats. New sections are <strong>AUTO</strong>: as long as their longest pattern, following that pattern if you change it. Set a length on the section page and it stays fixed.</li>
+            <li>A pattern shorter than the section loops until the section ends. A longer one is cut where the section ends.</li>
+            <li>At every column, every track starts its pattern from step 1, even when it plays the same pattern as before. Anything that should evolve belongs inside one section.</li>
+            <li>There is no repeat count: make the section longer, or place it again.</li>
+            <li>A section in which every track rests is one bar long (AUTO).</li>
+          </ul>
+          <h4>The letters A, B, C</h4>
+          <p>The letter on each column is its section’s name. The strip at the foot of PATTERNS shows the song as these letters, the column playing lit. A song <strong>A B A C</strong> has four columns and three sections; A plays first and third.</p>
+        </section>
+
         <section id="patterns">
           <h3>Patterns</h3>
-          <p>Eight patterns per track. The PATTERNS grid shows one row for each track in use; <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. <kbd>SELECT</kbd> goes on to SONG.</p>
+          <p>Sixteen patterns per track on tracks 1–4, eight on MIDI tracks 5–8. The PATTERNS grid has one row for each track in use; the cells along a row are that track’s patterns. <kbd>KNOB 1</kbd>–<kbd>4</kbd> queue patterns for tracks 1–4 when that track exists. While a song plays, its sections choose the patterns, so the knobs show <strong>STOP SONG TO SWITCH</strong>. <kbd>SELECT</kbd> goes on to SONG.</p>
           <div class="shots">
-            <figure class="shot"><img src="patterns.png" alt="Patterns grid" width="240" height="240"><figcaption>PATTERNS: one row per track, eight patterns.</figcaption></figure>
+            <figure class="shot"><img src="patterns.png" alt="Patterns grid" width="240" height="240"><figcaption>PATTERNS: one row per track; the song’s letters at the foot.</figcaption></figure>
             <figure class="shot"><img src="patterns_sheet.png" alt="Patterns sheet" width="240" height="240"><figcaption>Pattern sheet: Copy to…, Delete.</figcaption></figure>
           </div>
           <ul>
@@ -743,31 +770,79 @@
             <li>Hold a pattern key alone for a second to open its action dialog: press that key again to delete the pattern, another pattern key to copy it there, or <kbd>OCT−</kbd> to cancel. In the dialog the fourth and fifth black keys (C♯, D♯) blink: C♯ halves the pattern (the steps past the new length stay hidden), D♯ doubles it (its steps, recorded notes and motion copied after themselves, up to 64 steps). Keep the original pattern key or <kbd>SEQ</kbd> held to leave the dialog open and halve or double repeatedly. After a resize, releasing both closes it. On the playing pattern, hold <kbd>EDIT</kbd> to undo.</li>
             <li>On PATTERNS, <kbd>OCT+</kbd> opens the sheet: <strong>Set preset</strong>, <strong>Remove preset</strong>, <strong>Copy to…</strong> (confirm before replacing a used slot) or <strong>Delete pattern</strong> (confirm). Set preset opens the sound browser for the selected pattern: <kbd>OCT+</kbd> saves an independent sound copy; <kbd>OCT−</kbd> cancels. Playback uses <strong>Song override → Pattern override → Default track sound</strong>. STOP restores the default track sound. Copy includes the preset; Delete removes the pattern’s manual notes, recorded notes, motion and preset together. Remove preset restores inheritance without changing notes. Preset assignments save with the project and support undo. Tracks 5–8 remain MIDI-only. <kbd>OCT−</kbd> clears what is queued. Hold <kbd>EDIT</kbd> to undo.</li>
             <li>While playing, a pattern change waits until that track’s loop ends. Selecting the active pattern cancels a queued change. Destructive pattern operations (delete, clear notes or motion, or copy over a used or playing pattern) also wait for that track’s loop end. The header shows the pending action with <strong>AT LOOP END</strong>; the pattern key breathes. Live note, hit, erase and motion-lane edits stay immediate. STOP applies pending choices.</li>
+            <li>After a section is launched live from SONG, changing a track here is a live change only: the section itself is not edited, and the header shows <strong>A CHANGED</strong>. To keep what plays now, add it on SONG as a section.</li>
           </ul>
         </section>
 
         <section id="songs">
           <h3>Songs</h3>
-          <p>On <strong>SEQ → SONG</strong>, the knobs select section, track, that track’s pattern, and the selected block’s length across sections (up to 64 sections).</p>
+          <p><strong>SEQ → SONG</strong> puts sections in order. If the terms are new, read <a href="#arranging">Patterns, sections and songs</a> first.</p>
           <div class="shots">
-            <figure class="shot"><img src="song.png" alt="Song arrangement" width="240" height="240"><figcaption>SONG: sections of patterns.</figcaption></figure>
-            <figure class="shot"><img src="ref_sheet_song.png" alt="Song action sheet" width="240" height="240"><figcaption>Song sheet.</figcaption></figure>
+            <figure class="shot"><img src="song.png" alt="Song arrangement" width="240" height="240"><figcaption>SONG: a column per section placed.</figcaption></figure>
+            <figure class="shot"><img src="ref_sheet_song.png" alt="Song action sheet" width="240" height="240"><figcaption>Song sheet (OCT+ held).</figcaption></figure>
+          </div>
+          <h4>Reading the grid</h4>
+          <ul>
+            <li><strong>Each column plays one section.</strong> Its card shows the section’s letter and length (<strong>3:2</strong> is 3 bars 2 beats). Columns play left to right; four show at a time, then a <strong>+</strong> column for adding one.</li>
+            <li><strong>Each row is a track</strong>, in its colour. Its block in a column is the pattern it plays there; <strong>--</strong> is a rest.</li>
+            <li>The header shows the song’s length in minutes and seconds. The footer shows the picked column’s section, its length (<strong>AUTO</strong> when it follows its longest pattern), how often the song uses it, and how far the song has played.</li>
+          </ul>
+          <table>
+            <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>KNOB 1</kbd></td><td>Pick a column; past the last one, the <strong>+</strong> column.</td></tr>
+              <tr><td><kbd>KNOB 2</kbd></td><td>Which section the picked column plays (the next or previous letter in use).</td></tr>
+              <tr><td>Tap <kbd>OCT+</kbd></td><td>On a column: open its section page. On <strong>+</strong>: add a section of what every track plays now.</td></tr>
+              <tr><td>Hold <kbd>OCT+</kbd></td><td>Duplicate section, Copy as new section, Move section, Copy section, Delete section, Loop song, Clear song.</td></tr>
+              <tr><td><kbd>PLAY</kbd></td><td>Play the song from the picked column; press again to stop.</td></tr>
+              <tr><td><kbd>REC</kbd></td><td>Launch the picked column’s section live (below).</td></tr>
+              <tr><td>Tap <kbd>FX</kbd></td><td>The picked section’s master punches.</td></tr>
+              <tr><td>Hold <kbd>EDIT</kbd></td><td>Undo a song edit; <kbd>EDIT</kbd> + <kbd>OCT−</kbd>/<kbd>OCT+</kbd> undo/redo.</td></tr>
+            </tbody>
+          </table>
+          <p>Stop the song before editing; otherwise the screen shows <strong>STOP TO EDIT</strong>.</p>
+          <h4>Make a song</h4>
+          <ol>
+            <li>Write the patterns first, for example drums P1 and P2, bass P1 and P3.</li>
+            <li>Choose each track’s pattern for the first part (PATTERNS, or SEQ + a white key), then on SONG turn <kbd>KNOB 1</kbd> to <strong>+</strong> and tap <kbd>OCT+</kbd>. That adds section <strong>A</strong>: every track’s pattern as it is now, AUTO length.</li>
+            <li>Change patterns for the next part and tap <kbd>OCT+</kbd> on <strong>+</strong> again: <strong>B</strong>. If the patterns already match a section, that section is placed again instead (<strong>PLACED A</strong>).</li>
+            <li>To place a section again anywhere, pick a column and turn <kbd>KNOB 2</kbd>, or hold <kbd>OCT+</kbd> → Duplicate section.</li>
+            <li>Press <kbd>PLAY</kbd>.</li>
+          </ol>
+          <p>A song holds up to 26 sections (A–Z) in up to 64 columns. Delete section removes that column only; a section’s letter is free again when its last column goes.</p>
+          <h4>The section page</h4>
+          <p>Tap <kbd>OCT+</kbd> on a column to open its section. What you change here changes every column of that section.</p>
+          <div class="shots">
+            <figure class="shot"><img src="song_section.png" alt="Section page" width="240" height="240"><figcaption>Section page: length, each track’s pattern, how they fill the length.</figcaption></figure>
+            <figure class="shot"><img src="song_preset_sheet.png" alt="Section sheet" width="240" height="240"><figcaption>Section sheet (OCT+).</figcaption></figure>
           </div>
           <ul>
-            <li>While you jam with no song playing, every loop of track 1 logs the tracks’ patterns as a section (same patterns again: a repeat).</li>
-            <li>Hold <kbd>REC</kbd> on SONG (or use Take jam on the sheet) to turn that log into the arrangement. Overwrite asks for confirmation.</li>
-            <li>PLAY runs the arrangement; PLAY starts from the selected section with its full repeats; sections change every track at track 1’s loop boundary; the final section stops. STOP returns to the patterns selected before SONG.</li>
-            <li>The ruler above the blocks shows elapsed <strong>minutes:seconds</strong>. <kbd>KNOB 4</kbd> extends the selected block into following sections on its own track, or trims its right edge. Notes and automation continue through the extended block; trimming leaves rests. Extension stops at another occupied block and can append empty sections at the end.</li>
-            <li><kbd>KNOB 3</kbd> chooses <strong>REST</strong> below P1. A rest leaves that track silent while release, delay and reverb tails decay. Track 1 rests and continued blocks retain one straight four-beat bar per section repeat.</li>
-            <li><kbd>OCT+</kbd> opens cell actions: Set rest, Copy to…, Move to…, Add empty section. Add empty section inserts a section of rests at the cursor. For copy and move, choose a destination on the grid, then <kbd>OCT+</kbd> applies or <kbd>OCT−</kbd> cancels. Copy and move act on the whole block. Destinations must be empty. Copies reuse the pattern; editing its notes changes every occurrence.</li>
-            <li><strong>Set preset:</strong> select the section and track, then <kbd>OCT+</kbd> → Set preset. Browse sounds as usual; <kbd>OCT+</kbd> saves a separate copy for the whole selected pattern block, including its continued sections, <kbd>OCT−</kbd> cancels. Select anywhere inside a long block to change its sound. Other occurrences of the same pattern stay independent. Blocks without a Song override use the Pattern override, then the default track sound. STOP restores the default track sound. Remove preset clears the whole block’s Song override. Native patches are included, so later library edits cannot change the song. Song copy/move and undo include these assignments; the note pattern remains shared. Tracks 5–8 remain MIDI-only.</li>
-            <li>Hold <kbd>OCT+</kbd> for Insert empty section, Duplicate section, Move section, Copy sections, Delete section, Take jam, and Clear song. Inserted empty sections contain rests on every track.</li>
-            <li>Hold <kbd>OCT+</kbd> and turn <kbd>KNOB 1</kbd> to select a phrase, then tap <kbd>OCT+</kbd> to copy, move, duplicate or delete its sections. Copy and move insert before the destination. Duplication inserts after the source.</li>
-            <li>Hold <kbd>EDIT</kbd> to undo song edits; <kbd>EDIT</kbd> + <kbd>OCT−</kbd>/<kbd>OCT+</kbd> undo/redo. Up to eight edits are retained while edit memory is available.</li>
-            <li><strong>Loop song</strong> in the tapped or held <kbd>OCT+</kbd> menu returns the final section to section 1. Set it while stopped; it saves with the project and defaults off. The header shows LOOP, or SONG LOOP while playing. PLAY still stops the song.</li>
-            <li>Tap <kbd>FX</kbd> on SONG to place a master punch. Press an effect key or turn <kbd>KNOB 1</kbd>; <kbd>KNOB 2</kbd> selects one of four named lanes. Turn <kbd>KNOB 3</kbd> to move START and <kbd>KNOB 4</kbd> to set END. These are numbered steps: START <strong>5</strong> and END <strong>8</strong> highlights steps 5 through 8 on the grid, on each section repeat. PLAY auditions with a moving playhead. Vertical coloured spans inside the rounded, filled song blocks show where each punch applies. The footer keeps the song progress bar; effect names stay in the punch editor.</li>
-            <li>In the punch editor, <kbd>SELECT</kbd> browses sections, <kbd>OCT+</kbd> selects a free punch, <kbd>KNOB 1</kbd> turned left to <strong>OFF</strong> clears the selected punch. <kbd>EDIT</kbd> also removes it; holding <kbd>EDIT</kbd> undoes either action. <kbd>PLAY</kbd> auditions the song; stop before editing. <kbd>OCT−</kbd> returns to SONG. Holding <kbd>FX</kbd> on SONG still opens the live performance layer.</li>
-            <li><kbd>PLAY</kbd> starts at the cursor and stops playback; moving the cursor while playing does not jump. PLAY on the add-section column starts from section 1. <kbd>OCT+</kbd> is for editing.</li>
+            <li>The rows are PATTERNS’ rows: the pattern the section plays on each track is filled. <kbd>KNOB 1</kbd>–<kbd>4</kbd> choose it for tracks 1–4 (turn below the first pattern for <strong>REST</strong>). <kbd>ALGORITHM</kbd> selects tracks as everywhere.</li>
+            <li>The top row shows the length, with <strong>AUTO</strong> while it follows the longest pattern. <kbd>SELECT</kbd> sets it a beat a detent (from AUTO: its current length); turned below one beat, it returns to AUTO. The sheet’s Length row does the same, and <kbd>OCT+</kbd> on it sets AUTO.</li>
+            <li>Under the rows, a lane per track shows how its pattern fills the length: the first loop bright, later loops lighter, a red mark where the section cuts a pattern, a dotted line for a rest.</li>
+            <li><kbd>PLAY</kbd> loops just this section; the header shows <strong>LOOPING A</strong>. Pattern and length changes are heard from the next pass. Press <kbd>PLAY</kbd> again to stop.</li>
+            <li><kbd>OCT+</kbd> opens the section sheet: Length, Set preset and Remove preset (for the selected track), Punch FX, Copy as new section. Tap <kbd>FX</kbd> for the punches directly. <kbd>OCT−</kbd> returns to SONG.</li>
+          </ul>
+          <h4>Live launch</h4>
+          <ul>
+            <li>Tap <kbd>REC</kbd> on SONG to launch the picked column’s section: every track switches to its patterns together. Stopped, it starts playing at once.</li>
+            <li>While patterns play (the song itself not running), the first launch starts on the next bar. After that, a launched section waits for the end of the one playing. The header shows what is next: <strong>B NEXT</strong>. The column playing has a coloured card; a queued one is dashed.</li>
+            <li>A launch switches patterns and rests only; a section’s sounds and punches play when the song plays. Changing a track by hand afterwards shows <strong>A CHANGED</strong>.</li>
+            <li>STOP ends the launch. While the song itself plays, REC says <strong>STOP SONG TO LAUNCH</strong>.</li>
+          </ul>
+          <h4>Sounds and punches</h4>
+          <ul>
+            <li><strong>Set preset:</strong> on the section page, select a track, then <kbd>OCT+</kbd> → Set preset. Browse sounds as usual; <kbd>OCT+</kbd> keeps a copy for that track in this section (every column of it), <kbd>OCT−</kbd> cancels. The normal track sound returns in other sections and on STOP. Native patches are included, so later library edits cannot change the song. Tracks 5–8 remain MIDI-only.</li>
+            <li><strong>Punch FX</strong> (the section sheet, or <kbd>FX</kbd> on SONG or the section page) places master punches on the section. Press an effect key or turn <kbd>KNOB 1</kbd>; <kbd>KNOB 2</kbd> selects one of four named lanes. Turn <kbd>KNOB 3</kbd> to move START and <kbd>KNOB 4</kbd> to set END. These are track 1’s steps: START <strong>5</strong> and END <strong>8</strong> highlights steps 5 through 8, on every loop of track 1’s pattern (track 1 resting: each bar’s sixteenths). Vertical coloured spans inside the song’s blocks show where each punch applies.</li>
+            <li>In the punch editor, <kbd>OCT+</kbd> selects a free punch, <kbd>KNOB 1</kbd> turned left to <strong>OFF</strong> clears the selected punch. <kbd>EDIT</kbd> also removes it; holding <kbd>EDIT</kbd> undoes either action. <kbd>PLAY</kbd> auditions (opened from the section page: that section, looping); stop before editing. <kbd>OCT−</kbd> returns. Holding <kbd>FX</kbd> on SONG still opens the live performance layer.</li>
+          </ul>
+          <h4>More</h4>
+          <ul>
+            <li>Hold <kbd>OCT+</kbd> and turn <kbd>KNOB 1</kbd> to select several columns, then tap <kbd>OCT+</kbd> to copy, move, duplicate or delete them. Copy and move insert before the destination; duplication inserts after the source. Copies keep their letters: they are the same sections.</li>
+            <li>Up to eight edits are retained while edit memory is available.</li>
+            <li><strong>Loop song</strong> (hold <kbd>OCT+</kbd>) returns the final column to the first. Set it while stopped; it saves with the project and defaults off. The header shows LOOP, or SONG LOOP while playing.</li>
+            <li><kbd>PLAY</kbd> starts at the picked column and stops playback; moving the cursor while playing does not jump. PLAY on the <strong>+</strong> column starts from the first. The final column stops the song unless Loop song is on. STOP returns each track to the pattern it had before.</li>
+            <li>Songs saved by earlier firmware load as sections: each row becomes a column, identical rows share a letter, and a row’s repeats become its length. Blocks that were held across rows now restart at each column (the header says <strong>SONG BLOCKS RESTART</strong>). A song with more than 26 different rows keeps its first 26 sections (<strong>SONG CUT: 26 SECTIONS</strong>). Firmware before sections cannot load a project saved with them.</li>
           </ul>
         </section>
 

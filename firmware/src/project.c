@@ -975,6 +975,7 @@ static int project_restore_runtime(const project_t *input)
     memset(motion_nactive, 0, sizeof motion_nactive);   /* (the patches come with the project) */
     motion_base_valid = 0;
     ui.song_row = 0;
+    sp.open = 0;                                        /* (the section page shows the song loaded no more) */
     for (i = 0; i < G_COUNT; i++)
         if (i != G_SLOT && i != G_LOAD && i != G_SAVE)
             song.g[i] = global_reserved(i) ? 0 : (int16_t)clamp(p->g[i], GP[i].min, GP[i].max);
@@ -1571,27 +1572,27 @@ static int project_used(uint32_t slot)
     return proj_meta[slot % PROJ_SLOTS].used;
 }
 
-/* Main loop only: no flash access or copies when the ISR changes rows. */
-static uint32_t chain_prepare_from(uint32_t start)
+/* Main loop only: no flash access or copies when the ISR changes rows. solo: the section page's PLAY, start's section
+ * again and again. Every track starts its pattern at a section: nothing to seek into. */
+static uint32_t chain_prepare_solo(uint32_t start, uint32_t solo)
 {
     if (transport_busy()) return 2;
     if (!chain_valid(&chain_config) || !chain_config.count || start >= chain_config.count) return 1;
     for (uint32_t i = 0; i < chain_config.count; i++)
-        for (uint32_t k = 0; k < NTRK; k++) if (chain_patterns[i][k] > CHAIN_HOLD || (chain_patterns[i][k] == CHAIN_HOLD && chain_bank(i, k) >= NPAT)) return 1;
+        for (uint32_t k = 0; k < NTRK; k++) if (chain_patterns[i][k] > CHAIN_REST) return 1;
     uint32_t f = motion_guard();
     if (transport_busy()) { motion_unguard(f); return 2; }
     if (!song_sound_prepare()) { motion_unguard(f); return 67; }
     for (uint32_t k = 0; k < NTRK; k++) { pattern_commit(&trk[k]); trk[k].pattern_next = 0xff; }
     chain.config = chain_config;
     chain.start = (uint8_t)start;
-    for (uint32_t k = 0; k < NTRK; k++) {
-        chain.seek_samples[k] = 0;
-        for (uint32_t row = chain_origin(start, k); row < start; row++) chain.seek_samples[k] += chain_row_samples(row);
-    }
+    chain.solo = (uint8_t)(solo != 0);
+    for (uint32_t k = 0; k < NTRK; k++) chain.seek_samples[k] = 0;
     RING_PUBLISH(); chain.armed = 1; transport_req = 1;
     motion_unguard(f);
     return 0;
 }
+static uint32_t chain_prepare_from(uint32_t start) { return chain_prepare_solo(start, 0); }
 
 static uint32_t chain_prepare(void) { return chain_prepare_from(0); }
 

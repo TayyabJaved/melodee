@@ -4,12 +4,13 @@
 #include "ui_test.c"
 #include <assert.h>
 
-static void setup(uint32_t count)
+static void setup(uint32_t count)                       /* count columns, each its own section (A, B, ..) */
 {
     ui_power_on(); chain_config.count = (uint8_t)count;
     for (uint32_t r = 0; r < count; r++) {
         chain_config.row[r] = (chain_row_t){0, 1};
         memset(chain_patterns[r], 0, NTRK);
+        chain_config.sect[r] = (uint8_t)r;
     }
     for (uint32_t k = 0; k < NPART; k++) {
         trk[k].p[P_SLEN] = 1;
@@ -18,10 +19,11 @@ static void setup(uint32_t count)
     }
     go_page(GR_SONG); ui.song_row = 0; frame();
 }
-static uint32_t choose(uint32_t row, uint32_t engine, uint32_t preset)
+static uint32_t choose(uint32_t row, uint32_t engine, uint32_t preset)   /* SONG: OCT+ the column's section page, its sheet */
 {
-    ui.song_row = (uint8_t)row;
-    press(B_OCTUP); sheet_do("Set preset");
+    sect_close(); ui.song_row = (uint8_t)row;
+    press(B_OCTUP); assert(sect_on() && sp.row == row);
+    sheet_do("Set preset");
     assert(song_picker.active && cur_page()->graph == GR_BROWSE);
     engine_load_of(TSEL, engine, preset);
     press(B_OCTUP);
@@ -65,15 +67,17 @@ static void playback(void)
     events_block(tick); assert(!chain.running);
     assert(!chain_prepare_from(1)); transport_req = 2; events_block(1);
     assert(!chain.armed && !chain.running && TSEL->eng_req == engine);
-    chain_patterns[1][0] = CHAIN_HOLD; chain_config.row[1].slot = CHAIN_HOLD;
+    song_column_put(2, 1, 0);                           /* (column 3 plays B too: B's sound there) */
     assert(!chain_prepare_from(0)); events_block(1); events_block(tick);
     assert(chain.row == 1 && TSEL->eng_req == ENGI_PROPHET && TSEL->seq_idx == 0);
+    events_block(tick);
+    assert(chain.row == 2 && TSEL->eng_req == ENGI_PROPHET && TSEL->seq_idx == 0);
     seq_stop(); assert(TSEL->eng_req == engine && !memcmp(TSEL->p, base, sizeof base));
     chain_config.rsv[CHAIN_LOOP] = 1;
     assert(!chain_prepare_from(1)); events_block(1); events_block(16u * tick); events_block(tick);
     assert(chain.running && !chain.row && TSEL->eng_req == engine);
     seq_stop();
-    puts("Song presets: direct start, section restore, continuations, cancellation, loop and STOP passed");
+    puts("Song presets: direct start, section restore, a section placed again, cancellation, loop and STOP passed");
 }
 static void native_and_persistence(void)
 {
@@ -105,16 +109,20 @@ static void native_and_persistence(void)
 static void arrangement_edits(void)
 {
     setup(4); uint32_t a = choose(0, ENGI_CZ, 2), b = choose(1, ENGI_FM6, 2);
-    ui.song_row = 0; song_insert(1); assert(chain_config.sound[1][0] == a && chain_config.sound[2][0] == b);
+    sect_close(); ui.song_row = 0; song_insert(0);      /* (Duplicate: A again after it) */
+    assert(chain_config.count == 5 && chain_config.sect[1] == 0 && chain_config.sound[1][0] == a && chain_config.sound[2][0] == b);
+    uint32_t c = choose(1, ENGI_PROPHET, 4);            /* (A's sound: both its columns) */
+    assert(chain_config.sound[0][0] == c && chain_config.sound[1][0] == c);
+    song_edit_history(0); assert(chain_config.sound[0][0] == a && chain_config.sound[1][0] == a);
     song_edit_history(0); assert(chain_config.count == 4 && chain_config.sound[1][0] == b);
-    ui.song_row = 0; song_cell_copy(); ui.song_row = 3; song.sel = 1; song_apply_destination();
-    /* Occupied notes must be cleared before copying a block. */
-    chain_patterns[3][1] = CHAIN_REST; song_edit_sync(); ui.song_row = 0; song.sel = 0;
-    song_cell_copy(); ui.song_row = 3; song.sel = 1; song_apply_destination();
-    assert(chain_config.sound[3][1] == a && chain_config.sound[0][0] == a);
-    song.sel = 0; ui.song_row = 0; song_rows_remove(0,1);
-    assert(chain_config.sound[0][0] == b && chain_config.sound[2][1] == a && !chain_config.sound[3][1]);
-    puts("Song presets: section duplication, undo, cell copy and deletion passed");
+    sect_close(); ui.song_row = 0; song_insert(1);      /* (Copy as new section: a new letter, A's sound with it) */
+    assert(chain_config.count == 5 && chain_config.sect[1] == 4 && chain_config.sound[1][0] == a);
+    choose(1, ENGI_PROPHET, 5); assert(chain_config.sound[0][0] == a);   /* (the copy changes alone) */
+    sect_close(); ui.song_row = 0; song_sections_copy(); ui.song_row = 3; song_apply_destination();
+    assert(chain_config.count == 6 && chain_config.sect[3] == 0 && chain_config.sound[3][0] == a);
+    ui.song_row = 0; song_rows_remove(0,1);
+    assert(chain_config.sound[2][0] == a && chain_config.sect[2] == 0 && chain_config.count == 5);
+    puts("Song presets: duplication, a section's columns together, copy as new, column copy, undo and deletion passed");
 }
 static void automation_and_failures(void)
 {
@@ -140,43 +148,33 @@ static void automation_and_failures(void)
 }
 static void whole_pattern_sound(void)
 {
-    setup(6); track_t *t = &trk[1];
+    setup(3); track_t *t = &trk[1];
     trk[0].p[P_SLEN] = 16; pattern_commit(&trk[0]);
     t->p[P_SLEN] = 64;
     for (uint32_t j = 1; j < 64; j++) t->step[j] = (step_t){{0}, 0, ST_TIE};
     pattern_commit(t);
-    for (uint32_t r = 1; r < 4; r++) chain_patterns[r][1] = CHAIN_HOLD;
-    chain_patterns[5][1] = CHAIN_REST;
+    chain_patterns[1][1] = CHAIN_REST;                  /* (B: track 2 rests) */
+    song_column_put(2, 0, 0);                           /* (A, B, A) */
     song.sel = 1; uint8_t base = t->eng_req;
-    uint32_t id = choose(2, ENGI_PROPHET, 13); /* select in the middle of the 64-step occurrence */
-    for (uint32_t r = 0; r < 4; r++) assert(chain_config.sound[r][1] == id);
-    assert(!chain_config.sound[4][1]); /* another occurrence of the same note pattern stays independent */
+    uint32_t id = choose(0, ENGI_PROPHET, 13);
+    assert(chain_config.sound[0][1] == id && chain_config.sound[2][1] == id && !chain_config.sound[1][1]);
     uint32_t step = seq_div_samples(t->p[P_SDIV]);
     assert(!chain_prepare_from(0)); events_block(1);
-    for (uint32_t r = 0; r < 4; r++) {
-        assert(chain.row == r && t->eng_req == ENGI_PROPHET && t->seq_idx == r * 16u && t->seq_n == 1);
-        for (uint32_t j = 0; j < 16; j++) events_block(step);
+    for (uint32_t j = 0; j < 64; j++) {                 /* A: AUTO, its longest pattern (64 steps), one note held */
+        assert(chain.row == 0 && t->eng_req == ENGI_PROPHET && t->seq_idx == j && t->seq_n == 1);
+        events_block(step);
     }
-    assert(chain.row == 4 && t->eng_req == base); seq_stop();
-    assert(!chain_prepare_from(2)); events_block(1);
-    assert(t->eng_req == ENGI_PROPHET && t->seq_idx == 32 && t->seq_n == 1); seq_stop();
-    ui.song_row = 3; song_preset_remove();
-    for (uint32_t r = 0; r < 4; r++) assert(!chain_config.sound[r][1]);
+    assert(chain.row == 1 && t->eng_req == base && !t->seq_n);
+    for (uint32_t j = 0; j < 16; j++) events_block(step);   /* B: track 1's 16 steps, track 2 resting */
+    assert(chain.row == 2 && t->eng_req == ENGI_PROPHET && t->seq_idx == 0 && t->seq_n == 1);   /* A again: from its top */
+    seq_stop();
+    sect_close(); ui.song_row = 2; song_preset_remove();
+    assert(!chain_config.sound[0][1] && !chain_config.sound[2][1]);
     song_edit_history(0);
-    for (uint32_t r = 0; r < 4; r++) assert(chain_config.sound[r][1] == id);
-    chain_patterns[4][1] = CHAIN_REST; song_edit_sync(); ui.song_row = 1;
-    song_block_resize(1); assert(chain_config.sound[4][1] == id);
-    song_block_resize(-3);
-    for (uint32_t r = 2; r < 5; r++) assert(!chain_config.sound[r][1]);
-    song_block_resize(2);
-    for (uint32_t r = 0; r < 4; r++) assert(chain_config.sound[r][1] == id);
-    /* Older saved assignments only named the first section: inherit through HOLD. */
-    for (uint32_t r = 1; r < 4; r++) chain_config.sound[r][1] = 0;
+    assert(chain_config.sound[0][1] == id && chain_config.sound[2][1] == id);
     assert(!project_save(0)); project_load(0); t = &trk[1];
-    assert(!chain_prepare_from(0)); events_block(1);
-    for (uint32_t r = 0; r < 4; r++) { assert(t->eng_req == ENGI_PROPHET); for (uint32_t j = 0; j < 16; j++) events_block(step); }
-    assert(t->eng_req == base); seq_stop();
-    puts("Song presets: all 64 steps, continued notes, middle selection/start, independent occurrences, resize, undo and legacy inheritance passed");
+    assert(chain_config.sound[0][1] && chain_config.sound[0][1] == chain_config.sound[2][1] && chain_config.sect[2] == 0);
+    puts("Song presets: all 64 steps, a section's every column, rests, restart, removal, undo and persistence passed");
 }
 
 static uint32_t choose_pattern(uint32_t bank, uint32_t engine, uint32_t preset)

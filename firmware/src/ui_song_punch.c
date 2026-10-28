@@ -36,15 +36,11 @@ static void song_punch_input(uint32_t notes, uint32_t pressed, uint32_t oct, int
     if (ui.home || cur_page()->graph != GR_SONG) { pop_close(); return; }
     if (pressed & (1u << panel.btn[B_PLAY])) {
         if (song.playing || seq_counting() || chain_busy()) transport_req = 2;
+        else if (sp.open) sect_play();                  /* (from the section page: that section, looping) */
         else chain_play_ui();
     }
     if (oct & 1u) { pop_close(); return; }
-    int32_t delta = panel_enc(EN_SELECT);
-    if (delta) {
-        song_punch.row = (uint8_t)clamp((int32_t)song_punch.row + delta, 0, chain_config.count - 1u);
-        ui.song_row = song_punch.row;
-    }
-    delta = panel_enc(EN_K2);
+    int32_t delta = panel_enc(EN_K2);
     if (delta) song_punch.event = (uint8_t)clamp((int32_t)song_punch.event + delta, 0, CHAIN_FX_EVENTS - 1u);
     if (oct & 2u) song_punch_next();
     chain_fx_t *e = &chain_config.fx[song_punch.row][song_punch.event];
@@ -63,7 +59,7 @@ static void song_punch_input(uint32_t notes, uint32_t pressed, uint32_t oct, int
     if (delta) song_punch_change(2, delta);
 }
 /* Four lanes remain visible even when a different punch is selected. The grid
- * uses the saved conductor steps (also for rests and continuations), like DSP. */
+ * uses the saved conductor steps (track 1's; a rest: a bar's sixteenths), like DSP. */
 static void song_punch_draw(void)
 {
     const chain_fx_t *e = &chain_config.fx[song_punch.row][song_punch.event];
@@ -71,16 +67,16 @@ static void song_punch_draw(void)
     uint32_t style = ux.gen * 977u + ux.pal * 31u;
     uint32_t sig = e->fx + style;
     int32_t play = -1;
-    if (chain.running && chain.row == song_punch.row)
+    if (chain.running && chain.config.sect[chain.row] == chain_config.sect[song_punch.row])
         play = chain_patterns[chain.row][0] >= NPAT ?
-            (int32_t)(chain.rest_pos / seq_div_samples(2u)) : (int32_t)trk[0].seq_idx;
+            (int32_t)((chain.rest_pos / seq_div_samples(2u)) % 16u) : (int32_t)trk[0].seq_idx;
     char b[32];
     draw_head();
     if (ui.force || spv.title != sig) {
         spv.title = sig;
         cv_begin(240, 36, T_BG);
         cv_text_on(8, ty_y(9, TY_LB), TY_LB, e->fx ? "MASTER FX" : "KEYS: CHOOSE FX", T_MID, T_BG);
-        if (e->fx) cv_text_r(232, ty_y(9, TY_LB), TY_LB, "EACH REPEAT", T_MID, T_BG);
+        if (e->fx) cv_text_r(232, ty_y(9, TY_LB), TY_LB, "EACH T1 LOOP", T_MID, T_BG);
         cv_text_on(8, ty_y(26, TY_TX), TY_TX, e->fx ? PUNCH_NAME[e->fx - 1u] : "OFF",
                    e->fx ? punch_color(e->fx - 1u) : T_TEXT, T_BG);
         cv_blit(0, H_HEAD);
@@ -89,7 +85,7 @@ static void song_punch_draw(void)
     if (ui.force || spv.context != sig) {
         spv.context = sig;
         cv_begin(240, 18, T_BG);
-        str_cpy(b, "SECTION ", sizeof b); fmt_int(b + 8, song_punch.row + 1u);
+        str_cpy(b, "SECTION A", sizeof b); b[8] = (char)('A' + chain_config.sect[song_punch.row]);
         cv_text_on(8, ty_y(9, TY_LB), TY_LB, b, T_THEME, T_BG);
         fmt_int(b, steps); str_cpy(b + str_len(b), " STEPS", 7);
         cv_text_r(232, ty_y(9, TY_LB), TY_LB, b, T_MID, T_BG);

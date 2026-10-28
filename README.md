@@ -359,9 +359,9 @@ and patterns; settings represented by multiple patch bytes can use multiple even
   hats, crash and ride use metallic oscillator/noise approximations rather than samples. EDIT sets
   each drum's tuning, decay, tone, attack/snappy and level; a recorded hit can keep its own pitch
   and length.
-- **Finish the song on the box:** Capture writes the last bars you played, Jam logs pattern changes,
-  REC held on SONG turns that jam into an arrangement, and projects save themselves after five idle
-  seconds. SONG's four knobs select section, track, pattern and repeats.
+- **Finish the song on the box:** Capture writes the last bars you played, SONG adds a section of what
+  every track plays with one press and launches sections live, and projects save themselves after five idle
+  seconds. A section is defined once and placed as often as you like; its length follows its longest pattern.
 - **SID replaces LOFI:** a Commodore MOS 6581 / 8580 for every note, modelled at the register level after
   [reSID](https://github.com/libsidplayfp/resid): three oscillators on the chip's 16-bit frequency register,
   pulse, triangle, sawtooth, the 23-bit noise register, ring modulation and hard sync, and the combined
@@ -710,21 +710,22 @@ breathes); STOP does them at once. Live edits (a note, a hit, ERASE, a motion la
 track changes at its own loop end. Selecting the active pattern cancels a queued change. STOP applies pending choices.
 
 **SEQ > PATTERNS** (or hold SEQ) shows the selected group’s eight patterns per track: the one playing in the track's colour
-(with how far it has played), the one waiting outlined, the others holding notes raised; under it, the song's rows
-around the one playing (no song yet: the jam's). **KNOB 1–4** pick that group’s patterns; SELECT goes on to SONG.
+(with how far it has played), the one waiting outlined, the others holding notes raised; under it, the song's columns
+as their sections' letters around the one playing. **KNOB 1–4** pick that group’s patterns; SELECT goes on to SONG.
 **OCT+** opens the selected track's pattern's sheet: **Copy to…** frames the place it goes on the track's row (the
 first empty one), any knob moves the frame, OCT+ copies there (over a pattern in use it asks first) and OCT- cancels;
 **Delete pattern** asks, then empties the pattern, its notes and automation (hold EDIT to undo).
 
-On **SEQ > SONG**, KNOB 1 chooses the section, KNOB 2 the track, KNOB 3 that track's pattern and
-KNOB 4 the section's repeats. **Jam to song:** from PLAY on, every loop of track 1 logs all tracks’
-patterns as a section (the same patterns again: a repeat), so switching patterns while you jam writes a song;
-hold **REC** on SONG to turn the logged jam into the arrangement (over a song with sections: confirm).
-PLAY runs the arrangement; sections change all tracks
-at track 1's loop boundary and the final section stops. STOP returns to the patterns selected before
-SONG. Project saves and complete backups include every bank and the arrangement (up to 64 banks). Songs using only
-tracks 1–4 keep the existing FBKK format. Songs with tracks 5–8 use FBKL, storing programmed steps in the same flash
-slots. If a song is too dense to fit, **PROJECT FULL** refuses the save and preserves the previous saved copy. All
+On **SEQ > SONG** the song is columns of **sections** (A–Z, up to 64 columns): a section is a pattern or rest
+per track, a length, and optionally a sound and master punches per track. Each section is defined once; every
+column of it plays the same. **OCT+ on the + column** adds a section of what every track plays now (or places the
+matching section again); KNOB 1 picks a column, KNOB 2 which section it plays; **OCT+ on a column** opens its
+section page: KNOB k sets track k's pattern there, SELECT its length (AUTO: the longest pattern), PLAY loops it.
+A section plays for its length: shorter patterns loop, longer ones are cut, every track restarts at each column.
+**REC** launches the picked section live: every track switches together on the next bar, then at the end of the
+launched section. PLAY runs the arrangement and the final column stops. STOP returns to the patterns selected
+before SONG. Project saves and complete backups include every bank and the arrangement: FBKP, its song block and the
+sections' SEC1 block (older firmware refuses a record with SEC1; older records load, their rows made into sections). If a song is too dense to fit, **PROJECT FULL** refuses the save and preserves the previous saved copy. All
 banks can be filled in working memory; a fully dense eight-track song exceeds a saved project’s capacity.
 
 ### Note editing

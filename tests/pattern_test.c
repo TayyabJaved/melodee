@@ -107,7 +107,8 @@ static int arranged_chords(void)
         chain_patterns[0][k] = (uint8_t)(1u - (k & 1u));
         chain_patterns[1][k] = (uint8_t)(k & 1u);
     }
-    chain_config.count = 2; chain_config.row[0] = (chain_row_t){1,2}; chain_config.row[1] = (chain_row_t){0,1};
+    chain_config.count = 2; chain_config.row[0] = (chain_row_t){1,1}; chain_config.row[1] = (chain_row_t){0,1};
+    chain_config.len[0] = 4; chain_config.sect[1] = 1;   /* (A: four sixteenths, its 2-step banks twice; B: AUTO) */
     ok &= !chain_prepare(); events_block(32);
     for (uint32_t k = 0; k < NPART; k++) ok &= trk[k].pattern == chain_patterns[0][k] && trk[k].seq_n == 4 &&
         trk[k].seq_notes[0] == 48+k+chain_patterns[0][k];
@@ -115,11 +116,11 @@ static int arranged_chords(void)
     bad += check("SONG protects its bank selections and contents while running", pattern_request(TSEL, 7) && pattern_copy(TSEL, 0, 7));
     uint32_t period = div_samples(trk[0].p[P_SDIV]);
     events_block(period); events_block(period);
-    bad += check("SONG repeats the first row without changing its bank assignments", chain.running && chain.row == 0 && chain.remaining == 1 && trk[0].pattern == 1);
+    bad += check("SONG loops the first section's banks inside its length without changing them", chain.running && chain.row == 0 && trk[0].pattern == 1);
     events_block(period); events_block(period); ok = chain.running && chain.row == 1;
     for (uint32_t k = 0; k < NPART; k++) ok &= trk[k].pattern == chain_patterns[1][k] && trk[k].seq_n == 4 &&
         trk[k].seq_notes[0] == 48+k+chain_patterns[1][k];
-    bad += check("SONG changes all four banks together at track one's loop boundary", ok);
+    bad += check("SONG changes all four banks together at the section's length", ok);
     events_block(period); events_block(period); ok = !song.playing && !chain.running;
     for (uint32_t k = 0; k < NPART; k++) ok &= !trk[k].pattern && !trk[k].seq_n;
     bad += check("SONG completion restores original banks and releases all sequence voices", ok);

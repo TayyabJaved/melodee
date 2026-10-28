@@ -14,7 +14,8 @@ gives the code's values (marked *code*).
 **Can be built live:** engines and presets, every track parameter, every global parameter (BPM, swing, the shared
 FX rack), the native FM6 / CZ-1 / Prophet patches, all 64 steps of every pattern (notes, chords, drum hits, accents,
 slides, ties, velocity, chance, chord-sequencer entries), which of the 16 patterns plays, each pattern's LEN / DIV /
-SWING / GATE, the song (up to 64 sections, rests and continuations), knob recordings (motion), mixing, saving to
+SWING / GATE, the song (up to 64 columns of rests and patterns, as rows the device turns into sections), knob
+recordings (motion), mixing, saving to
 slots 1–4.
 
 **Cannot:** the generators (ARP > GEN), SHAPE's steps, timed (unquantized) recorded notes, the song's punch FX lane
@@ -73,7 +74,8 @@ slots 5–32, plain PLAY / STOP outside a song.
 
 | What | Status | How |
 | --- | --- | --- |
-| Sections: patterns of tracks 1–4 and repeats | ✅ write | `BANK_SONG` (74) op 1: count 0–64, then per section T1..T4 bank and repeat 1–16. *code*: bank 16 = REST, 17 = continue the section before (not at row 0, not after a REST) |
+| Sections: patterns of tracks 1–4 and repeats | ⚠️ partly | `BANK_SONG` (74) op 1: count 0–64, then per row T1..T4 bank and repeat 1–16. *code*: bank 16 = REST, 17 = continue the section before (not at row 0, not after a REST). Since sections (2026-10-28) the device converts the rows: identical rows share a letter (26 at most), a row's length is track 1's bank × its repeat (AUTO when that is its longest bank), a continuation gives its column the block's bank (it restarts). Replies report repeat 1 |
+| Section letters, set lengths (the section page) | ❌ | not on the wire: an op 1 replaces them with converted ones |
 | Start / stop the song | ✅ write | `BANK_SONG` op 2 [start row], op 3 |
 | Loop the song | ✅ write | `BANK_SONG` op 4, 0/1 |
 | Song columns of MIDI tracks 5–8 | ❌ | only four columns on the wire |
@@ -159,7 +161,8 @@ as a plain note.
    steps with `TRACK_STEP` (rests for the unused ones). Send all 12 step bytes: a shorter write keeps the step's old
    drum hits and chance.
 6. `MOTION` events if any.
-7. `BANK_SONG` op 1 with the sections; op 2 to listen.
+7. `BANK_SONG` op 1 with the sections (a row a column; give each the repeat that makes its length: track 1's
+   bank × repeat; rows with the same banks become one section); op 2 to listen.
 8. Select the pattern each track should start on, then `PROJECT` save to a slot 1–4. Name it on the device.
 
 Writes are fast but not instant: send the next request after the reply, not before. A full song (4 tracks × 16
@@ -172,5 +175,5 @@ Each of these is a small firmware addition, if the live route becomes the main o
 - A generator command (get / set a track's `gn_save` bytes) and a SHAPE command (mask, STEPS, DIR).
 - `PROJECT` slots 0–31 and a name argument.
 - Plain transport (play / stop) without the clock set to USB.
-- Song columns for tracks 5–8 and the punch FX lane.
+- Song columns for tracks 5–8, the punch FX lane, and the sections themselves (each column's letter and length).
 - A recorded-notes read / write, if AI-written unquantized parts are wanted.

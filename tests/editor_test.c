@@ -413,7 +413,9 @@ static int bank_protocol(void)
     bad += check("PATTERN rejects a MIDI-only track's bank 9 and reports its 8 banks", request(ED_PATTERN,m,3)==12 && host_wire[7] && !trk[NPART].pattern && host_wire[10]==NPAT_MIDI);
     a[2]=7; request(ED_PATTERN,a,3);
     uint8_t row[] = {1,1,0,2,4,7,3};
-    bad += check("bank SONG independently assigns four track banks", request(ED_BANK_SONG,row,sizeof row)==18 && !host_wire[6] && chain_patterns[0][3]==7 && chain_config.row[0].repeat==3);
+    bad += check("bank SONG independently assigns four track banks", request(ED_BANK_SONG,row,sizeof row)==18 && !host_wire[6] && chain_patterns[0][3]==7);
+    bad += check("  a row's repeats become its section's length (3 x track 1's bank)", chain_config.row[0].repeat==1 &&
+                 chain_config.len[0]*6u==3u*sect_pattern_u(0,0) && host_wire[15]==1);
     row[4]=CHAIN_HOLD+1u;
     bad += check("malformed bank SONG leaves the arrangement unchanged", request(ED_BANK_SONG,row,sizeof row)==18 && host_wire[6]==1 && chain_patterns[0][2]==4);
     uint8_t long_song[2u + CHAIN_ROWS * 5u] = {1, CHAIN_ROWS};

@@ -17,9 +17,39 @@ calibrate itself. Earlier 1.6 features remain included; see the
   knobs count to 16 (or 8) as well.
 - SONG sections can use patterns 9–16 on the synth tracks.
 - A project can hold what its save can: an edit that would not fit is refused
-  with **PATTERN STORAGE FULL**, so the music can always be saved. About 1,450
+  with **PATTERN STORAGE FULL**, so the music can always be saved. About 1,425
   set steps fit across all of a project's patterns (a 16-hit drum pattern uses
-  136 bytes of the room).
+  136 bytes of the room; the song's sections keep 196 bytes of it).
+
+## Songs: sections
+
+SONG is rebuilt around **sections**: a section (A–Z) is what every track plays
+in one part of the song, and the song places sections in up to 64 columns.
+
+- A section has **one definition**: every A in the song is the same A. Change its
+  patterns, length, sounds or punches on the **section page** (OCT+ on a column)
+  and every A changes. **Copy as new section** makes a variation.
+- Sections are added on purpose: **OCT+ on the + column** adds a section of what
+  every track plays now, or places the matching section again. KNOB 2 picks which
+  section a column plays. The **jam log and Take jam are removed**.
+- A section's **length** is in bars and beats. **AUTO** (the default) follows its
+  longest pattern; SELECT on the section page sets it a beat at a time. Shorter
+  patterns loop inside it, longer ones are cut, and every track starts its pattern
+  at every column. **Repeats and blocks held across sections are removed**;
+  track 1 no longer sets a section's length.
+- The section page shows PATTERNS' rows with the section's pattern on each track,
+  and a lane per track showing how it loops (and where it is cut) in the length.
+  **PLAY there loops just that section** (LOOPING A) while you change it.
+- **Live launch:** REC on SONG switches every track to the picked section
+  together: at once when stopped, on the next bar while patterns play, then at the
+  end of the launched section (B NEXT). Changing a track by hand afterwards shows
+  A CHANGED.
+- Sounds and master punches belong to the section. Punch steps follow track 1's
+  pattern and repeat with each loop of it.
+- Songs from earlier firmware **load as sections**: identical rows share a letter,
+  repeats become lengths, held blocks now restart at each column (SONG BLOCKS
+  RESTART), and a song of more than 26 different rows keeps its first 26
+  sections (SONG CUT: 26 SECTIONS). The web editor's song rows convert the same way.
 
 ## Projects: one shared storage pool
 
@@ -62,6 +92,8 @@ calibrate itself. Earlier 1.6 features remain included; see the
   their sectors. Projects of every earlier format still load here, songs included;
   patterns 9–16 start empty. A dense older project that does not fit the new
   format is saved in its earlier format while patterns 9–16 stay unused.
+- Projects with a song save its sections (an SEC1 block) and are refused by
+  firmware before sections, including earlier builds of this candidate.
 - Backups now list 57 objects (32 projects). Older archives restore; archives from
   this candidate are refused by older firmware before anything is written.
 - The resource region must be written after updating; returning to stock firmware
@@ -69,7 +101,8 @@ calibrate itself. Earlier 1.6 features remain included; see the
 - Audio working memory is **92.4 KB** (was 114.3 KB): every stored pattern keeps
   room to be completely full in RAM. Very heavy setups may now find less room.
 - The web editor's pattern view still shows eight patterns; its project command
-  still addresses slots 1–4.
+  still addresses slots 1–4. Its song view still edits rows with repeats; they are
+  converted to sections, and section letters and set lengths are not shown there.
 
 ## Validation and downloads
 
@@ -77,7 +110,8 @@ The release uses the reviewed
 [`zvenson/fm1-build` workflow at `v1`](https://github.com/zvenson/fm1-build/tree/v1).
 Host/web tests block publication. Physical validation is pending for the shared
 storage pool (power cuts, flash latency), the resource region install, 16-pattern
-editing and playback, and the radio's self-calibration on more units.
+editing and playback, the song sections (section timing, live launch and the
+section page's audition), and the radio's self-calibration on more units.
 
 Downloads include dual-core firmware, application binary, the resource file
 (`melodee-1.6.0-rc.5-res.bin`), native recovery archives for Windows x64, macOS

@@ -155,7 +155,8 @@ One way to move on every screen with something to move through (Kerem, 2026-10-1
 | Browser | list (category) | sound | FAV / engine | keep | back (revert) |
 | Settings | value | row | - | open / step | close |
 | PROJECT, USER, STORE | slot | slot | - | the slot's sheet | Stage |
-| SONG | section | track | REST or pattern / selected block length | cell actions / apply destination | cancel, then Stage |
+| SONG | column | the column's section | - | the section page; on "+": add what plays / apply destination | cancel, then Stage |
+| SONG: section page | track 1's pattern (REST below P1) | track 2's | track 3's / 4's (SELECT: length) | the section's sheet | SONG |
 | PATTERNS | track 1's pattern | track 2's | track 3's / 4's | the pattern's sheet | the queue, Stage |
 | PATTERNS: Copy to | the place | the place | the place | copy there | leave |
 | MOD | source (its picker) | route | destination / amount | - | Stage |
@@ -166,77 +167,82 @@ One way to move on every screen with something to move through (Kerem, 2026-10-1
 | NAME | place | letter | - | save | cancel |
 | NEW SONG | (as its page) | | | next / create | back |
 
-SONG arrangements hold 64 sections. PLAY starts at step zero of the selected section with its full repeat count,
-continues to the end, and stops; PLAY while running or armed stops/cancels. The add-section column starts at section 1.
-Starting inside a continued block seeks that block to the selected section, including held and recorded notes and motion.
-Moving the cursor during playback does not seek. OCT+ opens the selected cell's sheet (Set rest, Copy to…, Move to…, Add empty section),
-or inserts an empty section at the add column. Copy/move choose a destination on the grid; OCT+ applies, OCT- cancels.
-Copy/move acts on the entire selected block, including its continued sections, and keeps the note pattern shared.
-Moves leave REST at the source. Occupied destinations must be cleared first.
-Hold OCT+ for section insertion, duplication, movement, deletion and the existing song actions. Hold OCT+ and turn
-KNOB 1 (or SELECT) to select consecutive sections; tap OCT+ for phrase copy, move, duplicate and delete. Section copy
-and move insert before the destination; duplication inserts after the source. EDIT held undoes up to eight song
-edits; EDIT + OCT-/OCT+ undo/redo. History is acquired on demand and may be reclaimed for audio.
+SONG sections (this fork, 2026-10-28; mock: `docs/design/mock/song_workflow_proposal.svg`). A song is up to 64
+columns, each naming one of up to 26 sections (A–Z). A section is one definition: a pattern or REST per track, a
+length, a sound per track and up to four master punches; every column of it holds the same values (song_chain.c
+`sect_sync`, data in `chain_config_t.sect` / `.len`), so editing A edits every A. Length is in sixteenths, set a beat
+at a time; 0 is AUTO, the longest pattern of the tracks in use (all resting: one bar), following pattern edits until
+a length is set. A shorter pattern loops inside the section; a longer one is cut at its end. Every track restarts
+its pattern at every column, also with the same pattern: nothing is held across columns, and there are no repeats.
+Sections are made on purpose: OCT+ on the "+" column adds one of what every track plays now; patterns matching an
+existing section (the tracks in use) place it again ("PLACED A"), otherwise the next free letter ("ADDED B"; none:
+"26 SECTIONS IN USE"). KNOB 2 moves a column to the next or previous letter in use. Delete section removes the
+column only; a letter is free again when its last column goes. Duplicate section places the same section after
+the column; Copy as new section places a new letter with the same contents (on the section page: then edits it).
+Range copy/move/duplicate/delete (OCT+ held + KNOB 1) keep the columns' letters.
+PLAY starts at step zero of the picked column and stops at the end; PLAY on "+" starts at the first column.
+Moving the cursor during playback does not seek. The SONG card strip shows each column's letter and length
+("4 bars", briefly "3:2" for bars:beats); the footer the picked column's section, length (AUTO), its use count
+and the song's progress. The header shows the song's length in minutes:seconds.
+The section page (OCT+ on a column) draws PATTERNS' rows with the section's pattern filled (a rest: REST across the
+cells), the length on top (AUTO chip), and a lane per track under the rows: the first loop bright, later loops
+lighter, a REC-coloured edge where the section cuts a pattern, a dotted line for a rest. KNOB k sets track k's
+pattern in the section, SELECT the length (below one beat: AUTO), PLAY loops the section alone (`chain.solo`; header
+LOOPING A; pattern and length edits apply from the next pass), OCT+ its sheet (Length, Set/Remove preset for the
+selected track, Punch FX, Copy as new section), FX its punches, OCT- back to SONG.
+Live launch: REC on SONG switches every track to the picked column's section together (seq.c `live_tick`): stopped,
+at once; patterns playing without the song, on the next bar, then at the end of the launched section. Patterns and
+rests only. The shared header shows "B NEXT" while queued and "A CHANGED" once a track is changed by hand (both on
+every page, for as long as the state lasts); STOP ends it. While the song plays REC says STOP SONG TO LAUNCH.
 Rests display `--` and suppress sequence notes, recorded notes and motion while allowing releases and FX tails.
-Pattern starts on track 1 retain the existing section timing; a rest or continuation on track 1 uses one straight
-four-beat bar per retained section repeat. Growing/trimming a block therefore preserves following section times.
-The ruler above the blocks shows elapsed minutes:seconds; the footer shows the section position and selected block length.
-KNOB 4 grows/shrinks that block into following sections on its own track. Continued sections do not restart notes,
-recorded playback or motion. Shrinking leaves rests; extension appends empty sections if needed, and stops at an
-occupied block. The underlying note pattern stays unchanged. Section timing/repeats from existing projects are retained. Persistent destination/range status stays
-in the shared header until applied/cancelled or leaving SONG. Transport remains on PLAY.
+Loading an older record (no SEC1) converts its rows (song_chain.c `song_sections_normalize`): a row's length is its
+old one, track 1's pattern (resting or held: a bar) times its repeats, AUTO where that equals its longest pattern;
+held cells get their block's pattern and sound (they now restart: header SONG BLOCKS RESTART); identical rows share
+a letter; past 26 sections the song ends (SONG CUT: 26 SECTIONS). The web editor's row commands convert the same way.
+Persistent destination/range status stays in the shared header until applied/cancelled or leaving SONG.
 
-Loop song is available in the tapped and held OCT+ sheets and is saved per project (default Off). Set it while
-stopped. A looping song returns from its final section to section 1 with the residual sample phase preserved,
-even if PLAY began at a later cursor section. PLAY still stops and restores the original patterns. The shared
+Loop song is available in the held OCT+ sheet and is saved per project (default Off). Set it while
+stopped. A looping song returns from its final column to the first with the residual sample phase preserved,
+even if PLAY began at a later column. PLAY still stops and restores the original patterns. The shared
 header shows LOOP on SONG while enabled, and SONG LOOP during playback on every page. The web editor exposes
 the same stopped-only setting when bank capability version 4 is available.
 
-SONG block presets: while stopped, select a pattern block and track, then OCT+ > Set preset.
-The normal browser auditions that track; OCT+ saves an independent sound copy across the
-whole selected block and returns to SONG, OCT- cancels. Selecting any continued section
-edits the same block. Navigation away also restores the normal track sound.
-Remove preset clears the whole block. The assignment includes native FM6, CZ, Prophet
-and drum data; overwriting a library preset does not change it. Other occurrences of the
-same note pattern retain their own sounds. A 64-step block spanning four 16-step sections
-keeps its sound through all four; unassigned blocks and STOP restore the normal track sound.
-Growing a block extends its sound assignment; trimming clears it from the removed sections.
+Section presets: on the section page select a track, then OCT+ > Set preset. The normal browser auditions that
+track; OCT+ saves an independent sound copy for it in the section (every column) and returns to the section page,
+OCT- cancels. Navigation away also restores the normal track sound. Remove preset clears it. The assignment includes
+native FM6, CZ, Prophet and drum data; overwriting a library preset does not change it. Other sections using the same
+note pattern retain their own sounds; unassigned sections and STOP restore the normal track sound.
 Track mix, FX routing, scale, arp, notes, timing and motion lanes stay track-owned.
-Changing between block sounds releases the old sequence notes; continued sections of a
-block retain held notes and automation without reloading the sound at each section edge.
-Section and cell copy/move, section duplication/deletion, project backups and song undo include
-the sound assignments. Copies share an immutable song snapshot; replacing one cell leaves
-other cells unchanged. Up to 64 distinct snapshots can live in a project/history, subject to
-available edit memory and the existing PROJECT FULL save limit. Snapshots allocate memory on
-demand; playback boundaries do no allocation or library reads. Tracks 5–8 remain MIDI-only.
-The shared header shows SET PRESET through browser selection, then the selected cell's sound
-name on SONG (LOOP and transport statuses retain priority); the cell sheet title also names the assignment.
+Changing between section sounds releases the old sequence notes. Column copy/move/duplicate/deletion, project backups
+and song undo include the sound assignments. Copies share an immutable song snapshot. Up to 64 distinct snapshots can
+live in a project/history, subject to available edit memory and the existing PROJECT FULL save limit. Snapshots
+allocate memory on demand; playback boundaries do no allocation or library reads. Tracks 5–8 remain MIDI-only.
+The shared header shows SET PRESET through browser selection, then the selected track's sound in the section on the
+section page (LOOP and transport statuses retain priority).
 
-TAKE JAM: REC held on SONG (elsewhere REC held captures).
-
-Timed master punches: tap FX on SONG to open the selected section's punches directly; OCT+ > Punch FX also opens it.
-Keys choose an effect silently; KNOB 1 follows the same physical key order. The selected effect is named
-above four lanes, each labelled with its slot and effect name. Each lane shows the section's numbered step grid;
+Timed master punches: tap FX on SONG or the section page (or the section sheet's Punch FX) to open the section's
+punches. Keys choose an effect silently; KNOB 1 follows the same physical key order. The selected effect is named
+above four lanes, each labelled with its slot and effect name. Each lane shows track 1's numbered step grid;
 coloured cells show the applied range and a white outline marks the selected punch. KNOB 2 selects a slot,
 KNOB 3 moves START, and KNOB 4 sets END (the last included step). Both values are one-based step numbers:
 START 5 / END 8 colours steps 5 through 8 directly. No beat fractions or duration subtraction are needed.
-SELECT browses sections, OCT+ selects the next free slot. KNOB 1 has OFF before the first effect; selecting it
-clears only the selected punch and its timing. EDIT also removes that punch, and EDIT held undoes either action.
-OCT- returns to SONG. PLAY auditions from the selected section and stops again; edits remain stopped-only.
+OCT+ selects the next free slot. KNOB 1 has OFF before the first effect; selecting it clears only the selected punch
+and its timing. EDIT also removes that punch, and EDIT held undoes either action. OCT- returns. PLAY auditions (from
+the section page: that section, looping) and stops again; edits remain stopped-only.
 A playhead crosses the lanes while the displayed section plays. Holding FX on SONG retains the existing live
 punch layer. Timing edits redraw only the changed lane and placement cards. Moving a punch retains its duration
 at the section edge. SONG shows vertical effect-coloured spans through the filled part of each pattern block,
-clipped to its exact rounded outline. Repeat ranges repeat within the section; overlapping spans use the same
-latest-start/slot priority as playback. Pattern labels and the selection rim stay in front. Empty, dashed and
-rest cells receive no effect colour. The footer keeps its normal section/length information and progress bar;
+clipped to its exact rounded outline, once per loop of track 1's pattern across the section; overlapping spans use
+the same latest-start/slot priority as playback. Pattern labels and the selection rim stay in front. Empty, dashed
+and rest cells receive no effect colour. The footer keeps its normal section/length information and progress bar;
 effect names and numbered slots remain in the punch editor.
-The first track's pattern defines the step division, swing and section length; rests and continuations use
-16 straight sixteenth-note steps. Timing restarts on every section repeat, including a punch spanning the
-whole section. Overlaps use the latest start, with the later punch slot breaking ties; an earlier punch
-resumes if its duration remains. Events outside a subsequently shortened pattern do not play; their stored
-timing is retained. These are master effects, shared by all tracks, and are local to the song section;
-referencing the same note pattern elsewhere does not copy them. Section copy, move, duplicate, delete and
-song undo include the FX lane. Cell operations change only the selected track's pattern reference.
+Track 1's pattern defines the step division and swing of the punch steps; a resting track 1 uses 16 straight
+sixteenth-note steps per bar. Timing restarts on every loop of track 1's pattern (each bar when it rests), including
+a punch spanning the whole pattern. Overlaps use the latest start, with the later punch slot breaking ties; an
+earlier punch resumes if its duration remains. Events outside a subsequently shortened pattern do not play; their
+stored timing is retained. These are master effects, shared by all tracks, and belong to the section (every column
+of it); referencing the same note pattern elsewhere does not copy them. Column copy, move, duplicate, delete and
+song undo include the FX lane.
 Song punches do not replace the footer or shared header with effect names or FX status indicators. A live FX key overrides
 the lane until released. Buffered song effects warm their history from PLAY and keep the optional 32 KiB
 history until STOP or song end. Filter-only songs require no punch history. Editing remains stopped-only.
@@ -269,6 +275,10 @@ place status cards over knobs, lists, waveforms, or notes.
 - **Right:** the active transport status replaces the page/engine title and optional navigation marks. Priority:
   `ERASING`, then `WAIT LOOP` (waiting for the selected track's loop boundary), then brief action feedback, then
   the normal context. Keep transport, BPM, and REC visible. Use REC colour for recording states.
+- **Song sections** (2026-10-28): `LOOPING A` while the section page loops a section, `B NEXT` while a live launch
+  waits, `A CHANGED` once a track leaves the launched section; each on every page for as long as its state lasts
+  (ui_song.c `song_edit_status`: after SET PRESET; LOOPING before SONG LOOP; the live two, song stopped, before LOOP).
+  A load's conversion (`SONG BLOCKS RESTART`, `SONG CUT: 26 SECTIONS`) is brief feedback, a message.
 - **Master punch:** keep the normal page/transport header during song punches and their wet fades.
   Show effect names in the punch editor; keep the song footer for position and progress.
   The live FX layer retains its own HOLD / LOCK / MEMORY context and names the selected key.

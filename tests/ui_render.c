@@ -509,7 +509,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "home_note", "h
     "stage_long", "stage_3tracks_long", "stage_2tracks_long", "stage_1track_long",
     "ref_stage_held", "ref_stage_released", "ref_stage_cutoff", "ref_stage_drum", "ref_browser", "ref_patterns", "ref_song", "ref_env", "ref_lfo", "ref_edit_osc", "ref_mixer", "ref_notes", "ref_settings", "ref_dialog", "ref_sheet_sound", "ref_sheet_song", "ref_picker_wave", "ref_picker_mode", "ref_sections_p5", "ref_map_p5", "ref_map_fm6", "ref_scl_list", "ref_sheet_project", "ref_sheet_note", "ref_sheet_hit", "ref_motion", "ref_sheet_motion", "ref_mod", "ref_picker_mod", "ref_arp", "ref_pattern", "ref_fmeg", "ref_grid", "ref_scales", "fx_phaser", "fx_width", "fx_formant", "fx_tape", "fx_spit", "fx_room", "fx_chorus", "fx_full", "fx_slot2", "fx_slot3", "fx_rack", "fx_rack_split", "fx_rack_pick", "fx_rack_list", "fx_bus1", "fx_bus2", "fx_bus3", "fx_shared", "fx_shared_split", "fx_shared_sheet", "fx_tone_dark", "fx_tone_thin", "boot_migration", "boot_update", "boot_error", "boot_complete", "boot_wipe_confirm", "boot_wiping", "boot_update_error", "map_drum_kit", "map_drum_hit", "map_drum_category",
     "stage_unused_1track", "stage_unused_3tracks", "mixer_unused_2tracks", "menu_unused_tracks",
-    "fx_midiverb", "fx_mididelay", "fx_midi_rack", "fx_midi_list", "punch_peek", "punch_active", "punch_lock", "punch_memory", "punch_end", "fx_reverb", "fx_pedal_drive", "fx_pedal_crush", "fx_pedal_phaser", "fx_pedal_chorus", "fx_pedal_flanger", "punch_loop", "fx_pedal_fold", "stage_midi", "stage_midi_partial", "mixer_midi", "patterns_midi", "song_midi", "layer_glo_midi", "menu_midi_general", "menu_midi_minilab", "menu_midi_mode", "patterns_preset", "patterns_preset_pending", "song_long", "song_cell", "song_copy", "song_range", "song_loop", "song_punch", "song_punch_active", "song_punch_memory", "song_preset", "song_preset_sheet", "song_preset_browse", "pattern_sound_sheet", "pattern_sound_browse", "scl_humanize", "gen_off", "gen_turing", "gen_euclid", "gen_markov", "gen_atlas", "gen_sheet", "gen_page2", "gen_atlas2", "gen_change", "gen_markov2", "gen_series", "gen_bounce", "gen_fall"};
+    "fx_midiverb", "fx_mididelay", "fx_midi_rack", "fx_midi_list", "punch_peek", "punch_active", "punch_lock", "punch_memory", "punch_end", "fx_reverb", "fx_pedal_drive", "fx_pedal_crush", "fx_pedal_phaser", "fx_pedal_chorus", "fx_pedal_flanger", "punch_loop", "fx_pedal_fold", "stage_midi", "stage_midi_partial", "mixer_midi", "patterns_midi", "song_midi", "layer_glo_midi", "menu_midi_general", "menu_midi_minilab", "menu_midi_mode", "patterns_preset", "patterns_preset_pending", "song_long", "song_section", "song_copy", "song_range", "song_loop", "song_punch", "song_punch_active", "song_punch_memory", "song_preset", "song_preset_sheet", "song_preset_browse", "pattern_sound_sheet", "pattern_sound_browse", "scl_humanize", "gen_off", "gen_turing", "gen_euclid", "gen_markov", "gen_atlas", "gen_sheet", "gen_page2", "gen_atlas2", "gen_change", "gen_markov2", "gen_series", "gen_bounce", "gen_fall"};
 
 /* the scenes of the UI design screens: the state the UI-redesign
  * prototype drew them from (its setup(): two pattern tracks, the drum pattern on track 4, a synthetic scope),
@@ -762,8 +762,10 @@ static void ref_scene(int s)
             chain_config.row[k] = (chain_row_t){SP[k][0], (uint8_t)(k == 1u ? 2u : 1u)};
             memcpy(chain_patterns[k], SP[k], NPART);
         }
+        (void)song_sections_normalize(0);               /* (A B B C: B two loops of track 1's pattern) */
         ui.song_row = 3; go_page(GR_SONG);
         song.playing = 1; chain.running = 1; chain.row = 1; chain.remaining = 1; trk[0].seq_idx = 4;
+        chain.config = chain_config; chain.len = (uint32_t)chain_row_samples(1); chain.rest_pos = chain.len / 4u;
         break;
     }
     case S_REF_ENV: case S_REF_LFO: case S_REF_EDIT_OSC: case S_REF_NOTES:
@@ -943,7 +945,7 @@ static void setup(int s)
         if(s==S_PATGRID_COPY_MIDI){ my_steps(&trk[0]); go_page(GR_PATGRID); ptc_start(); ptc_row(5); ui.ptc_dst=3; }
         if(s==S_SONG_MIDI){
             chain_config.count=2; chain_config.row[0]=(chain_row_t){0,2}; chain_config.row[1]=(chain_row_t){1,4};
-            chain_patterns[1][6]=2; go_page(GR_SONG);
+            chain_patterns[1][6]=2; (void)song_sections_normalize(0); go_page(GR_SONG);
         }
         if(s==S_GLO_MIDI)ui.layer=LAYER_GLO;
         break;
@@ -1007,7 +1009,8 @@ static void setup(int s)
             }
             chain_config.row[r].slot = chain_patterns[r][0];
         }
-        ui.song_row = 62; song.sel = 1; song.g[G_BPM] = 120; jam.n = 0; song.playing = 0; go_page(GR_SONG); song_edit_sync();
+        (void)song_sections_normalize(0);               /* (the held blocks: their patterns in each column) */
+        ui.song_row = 62; song.sel = 1; song.g[G_BPM] = 120; song.playing = 0; go_page(GR_SONG); song_edit_sync();
         if (s == S_SONG_PUNCH || s == S_SONG_PUNCH_ACTIVE || s == S_SONG_PUNCH_MEMORY) {
             chain_config.fx[62][0] = (chain_fx_t){PX_LPF + 1, 0, 4};
             chain_config.fx[62][1] = (chain_fx_t){PX_MONO + 1, 8, 8};
@@ -1023,12 +1026,12 @@ static void setup(int s)
             engine_load_of(TSEL, ENGI_FM6, 5);
             song_sound_t sound; song_sound_capture(&sound, TSEL, "Section pad");
             chain_config.sound[ui.song_row][song.sel] = (uint8_t)song_sound_store(&sound);
-            if (s == S_SONG_PRESET_SHEET) song_cell_sheet_open();
+            if (s == S_SONG_PRESET_SHEET) { sect_open(ui.song_row); sect_sheet_open(); }
             if (s == S_SONG_PRESET_BROWSE) song_preset_open();
             ui.msg_t = 0;
         }
-        if (s == S_SONG_CELL) song_cell_sheet_open();
-        if (s == S_SONG_COPY) { song_cell_copy(); ui.song_row = 63; }
+        if (s == S_SONG_CELL) sect_open(ui.song_row);  /* (the section page) */
+        if (s == S_SONG_COPY) { song_sections_copy(); ui.song_row = 63; }
         if (s == S_SONG_RANGE) { se.range = 1; se.anchor = 59; se.end = 63; }
         if (s == S_SONG_LOOP) { chain_config.rsv[CHAIN_LOOP] = 1; chain_prepare_from(62); events_block(1); ui.msg_t = 0; }
         break;
@@ -1037,7 +1040,8 @@ static void setup(int s)
         song.playing = 0; project_save(0); project_save(1);
         chain_config.count = 3;
         chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4}; chain_config.row[2] = (chain_row_t){2, 1};
-        memset(chain_patterns[1], 1, NPART); memset(chain_patterns[2], 2, NPART); ui.song_row = 1; go_page(GR_SONG); chain_prepare(); events_block(32);
+        memset(chain_patterns[1], 1, NPART); memset(chain_patterns[2], 2, NPART); (void)song_sections_normalize(0);
+        ui.song_row = 1; go_page(GR_SONG); chain_prepare(); events_block(32);
         break;
     case S_NOTES_SLIDE:
     case S_NOTES_MIXED:
@@ -1190,7 +1194,7 @@ static void setup(int s)
     case S_SONG_T2:
         song.ntrk = 2; song.playing = 0; chain_config.count = 2;
         chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4};
-        memset(chain_patterns[1], 1, NPART); ui.song_row = 1; go_page(GR_SONG); break;
+        memset(chain_patterns[1], 1, NPART); (void)song_sections_normalize(0); ui.song_row = 1; go_page(GR_SONG); break;
     case S_GLO_T2: song.ntrk = 2; go_home(); ui.layer = LAYER_GLO; trk[1].p[P_MUTE] = 1; break;
     case S_NEW_ROLES_T1: song.playing = 0; new_open(); nw.on = 2; break;
     case S_STAGE_DRUM:
@@ -1235,9 +1239,10 @@ static void setup(int s)
             chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4};
             chain_config.row[2] = (chain_row_t){0, 1}; chain_config.row[3] = (chain_row_t){2, 16};
             memset(chain_patterns[1], 1, NPART); chain_patterns[1][3] = 0; memset(chain_patterns[3], 2, NPART);
+            (void)song_sections_normalize(0);
             chain.running = 1; chain.row = 1;
-        } else {                                         /* no song: the jam's rows */
-            jam.n = 2; jam.pat[0][0] = 0; jam.rep[0] = 4; jam.pat[1][0] = 1; jam.pat[1][1] = 4; jam.rep[1] = 2;
+        } else {                                         /* a song of two sections, A B */
+            chain_config.count = 2; chain_patterns[1][0] = 1; chain_patterns[1][1] = 4; (void)song_sections_normalize(0);
         }
         go_page(GR_PATGRID);
         if (s >= S_PATGRID_SHEET)                        /* (track 1's pattern 1: something to copy, to delete) */
@@ -1496,7 +1501,7 @@ static void setup(int s)
     case S_SONG_HOME:                            /* the song playing: the disc and its row in the header */
         song.playing = 0; project_save(0); project_save(1);
         chain_config.count = 2;
-        chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4};
+        chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4}; (void)song_sections_normalize(0);
         go_page(GR_SONG); chain_prepare(); events_block(32); go_home(); ui.msg_t = 0;
         break;
     /* the FX layer's map: held alone; REPEAT 1/16 + LPF + a mute playing with the macros turned;
@@ -1585,7 +1590,7 @@ static void setup(int s)
         song.playing = 0; project_save_as(0, "LOFI JAM"); project_save_as(1, "MWMWMWMWMWMW");
         chain_config.count = 3;
         chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 4}; chain_config.row[2] = (chain_row_t){2, 1};
-        ui.song_row = 0; go_page(GR_SONG); ui.msg_t = 0;
+        (void)song_sections_normalize(0); ui.song_row = 0; go_page(GR_SONG); ui.msg_t = 0;
         break;
     case S_ROLL_EMPTY: case S_ROLL_ACID: case S_ROLL_CHORDS: case S_ROLL_TIES: case S_ROLL_LEN32: case S_ROLL_HIGH:
     case S_ROLL_LOW: case S_ROLL_WIDE: case S_ROLL_PLAYING: roll_scene(s); break;
@@ -2369,13 +2374,10 @@ static void song_punch_sweep(const char *out)
         cur_name = "song FX/four overlapping lanes"; draw(-1); lint();
         if (p == UI_GRAY_INDEX) mono_check();
         if (!p) write_ppm(out, face ? "PIXEL" : "NIGHT", "song_punch_four");
-        pop_close(); chain_config.row[62].repeat = 3;
+        pop_close(); chain_config.len[62] = 48;          /* (three bars: the resting bar's punches three times) */
         cur_name = "song FX/repeated vertical spans"; draw(-1); lint();
         if (p == UI_GRAY_INDEX) mono_check();
         if (!p) write_ppm(out, face ? "PIXEL" : "NIGHT", "song_punch_grid");
-        chain_patterns[62][0] = CHAIN_HOLD;
-        cur_name = "song FX/continued vertical spans"; draw(-1); lint();
-        if (p == UI_GRAY_INDEX) mono_check();
         song_punch_open();
         memset(chain_config.fx[62], 0, sizeof chain_config.fx[62]);
         cur_name = "song FX/empty"; draw(-1); lint();

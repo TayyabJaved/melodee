@@ -266,6 +266,43 @@ still opens SHARED; an emptied slot falls back to its own rack. No stored data c
 Docs: README's FX section, `docs/design/README.md` "FX rack", `web/manual/index.html` (its `fx_rack.png` screenshot
 still shows the old title until the manual shots are regenerated).
 
+### Song sections (our mod)
+
+Upstream's SONG arranged rows (a bank per track, a repeat count, blocks held across rows, track 1's loop as the
+clock, a jam log taken with REC held). Ours is columns of **sections** A–Z (mock:
+`docs/design/mock/song_workflow_proposal.svg`; behaviour: the manual's "Patterns, sections and songs" and "Songs",
+`docs/design/README.md` "SONG sections").
+
+- **Data:** upstream's per-row arrays stay the columns (`chain_config`, `chain_patterns`); `chain_config_t` adds
+  `sect[64]` (the column's letter) and `len[64]` (sixteenths, 0 = AUTO). Every column of a letter holds the same
+  patterns, sounds, punches and length: edits go through `sect_sync` (`song_chain.c`), `sect_consistent` checks it.
+  Repeats are always 1, `CHAIN_HOLD` never stays in a loaded song. The sequencer, song sounds and punches still read
+  rows, as upstream does.
+- **Timing** (`song_chain.c`): `chain_tick` counts the section's length (`chain.len`, from `chain_row_samples_of`:
+  the set length, else the longest pattern of the tracks in use; recomputed on a tempo change or `len_dirty`) and
+  `chain_apply` restarts every track at each column. `chain.solo` loops one column (the section page's PLAY,
+  `chain_prepare_solo` in `project.c`). Punch steps stay track 1's, restarting per loop of its pattern (`fx_loop`
+  against `seq_loops[0]`).
+- **Live launch:** `live` (`song_chain.c`), ticked from `seq_advance_part` after `chain_tick`; `live_apply`
+  switches every track at once, `live.carry` starts them at the boundary's sample, `live.rest` silences the
+  section's rests through `chain_rest` until a track switches by hand (`seq.c`). `seq_stop` resets it. Header
+  states come from `song_edit_status` (`ui_song.c`): LOOPING A, B NEXT, A CHANGED.
+- **UI:** `ui_song.c` (rewritten: columns, `song_add_playing`, `song_column_section`, the section page `sp`,
+  `sect_pattern` / `sect_length` / `sect_play`, `song_launch`), `ui_patterns.c` (the cards, `sect_draw`),
+  `ui_popup.c` (SHEET_SONG, SHEET_SECTION), `ui_input.c` (KNOB 1/2, OCT+ open / add, REC launch, SELECT length on
+  the section page), `ui_song_sound.c` and `ui_song_punch.c` (per section, no SELECT browsing), `ui_draw.c` (the
+  SECTION A chip, the delete question).
+- **Storage:** SEC1 (`pattern_store.c`, `BANK_SECT_OFF`): magic, 64 letters, 64 lengths, the 196 bytes before SHP1,
+  written with it in every FBKL-family record; `pattern_room` reserves it. A record without it (upstream's, the
+  dense FBKK) is converted by `song_sections_normalize(0)` after its banks are in (lengths need their timings);
+  with it, `song_sections_normalize(1)` keeps the letters if they still describe the columns. `song_note` tells the
+  UI (`ui_notices`) when held blocks restarted or the song was cut at 26 sections. The editor's BANK_SONG and SONG
+  sets are converted the same way (`editor.c`).
+- **Tests:** `song_mode_test.c` (rewritten: lengths, rests, columns, adding, persistence, older songs),
+  `song_preset_test.c`, `song_punch_test.c`, `ui_test.c` (live launch, the section page, SONG keys),
+  `ui_render.c` (the scenes converted; `song_section` shows the section page), `editor_test.c`,
+  `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c`.
+
 Release packages must come from the attested `zvenson/fm1-build` workflow on a tag; never
 publish a local `--release` build. See [BUILDING.md → Releases](BUILDING.md#releases).
 
@@ -290,26 +327,26 @@ the link and prints the results as `ok` lines; any failure stops the build.
 
 ### Limits
 
-Measured on the standard build of `tj/1.6.0-rc.5` (1.6.0-rc.5 plus our stack, 2026-10-27). The nav build is within
-a few hundred bytes of it.
+Measured on the standard build of `tj/1.6.0-rc.5` (1.6.0-rc.5 plus our stack with the song sections, 2026-10-28).
+The nav build is within a few hundred bytes of it.
 The flash limit is not the 581,564 B app slot: the image must end before the commit-marker sector
 (`tools/fm1pkg_make.py` `BODY_MAX` 0x8C000 after the 3,808 B stub), 577,248 B in all. Earlier versions of this file
 measured against the slot and overstated the room by about 4.3 KB.
 
 | Region | Size | Used | Left | What lives there | When it is exceeded |
 | --- | ---: | ---: | ---: | --- | --- |
-| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 551,792 B | 25,456 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
+| Flash app image | **577,248 B** (body 0x8C000 + stub 0xEE0) | 555,476 B | 21,772 B | code, `const` data, the compressed SRAM images | build fails: "app body overlaps the commit-marker sector" |
 | Low SRAM (`RAMTEXT`) | 32,512 B | 30,728 B | 1,784 B (to the arena) | code that runs while flash is busy, DSP kernels and tables | link fails |
-| **Bank** (`.data` + `.bss`) | 98,304 B | 96,856 B | **1,448 B** (to the arena) | ordinary globals | link fails: "region `RAM' overflowed" |
-| **Pool** region | 357,888 B | `.pool` 133,968 B, resident audio code, CPU1 stacks 4,096 B | arena 97,568 B | `.pool` buffers, audio code, then the audio working arena | build fails if the arena drops under 49,152 B or the pool's headroom under 8,192 B |
+| **Bank** (`.data` + `.bss`) | 98,304 B | 96,776 B | **1,528 B** (to the arena) | ordinary globals | link fails: "region `RAM' overflowed" |
+| **Pool** region | 357,888 B | `.pool` 133,968 B, resident audio code, CPU1 stacks 4,096 B | arena 96,608 B | `.pool` buffers, audio code, then the audio working arena | build fails if the arena drops under 49,152 B or the pool's headroom under 8,192 B |
 | Foreground stack | 12,288 B | 9,608 B deepest path + 2,048 B required margin | **632 B** | the main loop (UI, storage) | build's stack audit fails |
 | Interrupt stack | 6,144 B | 4,500 B (audio 2,972 + BLE 716 + timer 220 + fault 464 + 128) | 1,644 B | interrupts, nested | build's stack audit fails |
 | CPU1 stack | 3,072 B | 1,828 B + 768 B guard and margin | 476 B | the second core's renderer | build's stack audit fails |
 | Retained (`NOINIT`) | 15,664 B | all but 48 B | 48 B (to the arena) | state that survives resets: panel calibration, settings, retained patterns | link fails |
 | Cache RAM | 28,672 B | given to audio after the boot self-test | | | |
 
-- **Bank:** ordinary globals. 1.4 KB are left since 1.6.0-rc.5 (it was 72 B on rc.4); keep our state out of it all
-  the same.
+- **Bank:** ordinary globals. 1.5 KB are left since 1.6.0-rc.5 (it was 72 B on rc.4; the song sections gave back
+  80 B, the jam log's 577 B minus the columns' letters and lengths); keep our state out of it all the same.
 - **Pool:** buffers marked `__attribute__((section(".pool")))`. They are zeroed at boot right after `.bss`
   (`main.c`). The rest of the pool region holds the resident audio code, then the **audio working arena**: engine
   states and effect delay lines, allocated on demand.
@@ -354,7 +391,7 @@ since; re-measure before relying on a number.
 | `recording_next` | 2,048 | recorded notes' order | `recording.c` |
 | `abuf` | 2,048 | audio output buffer | `audio.c` |
 | `FM6_MKI_LOG`, `FM6_MKI_EXP` | 2 × 2,048 | FM6 MARK I tables, filled at boot | generated |
-| `chain`, `chain_config` | 1,600 + 1,412 | the song chain | `song_chain.c` |
+| `chain`, `chain_config` | 1,808 + 1,604 | the song: its columns, their sections (host sizes; the jam log, 577 B, removed) | `song_chain.c` |
 | `bll` | 1,416 | Bluetooth LE link layer | `ble/ble_ll.c` |
 | `midi_voice`, `midi_sel_on` | 1,280 + 1,280 | MIDI-only tracks' voices, held MIDI notes | `core.h`, `midi_control.c` |
 
@@ -375,8 +412,9 @@ since; re-measure before relying on a number.
 | `mb` | 1,720 | BLE MIDI | `midi_ble.c` |
 | `undo_sram` | 1,612 | undo levels | `ui.c` |
 
-**Ours:** `gn` (generators) 736 B and `fm1_nav` (M1/M2, nav builds only) 60 B, both in the pool. See the budget
-below.
+**Ours:** `gn` (generators) 736 B and `fm1_nav` (M1/M2, nav builds only) 60 B, both in the pool; the song sections
+grow `chain` and `chain_config` by 192 B each (a letter and a length per column) and `live` (12 B) is new, while
+upstream's `jam` (577 B) is gone. See the budget below.
 
 To list them again after a build (sizes in hex; `.L_MergedGlobals` entries are the compiler's bundles of small
 variables, overlapping the named ones):
@@ -388,22 +426,26 @@ nm -S -n build/melodee.elf | awk '$1>="01c20000" && $1<"01c77600" && $3 ~ /^[bBd
 
 ### Our footprint and budget
 
-What our stack adds on top of plain upstream (standard build; nav in brackets; 2026-10-27):
+What our stack adds on top of plain upstream (standard build; nav in brackets; 2026-10-28, with the song sections):
 
 | | Upstream 1.6.0-rc.5 | With our stack | Ours | Our budget |
 | --- | ---: | ---: | ---: | ---: |
-| Flash image | 543,112 B | 551,792 B | +8,680 B (+9,252 B) | 20,000 B |
-| Bank | 96,824 B | 96,856 B | +32 B (+48 B) | 64 B |
+| Flash image | 543,112 B | 555,476 B | +12,364 B (+12,952 B) | 20,000 B |
+| Bank | 96,824 B | 96,776 B | −48 B (−32 B) | 64 B |
 | Pool (`.pool`) | 132,868 B | 133,968 B | +1,100 B (+1,164 B) | 4,096 B |
-| Audio arena | 92,448 B | 97,568 B | +5,120 B (+4,768 B) | |
+| Audio arena | 92,448 B | 96,608 B | +4,160 B (+3,872 B) | |
 
 The SID and TRIO removal gives back about 16 KB of upstream's flash and its resident audio code (hence the larger
 arena); our features (generators, the chord sequencer, the pattern tools, SHAPE, the UI changes, M1/M2/M3) take about
-25 KB of flash in all. The BLE fix is one line since upstream merged PR #90 in rc.5.
+25 KB of flash in all, the song sections about 3.4 KB of it (the section page, live launch, converting older songs).
+The BLE fix is one line since upstream merged PR #90 in rc.5.
 
 - **Bank:** what is ours is the far-call pointers `audio_ram.py` generates for our flash-resident audio entries
-  (they must be loaded data), `seqt`'s 2 B (it starts non-zero) and alignment.
-- **Flash** limits new features: 25.4 KB is left (24.9 KB in the nav build) for upstream's growth and ours together.
+  (they must be loaded data), `seqt`'s 2 B (it starts non-zero), the columns' letters and lengths, and alignment;
+  removing upstream's jam log more than pays for them.
+- **Audio arena:** the song sections take 960 B of it: the section clock, live launch and section lengths run in the
+  audio interrupt (`chain_tick`, `live_tick`, `chain_row_samples_of`), so they are resident audio code.
+- **Flash** limits new features: 21.8 KB is left (21.2 KB in the nav build) for upstream's growth and ours together.
   Prefer `static const` tables, short strings and small pictures (`pv_gen` alone is 1.8 KB), and reuse upstream
   helpers instead of copying them.
 - Before this setup, the generators were inlined into the sequencer tick: 6.9 KB of resident audio code, and `gn` in
@@ -476,7 +518,8 @@ work is a stack of commits kept on top of an upstream release tag, in this order
 | 16 | Drum keys are the grid's black keys | a drum track's first eight black keys play its eight lanes everywhere, white keys silent | `eng_drum.c` (`drum_keys`); `tests/mpc_octave_test.c`, `tests/ui_test.c`, `tests/chord_test.c` | never (ours) |
 | 17 | ARP: SHAPE mode, a rhythm of ON / OFF steps | ARP > MODE SHAPE (7): each step ON (the next held note, DIR's order) or OFF (a rest); STEPS and DIR in PROB and ORD's places on ARP 2 (`shape.ctrl`, not those bytes); M3 / OCT− held on the ARP page: the white keys are the steps; stored in `project_t.shape` (10 B a track) and, on flash, in the SHP1 block of FBKP records (FBKL–FBKO as our rc.4 build wrote them) | new `arp_shape.c`; `seq.c` (`arp_step`: the gate, `keyboard_block`), `params.c` (include, MODE name, `page_desc`), `ui.c`, `ui_input.c` (`ui_leds`, `shape_keys`, PRESETS), `ui_name.c` (`keys_mode`), `ui_pages.c` (`pv_arp`), `project.c`, `pattern_store.c`, `web/editor.html` (MODE names) | never (ours) |
 | 18 | FX: SHARED first, then the track's NOTE FX | SHARED (audio) is the first FX page and FX opens it; the track's rack is NOTE FX, its send row "Send" | `params.c` (`PAGES` order, title), `ui.c` (`fx_rack_page`, the FX button), `ui_input.c` (`fx_rack_enter` / `fx_rack_back`), `ui_draw.c`, `ui_pages.c`, `docs/design/README.md`, `web/manual/index.html`; `fx_test.c`, `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` | never (ours) |
-| 19 | DEV.md, plan.md | this file, the plan, task.md, README's sections on our features | `README.md` | never (ours); keep it last |
+| 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1 | `core.h` (`chain_config_t.sect`, `.len`), `song_chain.c` (sections, `song_sections_normalize`, section clock, `chain.solo`, `live_*`), `seq.c` (`live_tick`, no `jam`), `pattern_store.c` (SEC1, `pattern_room`), `project.c` (`chain_prepare_solo`), `editor.c` (rows converted), `tracks.c`, `ui_song.c` (rewritten), `ui_patterns.c` (SONG, the section page), `ui_popup.c`, `ui_input.c`, `ui_song_sound.c`, `ui_song_punch.c`, `ui_draw.c`, `ui.c`; tests `song_mode_test.c`, `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
+| 20 | DEV.md, plan.md | this file, the plan, task.md, README's sections on our features | `README.md` | never (ours); keep it last |
 
 Replayed onto 1.6.0-rc.5 on 2026-10-27 (`tj/1.6.0-rc.5`): PR #90's own commit dropped (upstream merged it), the
 SHAPE commits squashed, the docs commit last again. Conflicts met: `melodee.c` (the version), `project_stream.c`
@@ -499,7 +542,8 @@ its `shape` state (`arp_shape.c`); M1/M2's sit under `#if MELODEE_KEY_NAV`. To l
 
 **Expect conflicts in:** `ui_draw.c` (`draw_head`), `ui.c` (`grid_on`), `ui_input.c`, `ui_sections.c`, `ui_pages.c`
 (`pv_grid`, `pv_arp`), `ui_popup.c`, `seq.c`, `params.c`, `chord.c`, `engines.c`, `voice.c`, `eng_drum.c`,
-`project.c`, `pattern_store.c` and README. **Deleted upstream files** (`eng_sid.c`, `drum_sid.c`, `eng_trio.c`, the
+`project.c`, `pattern_store.c`, the song's files (`song_chain.c`, `ui_song.c`, `ui_patterns.c`, `ui_song_sound.c`,
+`ui_song_punch.c`, `editor.c`, `tracks.c`: see "Song sections") and README. **Deleted upstream files** (`eng_sid.c`, `drum_sid.c`, `eng_trio.c`, the
 SID tests): when upstream changes them, keep them deleted (`git rm`), then `git grep -iw sid` for new references. Upstream tests we changed on purpose (when upstream changes one, keep their change and re-apply ours):
 
 - **UI and navigation:** `tests/ui_test.c` (the FM6 / CZ-1 EDIT cycles, the section tests, the general-engine
@@ -517,6 +561,10 @@ SID tests): when upstream changes them, keep them deleted (`git rm`), then `git 
 - **Our features:** `chord_test.c` (Humanize; the drum track's key is a black key), `seq_edit_test.c` (chord
   entries, their preview), `upreset_test.c` (slot 45), `project_test.c` (shape defaults; the ten-byte snapshot still
   16,456 B), `ble_rf_replay_test.py` (the stored-calibration measurement), `web/test_web.mjs`.
+- **Song sections:** `song_mode_test.c` (rewritten), `song_preset_test.c` and `song_punch_test.c` (per-section
+  sounds and punches, no held blocks), `ui_test.c` (SONG keys, live launch instead of the jam log, `test_chain` on
+  section lengths; `ui_power_on` resets `sp` and `live`), `ui_render.c`, `editor_test.c` (repeats become a length),
+  `project_stream_test.c` (valid sections in its oracles), `pattern_test.c`, `midi_track_test.c` (one-beat sections).
 - **FX pages (SHARED first):** `fx_test.c` (the FX button opens SHARED, OCT− on a rack goes home, NOTE FX titles),
   `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` (the track rack is "NOTE FX").
 
@@ -601,6 +649,13 @@ onto 1.6.0-rc.4, with no conflict shown:
   `_Static_assert` checks its fixed fields end before it), and FBKL–FBKO from our rc.4 build (four tracks too: the
   validator accepts that with the magic). The dense FBKK fallback runs its tail to byte 27,884 and never has it: it
   loads the default shapes. Upstream refuses a record with SHP1 data where it expects zeros.
+- **Song sections:** the song keeps upstream's per-row arrays (`chain_config`, `chain_patterns`) as its columns and
+  adds a section id and a length per column; `sect_sync` keeps every column of a section identical, so the
+  sequencer, song sounds, punches and FBKP's song block read rows as upstream does. Upstream changes to SONG editing
+  (`ui_song.c`), row timing (`chain_tick`: ours counts the section's length, never track 1's loop), `CHAIN_HOLD`,
+  repeats or the jam log (`seq.c`, removed) conflict with ours: replay them as sections, and load their new fields
+  through `song_sections_normalize`. SEC1 sits in the 196 bytes before SHP1 (`BANK_SECT_OFF`, kept clear by
+  `pattern_room`); upstream refuses a record with it, as with SHP1.
 - **Chord sequencer:** entries live in note bytes 1..3 of a one-note step; upstream code that leaves stale bytes
   there must clear them (`step_clear`, `seq_entry_notes`). The DRUM engine is the only general engine left: tests
   that need one use a legacy engine with `MELODEE_LEGACY_EXTRAS`.

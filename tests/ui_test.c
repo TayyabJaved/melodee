@@ -155,6 +155,7 @@ static void ui_power_on(void)
     memset(trk, 0, sizeof trk);trk_voices_bind();
     memset(&song, 0, sizeof song);
     memset(&chain, 0, sizeof chain);
+    memset(&sp, 0, sizeof sp); live_reset();          /* (the section page, a live launch) */
     chain_defaults(&chain_config);
     pattern_init();
     memset(&ui, 0, sizeof ui);
@@ -1040,8 +1041,8 @@ static int test_track_count(void)
     bad += check("  T3, T4 moved down a place: their sound, level and steps", ok);
     bad += check("  their patterns too (old T3's bank 3 is T2's; old T2's gone)", pattern_at(1, 3)->step[6].note[0] == 72 &&
                  pattern_at(1, 3)->step[5].time != ST_NOTE);
-    bad += check("  the song's row: T1 0, then old T3's 2, old T4's 3; the last place 0",
-                 chain_config.count == 1u && chain_config.row[0].repeat == 2u && chain_patterns[0][0] == 0u &&
+    bad += check("  the song's row: T1 0, then old T3's 2, old T4's 3; the last place 0 (its 2 repeats: 2 bars)",
+                 chain_config.count == 1u && chain_config.row[0].repeat == 1u && chain_config.len[0] == 32u && chain_patterns[0][0] == 0u &&
                  chain_patterns[0][1] == 2u && chain_patterns[0][2] == 3u && chain_patterns[0][3] == 0u);
     ok = 1;
     for (i = 0; i < motion.count; i++) {
@@ -2654,10 +2655,14 @@ static int test_popups(void)
         press(B_HOME);
     }
     go_page(GR_SONG); frame();
+    press(B_OCTUP);
+    bad += check("POPUPS: SONG, OCT+ on +: a section of what plays (A)", !pop.on && chain_config.count == 1u &&
+                 !chain_config.sect[0] && ui.song_row == 1u);
+    ui.song_row = 0;
     hold(B_OCTUP);
     bad += check("POPUPS: SONG, OCT+ held: the song's sheet (no play)", pop.on == POP_SHEET && !song.playing);
     press(B_OCTUP);
-    bad += check("POPUPS: Insert section: a row", !pop.on && chain_config.count == 1u);
+    bad += check("POPUPS: Duplicate section: A again", !pop.on && chain_config.count == 2u && !chain_config.sect[1]);
     return bad;
 }
 static int test_song_view(void)
@@ -2667,10 +2672,14 @@ static int test_song_view(void)
     uint32_t i;
     int bad = 0;
     ui_power_on();
+    chain_defaults(&chain_config); chain_config.count = 6;
+    for (i = 0; i < 6u; i++) memcpy(chain_patterns[i], ROWS[i], NTRK);
+    (void)song_sections_normalize(0);
     for (i = 0; i < 6u; i++)
-        got[i] = row_letter(ROWS, i);
+        got[i] = (char)('A' + chain_config.sect[i]);
     got[6] = 0;
-    bad += check("SONG: rows with the same four patterns share a letter (A A B B C A)", str_eq(got, "AABBCA"));
+    bad += check("SONG: older identical rows load as one section (A A B B C A)", str_eq(got, "AABBCA"));
+    chain_defaults(&chain_config);
     TSEL->p[P_SLEN] = 32;
     TSEL->p[P_SDIV] = 2;                              /* 1/16 */
     i = pat_bars(song.sel, TSEL->pattern);
@@ -2703,16 +2712,17 @@ static int test_chain(void)
         memcpy(timing[i], &trk[i].p[P_SLEN], sizeof timing[i]);
         memcpy(sounds[i], trk[i].p, sizeof sounds[i]);
     }
-    chain_config.count = 2;
-    chain_config.row[0] = (chain_row_t){0, 2}; chain_config.row[1] = (chain_row_t){1, 1};
+    chain_config.count = 2;                             /* A: a section of 4 sixteenths (two loops of the 2-step bank) */
+    chain_config.row[0] = (chain_row_t){0, 1}; chain_config.row[1] = (chain_row_t){1, 1};
+    chain_config.sect[0] = 0; chain_config.sect[1] = 1; chain_config.len[0] = 4; chain_config.len[1] = 0;
     memset(chain_patterns[0], 0, NPART); memset(chain_patterns[1], 1, NPART);
     chain_patterns[1][3] = CHAIN_HOLD + 1u;
     bad += check("SONG invalid bank refuses before changing any track", chain_prepare() == 1 && !chain.armed &&
         !memcmp(trk[0].step, before[0], sizeof before[0]));
     chain_patterns[1][3] = 1;
     project_save(2); chain_defaults(&chain_config); pattern_init(); project_load(2);
-    bad += check("SONG bank assignments saved and loaded with all patterns", chain_config.count == 2 &&
-        chain_config.row[0].repeat == 2 && chain_patterns[1][3] == 1);
+    bad += check("SONG sections saved and loaded: letters, lengths and all patterns", chain_config.count == 2 &&
+        chain_config.len[0] == 4 && !chain_config.len[1] && chain_config.sect[1] == 1 && chain_patterns[1][3] == 1);
     song.rec = 3;
     bad += check("SONG prepares while stopped, no starts over a pending start", chain_prepare() == 0 && chain_prepare() == 2);
     events_block(n);
@@ -2721,16 +2731,16 @@ static int test_chain(void)
     period = div_samples((uint32_t)trk[0].p[P_SDIV]);
     events_block(period);
     events_block(period);
-    bad += check("SONG first row repeats without a gap", chain.row == 0 && chain.remaining == 1 && trk[0].seq_idx == 0);
+    bad += check("SONG a shorter pattern loops inside its section without a gap", chain.row == 0 && trk[0].seq_idx == 0);
     events_block(period);
     events_block(period);
-    ok = chain.row == 1 && chain.remaining == 1;
+    ok = chain.row == 1;
     for (i = 0; i < NPART; i++) {
         ok &= trk[i].seq_idx == 0 && trk[i].p[P_SLEN] == 3 && seq_steps(&trk[i])[0].note[0] == 65;
         for (k = 0; k < P_COUNT; k++)
             if (k < P_SLEN || k > P_SGATE) ok &= trk[i].p[k] == sounds[i][k];
     }
-    bad += check("SONG row change: four tracks together, sounds unchanged", ok);
+    bad += check("SONG section change at its length: four tracks together, sounds unchanged", ok);
     open_family(FAM_SEQ);
     for (k = 0; k < NPAGES && cur_page()->scope != SC_STEP; k++) open_family(FAM_SEQ);
     turn(EN_K2, 1); press(B_EDIT); hold(B_REC); hold(B_EDIT);
@@ -2741,13 +2751,14 @@ static int test_chain(void)
     ok = !song.playing && !chain.running && song.rec == 3;
     for (i = 0; i < NPART; i++) ok &= !trk[i].seq_n && !memcmp(trk[i].step, before[i], sizeof before[i]) &&
         !memcmp(&trk[i].p[P_SLEN], timing[i], sizeof timing[i]);
-    bad += check("SONG end: stops and restores editable patterns, timing and record arms", ok);
+    bad += check("SONG end (B: AUTO, its 3-step patterns): stops and restores editable patterns, timing and record arms", ok);
     bad += check("SONG source banks stay unchanged", pattern_at(0, 0)->step[0].note[0] == 60 && pattern_at(0, 1)->step[0].n == 3);
-    chain_config.row[0].repeat = 1;
+    chain_config.len[0] = 0;                            /* (A: AUTO, its 2-step patterns) */
     chain_prepare(); events_block(n);
     trk[0].seq_idx = 1;
     last = step_samples(&trk[0], div_samples((uint32_t)trk[0].p[P_SDIV]), 1);
     trk[0].seq_pos = last - n + 19u;
+    chain.rest_pos = chain.len - n + 19u;
     events_block(n);
     ok = chain.row == 1;
     for (i = 0; i < NPART; i++) ok &= trk[i].seq_pos == 19u && trk[i].seq_idx == 0;
@@ -2762,26 +2773,49 @@ static int test_chain(void)
     open_family(FAM_SEQ);
     for (k = 0; k < NPAGES && cur_page()->graph != GR_SONG; k++) open_family(FAM_SEQ);
     press(B_PLAY);
-    bad += check("SONG page empty PLAY explains how to start", msg_is("ADD A SONG ROW") && !transport_req);
+    bad += check("SONG page empty PLAY explains how to start", msg_is("ADD A SECTION") && !transport_req);
     turn(EN_K3, 1);
-    bad += check("SONG KNOB 3 (pattern) adds the first row with one repeat", chain_config.count == 1 && !chain_config.row[0].slot && chain_config.row[0].repeat == 1);
-    turn(EN_K1, 1); turn(EN_K3, 1); turn(EN_K3, 1);
-    bad += check("SONG KNOB 1 section and KNOB 3 pattern build a chain", chain_config.count == 2 && ui.song_row == 1 &&
-        chain_config.row[1].slot == 1 && chain_config.row[1].repeat == 1);
-    turn(EN_K2, 1);
-    bad += check("SONG KNOB 2 picks the track (2), the song unchanged", song.sel == 1u && chain_config.count == 2);
-    turn(EN_K2, -1);
+    bad += check("SONG KNOB 3 adds nothing", !chain_config.count);
+    press(B_OCTUP);
+    bad += check("SONG OCT+ on +: section A of the patterns playing, AUTO", chain_config.count == 1 && !chain_config.sect[0] &&
+        !chain_config.len[0] && !chain_patterns[0][0] && ui.song_row == 1);
+    pattern_request(TSEL, 1); press(B_OCTUP);
+    bad += check("  other patterns: a new letter (B)", chain_config.count == 2 && chain_config.sect[1] == 1 && chain_patterns[1][0] == 1);
+    pattern_request(TSEL, 0); press(B_OCTUP);
+    bad += check("  A's patterns again: A placed again", chain_config.count == 3 && !chain_config.sect[2]);
+    ui.song_row = 1; turn(EN_K2, 1);
+    bad += check("SONG KNOB 2: the column plays another section (B -> A; B was there only)", chain_config.count == 3 &&
+        !chain_config.sect[1] && !chain_patterns[1][0]);
+    hold(B_EDIT);
+    bad += check("  EDIT held undoes it", chain_config.sect[1] == 1 && chain_patterns[1][0] == 1);
     project_save(0);
     chain_config.count = 1;
-    chain_config.row[0] = (chain_row_t){0, 1};
     ui.song_row = 0;
     fm1_in.buttons |= (1u << panel.btn[B_OCTUP]) | (1u << panel.btn[B_OCTDN]);
     host_pressed |= fm1_in.buttons; frame();
     fm1_in.buttons = 0; frame();
     bad += check("SONG OCT chord does not start playback or leave the page", !transport_req && !ui.home);
     press(B_OCTUP);
-    bad += check("SONG OCT+ opens cell actions without starting transport", pop.on == POP_SHEET && !chain.armed && !transport_req);
-    press(B_OCTDN); press(B_PLAY);
+    bad += check("SONG OCT+ on a column opens its section page without starting transport", sect_on() && sp.row == 0 &&
+        !chain.armed && !transport_req);
+    turn(EN_K1, 1);
+    bad += check("  KNOB 1 there: track 1's pattern in the section", chain_patterns[0][0] == 1);
+    turn(EN_K1, -1); turn(EN_K1, -1);
+    bad += check("  below P1: a rest", chain_patterns[0][0] == CHAIN_REST);
+    turn(EN_K1, 1);
+    turn(EN_SELECT, 3);
+    bad += check("  SELECT: its length a beat a detent (from AUTO: 4 beats, +3)", chain_config.len[0] == 28u);
+    turn(EN_SELECT, -10);
+    bad += check("  turned below a beat: AUTO again", !chain_config.len[0]);
+    press(B_PLAY); events_block(32);
+    bad += check("  PLAY loops the section (the header: LOOPING A)", chain.running && chain.solo && str_eq(song_edit_status(), "LOOPING A"));
+    turn(EN_SELECT, 2);
+    bad += check("  edits while it loops", chain_config.len[0] && chain.config.len[0] == chain_config.len[0]);
+    press(B_PLAY); events_block(32);
+    press(B_OCTDN);
+    bad += check("  OCT- back to SONG", !sect_on() && !ui.home && cur_page()->graph == GR_SONG && !chain.running);
+    chain_config.len[0] = 0;
+    press(B_PLAY);
     bad += check("SONG PLAY starts at the selected section", chain.armed && transport_req == 1);
     project_save(3);
     bad += check("SONG pending start cannot write a project", msg_is("STOP TO SAVE") && !project_used(3));
@@ -2790,9 +2824,9 @@ static int test_chain(void)
     uint32_t old_count = chain_config.count;
     ui.song_row = chain_config.count;
     turn(EN_K4, 30);
-    bad += check("SONG KNOB 4 on the add column does not create a block", chain_config.count == old_count);
-    for (k = chain_config.count; k < CHAIN_ROWS; k++) { turn(EN_K1, 1); turn(EN_K3, 1); }
-    bad += check("SONG append row stays bounded at 64", chain_config.count == CHAIN_ROWS && chain_valid(&chain_config));
+    bad += check("SONG KNOB 4 on the add column does not create a column", chain_config.count == old_count);
+    for (k = chain_config.count; k < CHAIN_ROWS; k++) { ui.song_row = chain_config.count; press(B_OCTUP); }
+    bad += check("SONG adding columns stays bounded at 64", chain_config.count == CHAIN_ROWS && chain_valid(&chain_config));
     go_title("SONG"); hold(B_OCTUP); sheet_do("Clear song");
     bad += check("Clear song (the song's sheet) requires explicit confirmation", ui.confirm == CF_CLEAR_SONG &&
                  chain_config.count == CHAIN_ROWS);
@@ -2816,10 +2850,10 @@ static int test_product_ux(void)
             continue;
         press(B_REC);
         if (PAGES[i].graph == GR_SONG)
-            ok &= song.rec == 0 && !transport_req && msg_is("[SEQ] TO RECORD");
+            ok &= song.rec == 0 && !transport_req && msg_is("ADD A SECTION");
         else ok &= song.rec == 1 && transport_req == 0 && ui.page == i && !ui.home;
     }
-    bad += check("REC stays on every page, SONG stopped asks for pattern recording", ok);
+    bad += check("REC stays on every page; on SONG it launches a section (none yet: says so)", ok);
     ui_power_on(); hold(B_HOME); press(B_REC);
     bad += check("REC in the MENU does nothing (the menu stays, no arm, no transport start)",
                  ui.menu == 1 && song.rec == 0 && !transport_req);
@@ -2842,7 +2876,7 @@ static int test_product_ux(void)
     turn(EN_SELECT, 1);
     bad += check("  SELECT: SONG next to it", cur_page()->graph == GR_SONG);
     song.rec = 1; chain.armed = 1; press(B_REC);
-    bad += check("REC cannot write borrowed patterns while SONG is armed", song.rec == 1 && msg_is("STOP TO RECORD"));
+    bad += check("REC cannot launch or write borrowed patterns while SONG is armed", song.rec == 1 && msg_is("STOP SONG TO LAUNCH"));
     ui_power_on(); open_family(FAM_EDIT);
     ok = 1;
     for (i = 0; i < 8u; i++) { open_family(FAM_EDIT); ok &= page_visible(ui.page) && !(cur_page()->id[0] >= P_FM1_ATK && cur_page()->id[0] <= P_FM4_LEVEL); }
@@ -5029,28 +5063,41 @@ static int test_capture(void)
     bad += check("Capture while the track records: refused", msg_is("RECORDING"));
     song.rec = 0;
     stop_transport();
-    {   /* the jam log: track 1's loop with pattern 1, then 2 twice, then 1 */
+    {   /* SONG REC: live launch. Stopped: at once; playing: the next bar, then the end of the section launched */
         ui_power_on();
         stop_transport();
         for (i = 0; i < NPART; i++) trk[i].p[P_SLEN] = 4;
-        transport_req = 1;
-        events_block(1);
-        while (jam.n < 1u) events_block(1);
-        pattern_request(&trk[0], 1);
-        while (jam.n < 2u) events_block(1);
-        while (jam.rep[1] < 2u) events_block(1);
-        pattern_request(&trk[0], 0);
-        while (jam.n < 3u) events_block(1);
-        stop_transport();
-        bad += check("jam log: a row per change, repeats counted (1, 2 x2, 1)", jam.n == 3u && jam.pat[0][0] == 0u &&
-                     jam.pat[1][0] == 1u && jam.rep[1] == 2u && jam.pat[2][0] == 0u);
+        chain_defaults(&chain_config); memset(chain_patterns, 0, sizeof chain_patterns);
+        chain_config.count = 2; chain_patterns[1][0] = 1;
+        pattern_commit(&trk[0]);
+        (void)song_sections_normalize(0);
         go_page(GR_SONG);
-        hold(B_REC);
-        bad += check("SONG: REC held takes the jam as the song (empty song: no dialog)", chain_config.count == 3u &&
-                     chain_patterns[1][0] == 1u && chain_config.row[1].repeat == 2u && !ui.confirm);
-        hold(B_REC);
-        bad += check("  over a song with rows: the dialog first", ui.confirm == CF_TAKE_JAM);
-        press(B_OCTDN);
+        ui.song_row = 0;
+        press(B_REC);
+        events_block(1);
+        bad += check("SONG REC stopped: the column's section starts at once", song.playing && live.cur == 0u && trk[0].pattern == 0u);
+        ui.song_row = 1;
+        press(B_REC);
+        bad += check("  playing: queued, the header names it (B NEXT)", live.next == 1u && str_eq(song_edit_status(), "B NEXT"));
+        uint32_t beat = seq_beat_samples(), guard = 0;
+        while (live.cur != 1u && guard++ < 8u * beat) events_block(1);
+        bad += check("  it starts at the end of the section launched (A: 1 beat)", live.cur == 1u && trk[0].pattern == 1u &&
+                     guard <= beat + 2u);
+        pattern_request(&trk[0], 0);
+        guard = 0;
+        while (trk[0].pattern != 0u && guard++ < 4u * beat) events_block(1);
+        bad += check("  a track changed by hand leaves it (B CHANGED)", str_eq(song_edit_status(), "B CHANGED"));
+        transport_req = 2; events_block(1);
+        bad += check("  STOP ends the launch", live.cur == CHAIN_ROWS && live.next == CHAIN_ROWS && !song_edit_status()[0]);
+        transport_req = 1; events_block(1);
+        events_block(beat + beat / 2u);                 /* (mid-way through bar 1) */
+        ui.song_row = 1;
+        press(B_REC);
+        guard = 0;
+        while (live.cur != 1u && guard++ < 8u * beat) events_block(1);
+        bad += check("  the first launch while patterns play waits for the next bar", live.cur == 1u && beat_n == 0u &&
+                     beat_pos <= 2u);
+        transport_req = 2; events_block(1);
         go_home();
     }
     {

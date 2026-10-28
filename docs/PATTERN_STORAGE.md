@@ -11,7 +11,7 @@ Implemented on top of `86c8130` (2026-10-17). This is the RAM-storage foundation
 
 The eight `track_t.step` arrays hold the editable/playing patterns. Each track also has one staging pattern. Every other bank is represented by a directory of 16-step blocks in a dedicated, statically bounded chunk pool.
 
-Foreground `pattern_poll()` compresses outgoing staging data and prepares the next queued bank, or the next SONG row. At a prepared boundary, the sequencer frees the incoming cold copy and swaps expanded steps and timing with staging. The outgoing bank remains readable from staging immediately, including edits made after preparation; foreground service encodes it later.
+Foreground `pattern_poll()` compresses outgoing staging data and prepares the next queued bank, or the next SONG column (or a section launched live). At a prepared boundary, the sequencer frees the incoming cold copy and swaps expanded steps and timing with staging. The outgoing bank remains readable from staging immediately, including edits made after preparation; foreground service encodes it later.
 
 If preparation has not run, the sequencer flushes any previous outgoing bank and decodes the requested bank synchronously. This fallback is bounded by the pattern size and chunk count. It preserves the requested boundary and never waits for foreground work. It can cost more CPU than a prepared switch, so device deadline measurements remain required before increasing capacity.
 

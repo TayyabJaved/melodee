@@ -455,15 +455,21 @@ _Static_assert(sizeof(motion_store_t) == 260u, "motion disk layout");
 #define CHAIN_LOOP 0u /* chain_config_t.rsv index; persisted by FBKM */
 #define CHAIN_FX_EVENTS 4u
 #define CHAIN_SOUNDS 64u
+#define SONG_SECTIONS 26u /* sections A..Z; each is placed in any number of the song's columns */
+#define SECT_LEN_MAX (64u * 16u) /* a section's set length: sixteenths, up to 64 bars */
 /* fx: zero is dry; 1..27 are the stable SLOOP key-effect IDs plus one.
- * Timing is in conductor steps, repeated with each section repeat. */
+ * Timing is in conductor steps (track 1's), repeated with each loop of its pattern. */
 typedef struct { uint8_t fx, start, length; } chain_fx_t;
 typedef struct { uint8_t slot, repeat; } chain_row_t;
+/* A song is columns in order; each names its section. Every column of one section holds the same patterns, sounds,
+ * punches and length (song_chain.c sect_sync); repeats are 1 and nothing is held across columns. */
 typedef struct {
     uint8_t count, rsv[3];
     chain_row_t row[CHAIN_ROWS];
     chain_fx_t fx[CHAIN_ROWS][CHAIN_FX_EVENTS];
     uint8_t sound[CHAIN_ROWS][NTRK]; /* 0: normal track sound; otherwise immutable song snapshot + 1 */
+    uint8_t sect[CHAIN_ROWS];        /* the column's section, 0..SONG_SECTIONS - 1 */
+    uint16_t len[CHAIN_ROWS];        /* its length in sixteenths; 0: AUTO, its longest pattern */
 } chain_config_t;
 /* FUN records and raw snapshots retain their original arrangement extent. */
 typedef struct {

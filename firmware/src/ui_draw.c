@@ -161,6 +161,9 @@ static void head_chip_text(char *b)
     if (designer_on() && !name_on() && designer_head_chip(b)) {   /* the designer's START, FEATURES, original */
     } else if (song_punch_on()) {
         str_cpy(b, "SONG FX", 16);
+    } else if (sect_on()) {                             /* SONG's section page: "SECTION B" */
+        str_cpy(b, "SECTION A", 16);
+        b[8] = (char)('A' + chain_config.sect[sp.row]);
     } else if (new_on()) {                                     /* NEW SONG */
         str_cpy(b, "NEW SONG", 16);
     } else if (ptc_on()) {                              /* PATTERNS' Copy to: "copy 3 to 5", another track's "to T2 5" */
@@ -1004,8 +1007,10 @@ static void confirm_text(char *a, char *b)
         if (!project_name(k % PROJ_SLOTS, b) || !b[0])
             str_cpy(b, "Its song and patterns go", 32);
         break;
-    case CF_DEL_ROW:
-        str_cpy(a, "DELETE SONG ROW?", 24);
+    case CF_DEL_ROW:                                    /* a column; its section lives on in its others */
+        str_cpy(a, "DELETE SECTION A?", 24);
+        a[15] = (char)('A' + chain_config.sect[k % CHAIN_ROWS]);
+        str_cpy(b, sect_uses(chain_config.sect[k % CHAIN_ROWS]) > 1u ? "This column only" : "Its last column", 32);
         break;
     case CF_CLEAR_SONG:
         str_cpy(a, "CLEAR SONG ORDER?", 24);
@@ -1013,11 +1018,6 @@ static void confirm_text(char *a, char *b)
     case CF_NEW_SONG:                                   /* what is lost */
         str_cpy(a, "START A NEW SONG?", 24);
         str_cpy(b, "Unsaved changes", 24);
-        break;
-    case CF_TAKE_JAM:                                   /* the rows it replaces */
-        str_cpy(a, "SONG FROM JAM?", 24);
-        fmt_int(b, (int32_t)chain_config.count);
-        str_cpy(b + str_len(b), " rows replaced", 16);
         break;
     case CF_INIT_SOUND:
         str_cpy(a, "INITIALIZE SOUND?", 24);

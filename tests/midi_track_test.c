@@ -192,6 +192,7 @@ static void sequencing(void)
     }
     chain_defaults(&chain_config); chain_config.count = 2;
     chain_patterns[0][0] = 0; chain_patterns[1][0] = 1;
+    chain_config.sect[1] = 1; chain_config.len[0] = chain_config.len[1] = 4;   /* (two one-beat sections, A B) */
     assert(!chain_prepare()); events_block(1); pop_midi(0x98, 60, 90);
     pattern_poll(); seq_advance(seq_beat_samples());
     pop_midi(0x88, 60, 0); pop_midi(0x98, 67, 90);

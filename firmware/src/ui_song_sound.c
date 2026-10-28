@@ -2,7 +2,7 @@
  * Copyright (C) 2026 Kerem Kilic (Ellic Studio) */
 /* The normal browser auditions into its owning track. A separate bounded
  * snapshot restores that sound on every exit, including navigation away.
- * OCT+ publishes one immutable sound across the selected pattern block. */
+ * OCT+ publishes one immutable sound for the track in the selected section, every column of it. */
 typedef struct {
     song_sound_t base;
     uint8_t fm[FP_SIZE + 1u], fm_on;
@@ -73,7 +73,7 @@ static void song_preset_cancel(void)
 static void local_preset_open(int pattern)
 {
     if (chain_busy() || transport_busy()) { ui_message("STOP TO EDIT"); return; }
-    if (!pattern && ui.song_row >= chain_config.count) { ui_message("ADD A SONG ROW"); return; }
+    if (!pattern && ui.song_row >= chain_config.count) { ui_message("ADD A SECTION"); return; }
     if (trk_midi_slot(song.sel)) { ui_message("MIDI TRACK ONLY"); return; }
     browse_commit(); momentary_restore();
     uint32_t f = motion_guard();
@@ -141,14 +141,10 @@ static void song_preset_finish(int keep)
             pattern_sound[k][row] = (uint8_t)id;
             load_end(&trk[k]); undo_seal();
         }
-        else {
-            uint32_t first = chain_origin(row, k), end = chain_block_end(first, k), changed = 0;
-            for (uint32_t r = first; r < end; r++) changed |= chain_config.sound[r][k] != id;
-            if (changed) {
-                if (!song_edit_begin()) { motion_unguard(f); return; }
-                for (uint32_t r = first; r < end; r++) chain_config.sound[r][k] = (uint8_t)id;
-                song_edit_end();
-            }
+        else if (row < chain_config.count && chain_config.sound[row][k] != id) {
+            if (!song_edit_begin()) { motion_unguard(f); return; }
+            chain_config.sound[row][k] = (uint8_t)id; sect_sync(row);
+            song_edit_end();
         }
         motion_unguard(f);
     }
@@ -157,10 +153,8 @@ static void song_preset_finish(int keep)
 }
 static void song_preset_remove(void)
 {
-    if (ui.song_row >= chain_config.count) return;
-    uint32_t first = chain_origin(ui.song_row, song.sel), end = chain_block_end(first, song.sel), any = 0;
-    for (uint32_t r = first; r < end; r++) any |= chain_config.sound[r][song.sel];
-    if (!any || !song_edit_begin()) return;
-    for (uint32_t r = first; r < end; r++) chain_config.sound[r][song.sel] = 0;
+    uint32_t row = ui.song_row;
+    if (row >= chain_config.count || !chain_config.sound[row][song.sel] || !song_edit_begin()) return;
+    chain_config.sound[row][song.sel] = 0; sect_sync(row);
     song_edit_end();
 }

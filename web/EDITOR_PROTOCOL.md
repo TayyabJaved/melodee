@@ -426,13 +426,15 @@ track's loop end while playing; selecting the active bank cancels its pending ch
 choices. Copy retains four-note chords, ties, drum data, chance, timing and motion. Copying into the active
 bank requires STOP; SONG blocks bank changes/copies. All pattern IDs on the wire are zero-based.
 
-BANK_SONG switches all four tracks at track 1's loop boundary, preserves the current sounds and mix,
+BANK_SONG switches all tracks together at each section's end (sections since 2026-10-28, below: before, at track 1's
+loop boundary), preserves the current sounds and mix,
 
 Bank capability tag `50 02 08 40` advertises 64 sections and REST bank id 8. Version 1 remains 16 sections,
 bank ids 0..7. BANK_SONG op 1 accepts up to 64 rows on version 2; its reply has the same five bytes per row.
 Op 2 optionally accepts a zero-based start row (`02 row`); omitted means row 0. Invalid start rows are rejected.
-Playback starts at step zero with that section's complete repeat count and continues to the final section.
-A resting track suppresses grid notes, recorded notes and motion; track 1 rests and continuations use a four-beat bar per repeat.
+Playback starts at step zero of that section and continues to the final section. A resting track suppresses grid
+notes, recorded notes and motion. (Before sections: with its complete repeat count; track 1 rests and continuations
+used a four-beat bar per repeat. Rows sent now are converted to sections, see "Sections" below.)
 Existing FUN and FBKK/FBKL codecs retain their fixed 16-row layout. Songs requiring longer arrangements or rests
 use FBKM, a new sparse bank container of the same extent: FBKL fixed fields, then count + three zero bytes,
 64 × (repeat, eight bank ids), then sparse patterns. Active FUN metadata retains the first 16 sections, with rests
@@ -450,8 +452,19 @@ steps. A disabled event has three zero bytes. Enabled events require start < 64 
 events past the section count must be disabled. The FX are section-local and repeat with the section.
 All event fields are validated before restoring a project. Older firmware rejects FBKN; saves without punches
 continue to use FBKK/FBKL/FBKM as appropriate. Backup transfers preserve FBKN unchanged. Timed punch editing
-is currently available on the device through SONG > OCT+ > Punch FX; the song protocol operations still
-describe note-pattern assignments, and replacing the arrangement clears its punch lane.
+is currently available on the device through the section page (SONG > OCT+ > Punch FX, or FX); the song protocol
+operations still describe note-pattern assignments, and replacing the arrangement clears its punch lane.
+
+**Sections (this fork, 2026-10-28).** The device's song is now columns of sections (A–Z, each a pattern or rest
+per track and a length in sixteenths, 0 = AUTO: its longest pattern), every column restarting every track. The
+BANK_SONG wire format is unchanged and still describes rows: op 1 rows are converted as an older project's are
+(a row's length is track 1's bank times its repeat, AUTO where that equals its longest bank; continuation id 9 gives
+the column its block's bank; identical rows share a section; past 26 sections the song ends). Replies report each
+column's banks with repeat 1 and `remaining` 1; section letters and set lengths are not on the wire yet, so an editor
+round trip of an arrangement with set lengths replaces them with the converted ones. FBKP records written since then
+carry a **SEC1** block (`53 45 43 31`) in the last bytes before SHP1: magic, 64 section ids (0–25, zero past the
+song), 64 little-endian lengths (0–1024). A record without SEC1 is converted on load; firmware before sections
+rejects a record with SEC1 (its bytes are where it expects zeros).
 
 pauses recording and sequence edits, and restores the original bank selections on STOP or the song's end.
 Each bank has LEN/DIV/SWING/GATE. Automation has a project-wide limit of 64 events; events belong to a

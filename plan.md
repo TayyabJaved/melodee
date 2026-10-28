@@ -30,6 +30,7 @@ All features are done and pass the host tests. Only Bluetooth MIDI has been trie
 | Pattern sheet: Double, Half, Euclid, Euclid turn | Pattern tools |
 | Bluetooth MIDI that works on our FM-1: upstream PR #90's measured radio calibration, forced on | BLE: measure… (Charles Vestal), BLE: measured calibration… (ours) |
 | UI: Bluetooth only on its page; ENV, LFO and EDIT pages, one home each; page position "2/4" ([task.md](task.md)) | UI: … (three commits) |
+| SONG sections: one definition per letter, the section page (pattern per track, AUTO / set length, PLAY loops it), OCT+ on + adds what plays, REC launches live; no jam, repeats or held blocks; older songs converted; SEC1 ([mock](docs/design/mock/song_workflow_proposal.svg)) | SONG: sections (not yet committed) |
 | DEV.md, this plan | DEV.md, plan.md |
 
 Bluetooth on our FM-1: with upstream's code alone it scanned and advertised but connected to nothing. With the

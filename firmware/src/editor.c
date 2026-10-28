@@ -1087,6 +1087,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
                         memcpy(chain_patterns[row], a + 2u + row * 5u, ED_TRK);
                         chain_config.row[row] = (chain_row_t){chain_patterns[row][0], a[6u + row * 5u]};
                     }
+                    (void)song_sections_normalize(0);   /* (rows as sections: a repeat is the section's length) */
                     ui.song_row = 0; ui.force = 1;
                 }
             }
@@ -1127,6 +1128,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
                     chain_defaults(&chain_config); chain_config.count = c.count;
                     memcpy(chain_config.row, c.row, c.count * sizeof(chain_row_t));
                     for (uint32_t row = 0; row < c.count; row++) memset(chain_patterns[row], c.row[row].slot, NTRK);
+                    (void)song_sections_normalize(0);
                     ui.song_row = 0; ui.force = 1;
                 }
             }
