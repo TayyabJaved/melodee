@@ -194,10 +194,11 @@ static int32_t solo_gain[NPART]={32768,32768,32768,32768};
 static void mix_solo(track_t *t,int32_t *b,uint32_t n)
 {
     uint32_t ti=(uint32_t)(t-trk);
-    int32_t from=solo_gain[ti],to=!track_solo || ((track_solo>>ti)&1u)?32768:0;
+    /* muted: the notes still sounding go too, not only the new ones (voice.c) */
+    int32_t from=solo_gain[ti],to=!t->p[P_MUTE] && (!track_solo || ((track_solo>>ti)&1u))?32768:0;
     if(from==32768 && to==32768)return;
     for(uint32_t i=0;i<n;i++){
-        from += clamp(to-from,-256,256); /* 128 samples, same GLO solo ramp as before */
+        from += clamp(to-from,-256,256); /* 128 samples, same ramp for GLO solo and MUTE */
         b[i]=mulq16(b[i],(uint32_t)from<<1);
         if(spread_on)spread_buf[i]=mulq16(spread_buf[i],(uint32_t)from<<1);
     }
