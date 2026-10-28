@@ -181,7 +181,8 @@ Switch it OFF to give the port back to the computer; the FM-1 never boots as a h
   a hub, or behind a hub on that hub's port (many hubs are two hub chips in one case, the second on the first's
   last port). The hubs' ports are powered and each device is tried until one has MIDI. Channel messages and
   clock / start / continue / stop are passed on; SysEx from the controller is ignored by design.
-- **Idle detection:** an unsupported or unresponsive direct device is probed once per attachment; unplug/replug
+- **Idle detection:** a device that does not answer at all is reset up to five times (50 ms resets, 100 to 1600 ms
+  recovery: some hubs need 400 ms); then an unsupported or unresponsive direct device waits; unplug/replug
   or toggle HOST to try again. An idle hub stays configured and checks one port's connection-change status
   every 100 ms, probing only changed connections. Empty hubs and non-MIDI devices do not cause periodic bus
   resets or power-good waits. An unresponsive hub waits for root unplug/replug or a HOST toggle.
