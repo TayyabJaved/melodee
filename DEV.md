@@ -564,7 +564,7 @@ SHAPE storage written for rc.4 (now in FBKP, `pattern_room` keeps its 44 B). Tes
 `recorded_note()` / `recorded_set_note()` accessors in `seq_tools_test.c` and `gen_track_test.c`; the CHORDS card
 label is CHRD (CHORD is cut in Rubik).
 
-Trial replay onto 1.6.0-rc.6 on 2026-10-28 (`tj/1.6.0-rc.6-trial`): 29 commits replayed; rc.5's branch
+Replay onto 1.6.0-rc.6 on 2026-10-28 (`tj/1.6.0-rc.6`, tried first as `tj/1.6.0-rc.6-trial`): 29 commits replayed; rc.5's branch
 unchanged. Conflicts: version strings (rc.6 and its `-nonav` twin); both sides' additions to lists and docs kept;
 SID/TRIO removal kept CR78/FM and their golden renders, browser and web metadata; SHAPE/SEC1 storage kept clear
 of rc.6's FBKQ pattern-preset IDs; the shared song/pattern sound picker and note-preview helpers kept upstream's
@@ -581,7 +581,9 @@ items, all upstream's PATTERNS drawing in `ui_patterns.c`. Ported to `ui_sect_dr
 two pages (`ptv.focus`, `pt_page`, `pt_numbers`' dots, `pt_row`'s off-page tick), `pt_prog_bar`'s fixed width and
 `pt_bars`' narrow cells, as ours shows all 16 in numbered cells (a design choice, kept). Checks: build ok (570,616 B,
 6.6 KB of flash left), `MELODEE_KEY_NAV=0` suite passed; the standard suite passed but for `audio_cpu_take_test.py`
-(lateness) and `mod_test`'s cost (+5.0 %, at its limit), both passing alone: load-sensitive, upstream's tests.
+(lateness) and `mod_test`'s cost (+5.0 %, at its limit), both passing alone: load-sensitive, upstream's tests. Device (2026-10-29, the build of this branch): basic navigation
+tried on the FM-1, working; not yet tried there: the CR78 / FM kits, sections with pattern presets, USB hubs, song
+playback and storage round trips.
 
 Shadow report, all seven rc.5→rc.6 items reviewed (the report still lists historical changes; decisions here):
 - layout / `ptv.focus`: not applicable, no page state in our all-16 layout;
