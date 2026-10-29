@@ -547,8 +547,9 @@ label is CHRD (CHORD is cut in Rubik).
 Since that replay the newer rows are working commits, not yet one a row: `e82af04` (row 19), `0367108` (the guide,
 row 23, and row 1's one build: `MELODEE_KEY_NAV` on by default), `4034a6a` (row 19's one look), `fd6b582` (rows 20 and 11's M3 + A#4, the
 PATTERNS empty cells), `96d9cc3` (row 21 and the shortcuts docs), then row 22 (the navigation rules, after it).
-Before the next replay, squash them into one commit per row in the table's order (`git rebase -i` by hand, outside
-this tool), keeping DEV.md and the docs (row 23) last.
+They stay as they are (the work is mixed across files, and splitting it would risk builds that work today); new
+work goes in as one commit per row, or as fixups of a row's commit (below), and the next replay can fold those in.
+Keep DEV.md and the docs (row 23) last.
 
 Our own files (no conflicts): `gen_track.c`, `seq_tools.c`, `ui_nav.c`, `chord_seq.c`, `ui_chords.c`, `arp_shape.c`
 (the SHAPE arp), the copied Tessera files, our tests (`key_nav_test.c`, `gen_test.c`, `gen_track_test.c`,
@@ -618,6 +619,10 @@ git remote add upstream https://github.com/keremimo/melodee.git   # (already don
 git config rerere.enabled true    # git remembers conflict resolutions and reuses them
 ```
 
+rerere fills a reused resolution into the file but leaves it unstaged: review it before `git add`, since the code
+around it may have changed. `git rerere forget <file>` drops a wrong one. Its memory is `.git/rr-cache`, local to
+this clone and never pushed: copy it along if you replay from another machine or a fresh clone.
+
 ### For each upstream release
 
 Only replay onto stable release tags. Release candidates come several a day; try one in
@@ -640,7 +645,10 @@ Then update `MELODEE_VERSION` in `firmware/src/melodee.c` to the new base (for e
 `v1.6.0`, and `v1.6.0-nonav` for the comparison build), build `build/melodee.fwsc`, and test on the device.
 
 To tidy the stack (squash a fix into its feature commit, reorder, reword):
-`git rebase -i <upstream tag>` on a branch nobody builds from yet.
+`git rebase -i <upstream tag>` on a branch nobody builds from yet. A fix to a row is committed as
+`git commit --fixup=<the row's commit>`; `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <upstream tag>` folds every
+fixup into its row with no editor. With Claude Code, the `fork-commit` skill (`.claude/skills/`) commits a change with
+its row and the checks, and the `upstream-replay` skill walks this section for a new release (CLAUDE.md).
 
 ### What to check after every replay
 
