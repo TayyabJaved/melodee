@@ -35,7 +35,11 @@ tests/run_tests.sh                          # ~100 s; must end with ALL HOST TES
   carry the SPDX line and `Copyright (C) 2026 Kerem Kilic (Ellic Studio)`; keep Leo Kuroshita's notice on retained
   Felucca code (AGENTS.md).
 - Keep a feature in our own files with thin, commented hooks in upstream files (`ui_nav.c` is included at the end of
-  `ui_input.c`; its `nav_*()` calls are the UI hooks). Fewer upstream lines touched means easier replays.
+  `ui_input.c`; its `nav_*()` calls are the UI hooks; song sections live in `song_sect.c`, `ui_sect*.c`). Fewer
+  upstream lines touched means easier replays.
+- Never rewrite or delete upstream code in place. Keep it verbatim inside `#ifdef MELODEE_UPSTREAM_<FEATURE>` (never
+  defined), put ours in our file, and leave a hook tagged with our file's name (DEV.md "Replacing upstream code").
+  `tools/upstream_shadow.py` then lists upstream's later changes to that code at each replay, so they get ported.
 - Target limits: no 64-bit divide on the target (`__udivdi3` link error; use `uint32_t` or `chain_div_samples`),
   canvases are at most 64 rows (`cv_begin`), static RAM (`.data+.bss`) is nearly full: put larger state in the zeroed
   pool, `__attribute__((section(".pool")))`. The build prints image size and RAM; read them after a change.

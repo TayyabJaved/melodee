@@ -263,6 +263,7 @@ static void arp_off(track_t *t)                  /* the sounding arp note ends (
 
 /* n and gate_n: sample time (INT), musical units (MIDI); a stopped external
  * transport uses real time converted to musical units for a tapped note's gate. */
+static volatile uint32_t beat_pos, beat_n;      /* clock units into the beat, beat of the bar (0..3) */
 static uint32_t punch_clock_samples(void)
 {
     uint32_t beat = beat_samples();
@@ -450,6 +451,29 @@ static void cap_off(const track_t *t, uint32_t note)
         }
     }
 }
+
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by song_sect.c (tools/upstream_shadow.py) */
+/* Jam -> song: while the transport runs (no song), each time track 1 starts its loop the four tracks' patterns are
+ * a row: the same as the last row: its repeats + 1 (up to 16), else a new row (up to CHAIN_ROWS). From PLAY on;
+ * SEQ > SONG TAKE JAM makes them the song (ui_input.c jam_take) */
+static struct { uint8_t n, pat[CHAIN_ROWS][NTRK], rep[CHAIN_ROWS]; } jam;
+static void jam_loop(void)
+{
+    uint32_t r = jam.n, k, same = r != 0u;
+    for (k = 0; same && k < NTRK; k++)
+        same = jam.pat[r - 1u][k] == trk[k].pattern;
+    if (same && jam.rep[r - 1u] < 16u) {
+        jam.rep[r - 1u]++;
+        return;
+    }
+    if (r >= CHAIN_ROWS)
+        return;
+    for (k = 0; k < NTRK; k++)
+        jam.pat[r][k] = trk[k].pattern;
+    jam.rep[r] = 1;
+    jam.n = (uint8_t)(r + 1u);
+}
+#endif                                          /* MELODEE_UPSTREAM_SONG */
 
 /* The STEP overview rounds to the nearest swung onset, with loop wrap.
  * SEQ > STEP follows playback (ui_input.c). Overdub: a step that
@@ -972,9 +996,12 @@ static void seq_start(void)
         cap_step[i] = 0xFFFFu;                     /* (capture: step 0 is the first) */
     }
     gn_restart_all();                              /* (every generator from the top of its seed) */
-    cap_from = cap_w;                              /* capture: this run */
+    cap_from = cap_w;                              /* capture and the jam log: this run */
     cap_track = song.sel;
-    live.pos = live.carry = 0;                     /* (a section launched while stopped: from here) */
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by song_sect.c (tools/upstream_shadow.py) */
+    jam.n = 0;
+#endif                                          /* MELODEE_UPSTREAM_SONG */
+    live.pos = live.carry = 0;                     /* (song_sect.c: a section launched while stopped, from here) */
     song.tick = 0;
     beat_pos = 0; beat_n = 0;                      /* the ARP LED's beat from the top too */
     song.playing = 1;
@@ -1094,7 +1121,7 @@ static void seq_stop(void)
         trk[i].rh_n = 0;                           /* a recorded note held over the stop: as far as it got */
     }
     chain_stop();
-    live_reset();
+    live_reset();                                  /* (song_sect.c) */
     for (i = 0; i < NTRK; i++) if (trk[i].pattern_next < NPAT) pattern_switch(&trk[i], trk[i].pattern_next);
     motion_end();
 }
@@ -1187,7 +1214,7 @@ static void seq_grid_tick(track_t *t, uint32_t n)
             break;
         uint32_t starting = t->seq_pos >= 0x7FFFFFFFu;
         uint32_t punch_in = 0;
-        t->seq_pos = starting ? (chain.running ? chain.carry : live.carry) : t->seq_pos - cur_len;
+        t->seq_pos = starting ? (chain.running ? chain.carry : live.carry) : t->seq_pos - cur_len;   /* (live: song_sect.c) */
         if (starting && chain.running) {
             t->seq_pos += chain.seek_phase[trk_index(t)]; chain.seek_phase[trk_index(t)] = 0;
         }
@@ -1203,7 +1230,7 @@ static void seq_grid_tick(track_t *t, uint32_t n)
         }
         if (!t->seq_idx && !chain.running && t->pattern_next < NPAT) {
             pattern_switch(t, t->pattern_next);
-            live.rest &= (uint8_t)~(1u << trk_index(t));   /* (changed by hand: no longer the launched section's rest) */
+            live.rest &= (uint8_t)~(1u << trk_index(t));   /* (song_sect.c: changed by hand, no longer the launched section's) */
             t->seq_idx = 0;
             period = seq_div_samples((uint32_t)t->p[P_SDIV]);
             len = (uint32_t)t->p[P_SLEN];
@@ -1216,6 +1243,10 @@ static void seq_grid_tick(track_t *t, uint32_t n)
                 seq_hush |= (uint8_t)(1u << k);
         }
         cap_step[trk_index(t)]++;
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by song_sect.c (tools/upstream_shadow.py) */
+        if (!t->seq_idx && t == &trk[0] && !chain.running)
+            jam_loop();
+#endif                                          /* MELODEE_UPSTREAM_SONG */
         if (starting && chain.running && chain.seek_samples[trk_index(t)] && !chain_rest(t)) {
             if (chain.seek_chase & (1u << trk_index(t)))
                 for (uint32_t j = 0; j < len; j++) motion_step(t, j, &motion);
@@ -1332,7 +1363,7 @@ static void seq_advance_part(uint32_t n)
     uint32_t i, beat = seq_beat_samples(), nt = trk_n();
     if (nt < NPART) nt = NPART;                       /* unused MIDI slots have no clock state to maintain */
     chain_tick(n);
-    live_tick(n);
+    live_tick(n);                                     /* (song_sect.c: live launch) */
     for (i = 0; i < nt; i++)
         seq_tick(&trk[i], n);
     chain_fx_tick();

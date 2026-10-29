@@ -369,7 +369,9 @@ if core && [ $TABLES = 1 ]; then
     t "motion, whole-step chance, an older parameter count, song restore and ARP repeat" motion_test -O1 $FW
     t "64 pattern banks: chords, ties, independent loop switching, copy and persistence" pattern_test \
         -O1 -DMELODEE_USB_AUDIO=1 $FW
-    t "song: 64 sections, rests, cursor playback, grid edits, phrases and undo" song_mode_test -O1 $FW
+    # (upstream's song_mode_test.c is kept verbatim but not run: song_sect_test.c, ours, replaces it;
+    #  tools/upstream_shadow.py lists upstream's changes to it at a replay)
+    t "song sections: columns, rests, lengths, adding, the section page, persistence, older songs" song_sect_test -O1 $FW
     t "song/pattern presets: priority, browser restoration, playback, undo and persistence" song_preset_test -O1 $FW
     t "song punch: timed master FX, repeats, live overrides, edits and persistence" song_punch_test -O1 $FW
     t "compressed pattern pool: dense capacity, prepared switches and state-machine oracle" pattern_pool_test -O1 $FW

@@ -279,26 +279,38 @@ clock, a jam log taken with REC held). Ours is columns of **sections** A–Z (mo
 `docs/design/mock/song_workflow_proposal.svg`; behaviour: the manual's "Patterns, sections and songs" and "Songs",
 `docs/design/README.md` "SONG sections").
 
+- **Where it lives:** in our own files, as upstream's SONG stays in its files: `song_sect.c` (the model, the section
+  clock, live launch, SEC1's coding; included near the top of `song_chain.c`), `ui_sect.h` / `ui_sect.c` (SONG's
+  editing, the section page, the keys; at the top and end of `ui_song.c`), `ui_sect_draw.c` (PATTERNS, SONG and the
+  section page drawn as one family; at the end of `ui_patterns.c`), `ui_sect_sheets.c` (the sheets; in `ui_popup.c`).
+  Upstream's code ours replaces is **kept verbatim** in its file inside `#ifdef MELODEE_UPSTREAM_SONG` (never
+  defined): its edits merge cleanly and `tools/upstream_shadow.py` lists them for porting (see "Conventions" and
+  "What to check after every replay"). In upstream's files the rest is one-line hooks, each tagged with our file's
+  name (`/* (song_sect.c) */`): `song_chain.c` (4), `ui_song.c` (5), `ui_patterns.c` (1), `ui_popup.c` (3),
+  `ui_input.c`, `seq.c` (5), `pattern_store.c` (4), `project.c`, `editor.c`, `ui_draw.c`, `ui_song_sound.c`,
+  `ui_song_punch.c`.
 - **Data:** upstream's per-row arrays stay the columns (`chain_config`, `chain_patterns`); `chain_config_t` adds
   `sect[64]` (the column's letter) and `len[64]` (sixteenths, 0 = AUTO). Every column of a letter holds the same
   patterns, sounds, punches and length: edits go through `sect_sync` (`song_chain.c`), `sect_consistent` checks it.
   Repeats are always 1, `CHAIN_HOLD` never stays in a loaded song. The sequencer, song sounds and punches still read
   rows, as upstream does.
-- **Timing** (`song_chain.c`): `chain_tick` counts the section's length (`chain.len`, from `chain_row_samples_of`:
-  the set length, else the longest pattern of the tracks in use; recomputed on a tempo change or `len_dirty`) and
-  `chain_apply` restarts every track at each column. `chain.solo` loops one column (the section page's PLAY,
-  `chain_prepare_solo` in `project.c`). Punch steps stay track 1's, restarting per loop of its pattern (`fx_loop`
-  against `seq_loops[0]`).
-- **Live launch:** `live` (`song_chain.c`), ticked from `seq_advance_part` after `chain_tick`; `live_apply`
+- **Timing** (`song_sect.c`, our `chain_tick` / `chain_apply` / `chain_fx_tick` / `chain_row_samples`): the clock
+  counts the section's length (`sect_clk.len`, from `chain_row_samples_of`: the set length, else the longest pattern
+  of the tracks in use; recomputed on a tempo change or `len_dirty`) and every track restarts at each column.
+  `sect_clk.solo` loops one column (the section page's PLAY: `chain_prepare_solo` in `ui_sect.c` around upstream's
+  `chain_prepare_from`, which is unchanged: with nothing held across columns its seek is zero). Punch steps stay
+  track 1's, restarting per loop of its pattern (`sect_clk.fx_loop` against `seq_loops[0]`).
+- **Live launch:** `live` (`song_sect.c`), ticked from `seq_advance_part` after `chain_tick`; `live_apply`
   switches every track at once, `live.carry` starts them at the boundary's sample, `live.rest` silences the
   section's rests through `chain_rest` until a track switches by hand (`seq.c`). `seq_stop` resets it. Header
   states come from `song_edit_status` (`ui_song.c`): LOOPING A, B NEXT, A CHANGED.
-- **UI:** `ui_song.c` (rewritten: columns, `song_add_playing`, `song_column_section`, the section page `sp`,
-  `sect_pattern` / `sect_length` / `sect_play`, `song_launch`), `ui_patterns.c` (the cards, `sect_draw`),
-  `ui_popup.c` (SHEET_SONG, SHEET_SECTION), `ui_input.c` (KNOB 1/2, OCT+ open / add, REC launch; the section page:
-  PRESETS its length, SELECT `sect_step` through the sections), `ui_song_sound.c` and `ui_song_punch.c` (per section, no SELECT browsing), `ui_draw.c` (the
-  SECTION A chip, the delete question).
-- **Storage:** SEC1 (`pattern_store.c`, `BANK_SECT_OFF`): magic, 64 letters, 64 lengths, the 196 bytes before SHP1,
+- **UI:** `ui_sect.c` (columns, `song_add_playing`, `song_column_section`, the section page `sp`, `sect_pattern` /
+  `sect_length` / `sect_step` / `sect_play`, `song_launch`; the keys `sect_song_knob` / `sect_song_oct`; ours of
+  `song_arm`, `song_insert`, `song_apply_destination`, `song_edit_status`), `ui_sect_draw.c` (the cells, the cards,
+  `sect_draw`), `ui_sect_sheets.c` (SHEET_SONG, SHEET_SECTION); hooks in `ui_input.c` (REC launch, PLAY, PRESETS,
+  SELECT), `ui_song_sound.c` and `ui_song_punch.c` (per section), `ui_draw.c` (the SECTION A chip, the delete
+  question).
+- **Storage:** SEC1 (layout in `pattern_store.c`, `BANK_SECT_OFF`; coding in `song_sect.c` `sect_block_*`): magic, 64 letters, 64 lengths, the 196 bytes before SHP1,
   written with it in every FBKL-family record; `pattern_room` reserves it. A record without it (upstream's, the
   dense FBKK) is converted by `song_sections_normalize(0)` after its banks are in (lengths need their timings);
   with it, `song_sections_normalize(1)` keeps the letters if they still describe the columns. `song_note` tells the
@@ -308,7 +320,8 @@ clock, a jam log taken with REC held). Ours is columns of **sections** A–Z (mo
   `tools/gen_song_guide.py` (drawings, not renders: change its steps with the controls; `--check` lists stale files).
   `docs/SHORTCUTS.md`'s pictures, `docs/shortcuts/`, are `tools/gen_shortcuts.py`'s (the keyboard maps follow
   `hal/fm1_input.h`, `panel.c`, `ui_layer.c`, `punch.c`; `--check` the same way).
-- **Tests:** `song_mode_test.c` (rewritten: lengths, rests, columns, adding, persistence, older songs),
+- **Tests:** `song_sect_test.c` (ours, in place of upstream's `song_mode_test.c`, which is kept verbatim but not
+  run: lengths, rests, columns, adding, persistence, older songs),
   `song_preset_test.c`, `song_punch_test.c`, `ui_test.c` (live launch, the section page, SONG keys),
   `ui_render.c` (the scenes converted; `song_section` shows the section page), `editor_test.c`,
   `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c`.
@@ -499,6 +512,13 @@ From [AGENTS.md](AGENTS.md):
 - Keep a feature in its own files with thin hooks into upstream code (`gen_track.c`,
   `seq_tools.c`, one line in `seq.c`; `ui_nav.c`, included at the end of `ui_input.c`). Upstream merges then
   conflict little. Mark each hook with a short comment naming our file, so a conflict shows what it belongs to.
+- **Replacing upstream code:** don't delete or rewrite it in place. Keep upstream's text verbatim inside
+  `#ifdef MELODEE_UPSTREAM_<FEATURE>` (never defined; today `MELODEE_UPSTREAM_SONG`), write ours in our file under the
+  same function name, and leave a tagged hook where needed. Upstream's later edits to that text then merge without
+  conflicts, and `tools/upstream_shadow.py --from <old> --to <new>` lists each of them so it is ported to ours (or
+  noted as not applying). A marker may end with `#else` and ours in place, for a line or two. An upstream test file
+  ours replaces stays verbatim and unrun, listed in the tool's `SUPERSEDED`. Prefer calling upstream's functions to
+  copying them: what ours calls gets their fixes for free.
 
 ## Following upstream releases
 
@@ -530,7 +550,7 @@ work is a stack of commits kept on top of an upstream release tag, in this order
 | 16 | Drum keys are the grid's black keys | a drum track's first eight black keys play its eight lanes everywhere, white keys silent | `eng_drum.c` (`drum_keys`); `tests/mpc_octave_test.c`, `tests/ui_test.c`, `tests/chord_test.c` | never (ours) |
 | 17 | ARP: SHAPE mode, a rhythm of ON / OFF steps | ARP > MODE SHAPE (7): each step ON (the next held note, DIR's order) or OFF (a rest); STEPS and DIR in PROB and ORD's places on ARP 2 (`shape.ctrl`, not those bytes); M3 / OCT− held on the ARP page: the white keys are the steps; stored in `project_t.shape` (10 B a track) and, on flash, in the SHP1 block of FBKP records (FBKL–FBKO as our rc.4 build wrote them) | new `arp_shape.c`; `seq.c` (`arp_step`: the gate, `keyboard_block`), `params.c` (include, MODE name, `page_desc`), `ui.c`, `ui_input.c` (`ui_leds`, `shape_keys`, PRESETS), `ui_name.c` (`keys_mode`), `ui_pages.c` (`pv_arp`), `project.c`, `pattern_store.c`, `web/editor.html` (MODE names) | never (ours) |
 | 18 | FX: SHARED first, then the track's NOTE FX | SHARED (audio) is the first FX page and FX opens it; the track's rack is NOTE FX, its send row "Send" | `params.c` (`PAGES` order, title), `ui.c` (`fx_rack_page`, the FX button), `ui_input.c` (`fx_rack_enter` / `fx_rack_back`), `ui_draw.c`, `ui_pages.c`, `docs/design/README.md`, `web/manual/index.html`; `fx_test.c`, `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` | never (ours) |
-| 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1; one look on PATTERNS, the section page and SONG (pattern numbers in the cells, empty cells blank, REST, SONG's cards in bars:beats) | `core.h` (`chain_config_t.sect`, `.len`), `song_chain.c` (sections, `song_sections_normalize`, section clock, `chain.solo`, `live_*`), `seq.c` (`live_tick`, no `jam`), `pattern_store.c` (SEC1, `pattern_room`), `project.c` (`chain_prepare_solo`), `editor.c` (rows converted), `tracks.c`, `ui_song.c` (rewritten), `ui_patterns.c` (PATTERNS' numbered cells, SONG, the section page), `ui_popup.c`, `ui_input.c`, `ui_song_sound.c`, `ui_song_punch.c`, `ui_draw.c`, `ui.c`; tests `song_mode_test.c`, `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
+| 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1; one look on PATTERNS, the section page and SONG (pattern numbers in the cells, empty cells blank, REST, SONG's cards in bars:beats) | ours: `song_sect.c`, `ui_sect.h`, `ui_sect.c`, `ui_sect_draw.c` (PATTERNS' numbered cells, SONG, the section page), `ui_sect_sheets.c`, `tools/upstream_shadow.py`; upstream's replaced code kept verbatim under `MELODEE_UPSTREAM_SONG` in `song_chain.c`, `ui_song.c`, `ui_patterns.c`, `ui_popup.c`, `ui_input.c`, `seq.c` (the jam), `tracks.c`, `ui_draw.c`; hooks in those and `core.h` (`chain_config_t.sect`, `.len`), `pattern_store.c` (SEC1's layout, `pattern_room`), `project.c`, `editor.c`, `ui_song_sound.c`, `ui_song_punch.c`; tests `song_sect_test.c` (in place of `song_mode_test.c`, kept unrun), `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
 | 20 | GLO: its main page first | a GLO tap opens the GLO layer locked open as its main page (mutes, solos, TAP, levels); GLO again: MIXER, GLOBAL .. WEIGHTS 2, then the main page; SELECT: the six as one list, no wrap (GLO SELECT only with GLO held); held: the layer while held; no double-tap lock for GLO | `ui_layer.c` (`glo_main`, `glo_open`, `glo_scroll`, `layer_lock_input`, the footer), `ui_nav.c` (MIXER in GLO's `nav_pages`, `nav_pos`), `ui_input.c`, `ui.c` (`open_global`'s comment); tests `ui_test.c`, `layer_screen_test.c`, `ui_render.c` (`layer_glo_main`) | never (ours) |
 | 21 | M3: the white keys press all twelve buttons | M3 + F3 .. D4: FX SCL ENV LFO EDIT GLO, E4 a gap (a note), F4 .. D5: HOME SAVE ARP SEQ PLAY REC, held as long as the key; on ARP > SHAPE they stay its steps; M3's keys lit as their buttons (lit, dim, glow, breathing; dark ones glow), the buttons their usual lights | `hal/fm1_input.h` (`FM1_NAV_WHITE`, `fm1_input_nav_whites`, `_whites_on`), `panel.c` (`panel_nav`), `ui_nav.c` (`nav_keep`, `nav_leds`, `nav_mirror`), `ui_input.c` (`ui_leds`), `ui.c`; tests `key_nav_test.c`, `nav_test.c`, `hostsim.c` and `settings_test.c` stand-ins | never (ours) |
 | 22 | Navigation: one set of rules | docs/NAVIGATION.md's decisions: SELECT pages only, stopping at both ends (and `nav_next_group`; ENV / LFO taps still go round); PRESETS the bigger step and the row where KNOB 2 picks one (lists, sheets, value lists, the menu, slots, FX racks, MOD, MOTION, the drum grid's lanes, the punch editor's lanes), the section page's length, PRESETS: GO TO STAGE where it has nothing to do; the section map KNOB 1 / PRESETS category, KNOB 2 / SELECT page; slot pages KNOB 1 ten slots; the menu's PRESETS stops; the section page SELECT walks the sections (`sect_step`), its position k/n of them; GLO's main page 1/6; F5 G5 F#5 freed under FX and on the drum grid | `ui_nav.c` (`nav_scroll`, `nav_next_group`, `nav_pos`, `nav_head_pos`, `nav_keep`), `ui.c` (`open_family`), `ui_input.c` (PRESETS, SELECT, the map, sheets, `slot_jump`), `ui_designer_input.c`, `ui_menu.c`, `ui_song.c` (`sect_step`), `ui_song_punch.c`, `hal/fm1_input.h` (`fm1_input_nav_free`); tests `ui_test.c` (`test_navigation_rules`), `nav_test.c`, `layer_screen_test.c`, `key_nav_test.c`, `scale_picker_test.c`, `fx_test.c`, `hostsim.c` | never (ours) |
@@ -546,7 +566,7 @@ label is CHRD (CHORD is cut in Rubik).
 
 Since that replay the newer rows are working commits, not yet one a row: `e82af04` (row 19), `0367108` (the guide,
 row 23, and row 1's one build: `MELODEE_KEY_NAV` on by default), `4034a6a` (row 19's one look), `fd6b582` (rows 20 and 11's M3 + A#4, the
-PATTERNS empty cells), `96d9cc3` (row 21 and the shortcuts docs), then row 22 (the navigation rules, after it).
+PATTERNS empty cells), `96d9cc3` (row 21 and the shortcuts docs), then row 22 (the navigation rules, after it), then row 19's move into our own files ("SONG sections: our own files", 2026-10-28: `song_sect.c`, `ui_sect*.c`, upstream's song code kept under `MELODEE_UPSTREAM_SONG`, `tools/upstream_shadow.py`; a commit of its own, not a fixup, as the later commits edit the same lines).
 They stay as they are (the work is mixed across files, and splitting it would risk builds that work today); new
 work goes in as one commit per row, or as fixups of a row's commit (below), and the next replay can fold those in.
 Keep DEV.md and the docs (row 23) last.
@@ -554,7 +574,8 @@ Keep DEV.md and the docs (row 23) last.
 Our own files (no conflicts): `gen_track.c`, `seq_tools.c`, `ui_nav.c`, `chord_seq.c`, `ui_chords.c`, `arp_shape.c`
 (the SHAPE arp), the copied Tessera files, our tests (`key_nav_test.c`, `gen_test.c`, `gen_track_test.c`,
 `seq_tools_test.c`, `nav_test.c`, `arp_shape_seq_test.c`, `arp_shape_stream_test.c`), DEV.md, plan.md, task.md, and
-the docs with their generators: `docs/SHORTCUTS.md`, `docs/NAVIGATION.md`, `docs/shortcuts/` (`tools/gen_shortcuts.py`),
+the song sections' files (`song_sect.c`, `ui_sect.h`, `ui_sect.c`, `ui_sect_draw.c`, `ui_sect_sheets.c`,
+`tests/song_sect_test.c`), `tools/upstream_shadow.py`, the docs with their generators: `docs/SHORTCUTS.md`, `docs/NAVIGATION.md`, `docs/shortcuts/` (`tools/gen_shortcuts.py`),
 `docs/song-guide/` (`tools/gen_song_guide.py`), `docs/design/mock/song_workflow_proposal.svg`. After a replay, run
 both generators with `--check`: a control upstream moved shows as a stale picture only if we change the text.
 Our hooks in upstream files are calls into our files, so a conflict shows what it belongs to: the UI's call
@@ -567,8 +588,9 @@ its `shape` state (`arp_shape.c`); M1/M2's sit under `#if MELODEE_KEY_NAV`. To l
 
 **Expect conflicts in:** `ui_draw.c` (`draw_head`), `ui.c` (`grid_on`), `ui_input.c`, `ui_sections.c`, `ui_pages.c`
 (`pv_grid`, `pv_arp`), `ui_popup.c`, `seq.c`, `params.c`, `chord.c`, `engines.c`, `voice.c`, `eng_drum.c`,
-`project.c`, `pattern_store.c`, the song's files (`song_chain.c`, `ui_song.c`, `ui_patterns.c`, `ui_song_sound.c`,
-`ui_song_punch.c`, `editor.c`, `tracks.c`: see "Song sections"), the navigation's (`ui_layer.c` GLO, `ui_menu.c`,
+`project.c`, `pattern_store.c`, the song's hooks (`song_chain.c`, `ui_song.c`, `ui_patterns.c`, `ui_popup.c`,
+`seq.c`, `ui_song_sound.c`, `ui_song_punch.c`, `editor.c`: one-line hooks now; upstream's song code inside the markers
+merges, then needs `tools/upstream_shadow.py`, see "Song sections"), the navigation's (`ui_layer.c` GLO, `ui_menu.c`,
 `ui_designer_input.c`, `panel.c`, `seq_notes.c`, `hal/fm1_input.h`: rows 20–22), README, `web/manual/index.html` and
 `docs/design/README.md` (our sections in upstream's text). **Deleted upstream files** (`eng_sid.c`, `drum_sid.c`, `eng_trio.c`, the
 SID tests): when upstream changes them, keep them deleted (`git rm`), then `git grep -iw sid` for new references. Upstream tests we changed on purpose (when upstream changes one, keep their change and re-apply ours):
@@ -588,7 +610,8 @@ SID tests): when upstream changes them, keep them deleted (`git rm`), then `git 
 - **Our features:** `chord_test.c` (Humanize; the drum track's key is a black key), `seq_edit_test.c` (chord
   entries, their preview), `upreset_test.c` (slot 45), `project_test.c` (shape defaults; the ten-byte snapshot still
   16,456 B), `ble_rf_replay_test.py` (the stored-calibration measurement), `web/test_web.mjs`.
-- **Song sections:** `song_mode_test.c` (rewritten), `song_preset_test.c` and `song_punch_test.c` (per-section
+- **Song sections:** `song_mode_test.c` (upstream's, kept verbatim, not run: `song_sect_test.c` replaces it),
+  `song_preset_test.c` and `song_punch_test.c` (per-section
   sounds and punches, no held blocks), `ui_test.c` (SONG keys, live launch instead of the jam log, `test_chain` on
   section lengths; `ui_power_on` resets `sp` and `live`), `ui_render.c`, `editor_test.c` (repeats become a length),
   `project_stream_test.c` (valid sections in its oracles), `pattern_test.c`, `midi_track_test.c` (one-beat sections).
@@ -652,8 +675,11 @@ its row and the checks, and the `upstream-replay` skill walks this section for a
 
 ### What to check after every replay
 
-A clean rebase does not mean a working build. These broke silently in the trial replay
-onto 1.6.0-rc.4, with no conflict shown:
+A clean rebase does not mean a working build, and a clean merge inside our markers means upstream's change reached
+nothing of ours. First run `python3 tools/upstream_shadow.py --from <old tag> --to <new tag>`: every item it lists
+is upstream code we replace that changed; port it to our file, or note in the replay paragraph why it does not apply
+(it exits 1 while items are listed; `--list` shows every marked block). Then these, which broke silently in the trial
+replay onto 1.6.0-rc.4, with no conflict shown:
 
 - **Static RAM:** the `.data + .bss` bank (98,304 B) can overflow when upstream grows. The
   link fails with "region `RAM' overflowed". Move our larger state into the zeroed pool

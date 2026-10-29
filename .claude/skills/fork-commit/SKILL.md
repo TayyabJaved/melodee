@@ -34,6 +34,13 @@ Read DEV.md's table and the feature sections. For each logical change in the dif
   over several working commits (DEV.md says which, under the last "Replayed onto …" paragraph), use the newest.
 - **Docs only** (manual, SHORTCUTS.md, NAVIGATION.md, guides, release notes) → the docs row's commit.
 
+If the change **replaces upstream code** (rewrites or deletes an upstream function, a layout, a test), check it
+follows DEV.md's "Replacing upstream code" convention before committing: upstream's text stays verbatim inside
+`#ifdef MELODEE_UPSTREAM_<FEATURE>` (never defined), ours lives in our file, the upstream file gets a tagged one-line
+hook. `python3 tools/upstream_shadow.py --list` shows the marked blocks; `--from <base> --to <base>` must report
+nothing (a block that "matches neither tag" was edited, and has to be put back). Code rewritten in place in an upstream
+file is the thing that makes replays hard: move it out before it is committed.
+
 If one diff mixes features in the same file, prefer one commit per feature by staging per file; if a file genuinely
 mixes two rows, commit it with the larger row and name both in the body. Don't hand-split hunks with `git add -p`
 (interactive; not available here).
@@ -44,9 +51,11 @@ mixes two rows, commit it with the larger row and name both in the body. Don't h
 source ~/.cache/melodee-venv/bin/activate
 ./build.sh && tests/run_tests.sh
 python3 tools/gen_shortcuts.py --check && python3 tools/gen_song_guide.py --check
+python3 tools/upstream_shadow.py --from "$(git describe --tags --abbrev=0)" --to "$(git describe --tags --abbrev=0)"
 ```
 
-Both must pass: the build's `ok` lines, `ALL HOST TESTS PASSED`, `0 lint findings`, the generators clean. If the only
+All must pass: the build's `ok` lines, `ALL HOST TESTS PASSED`, `0 lint findings`, the generators clean, and the
+shadow check reporting nothing (every marked block still upstream's text). If the only
 failure is the known flaky CPU timing test (`tests/audio_cpu_take_test.py`, the CPU sequence runner), rerun it alone and
 report it. Any other failure: fix it or stop and tell the user; never commit a red suite.
 

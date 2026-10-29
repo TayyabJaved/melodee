@@ -266,13 +266,8 @@ static int bankl_pack_tail(uint8_t *raw, const project_t *q)   /* runtime only (
         uint32_t m = BANK_SHAPE_MAGIC;
         memcpy(raw + BT(BANK_SHAPE_OFF), &m, 4u);
         memcpy(raw + BT(BANK_SHAPE_OFF) + 4u, q->shape, sizeof q->shape);
-        uint8_t *sec = raw + BT(BANK_SECT_OFF);
-        m = BANK_SECT_MAGIC; memcpy(sec, &m, 4u);
-        for (uint32_t r = 0; r < chain_config.count; r++) {
-            sec[4u + r] = chain_config.sect[r];
-            sec[4u + CHAIN_ROWS + 2u * r] = (uint8_t)chain_config.len[r];
-            sec[5u + CHAIN_ROWS + 2u * r] = (uint8_t)(chain_config.len[r] >> 8);
-        }
+        m = BANK_SECT_MAGIC; memcpy(raw + BT(BANK_SECT_OFF), &m, 4u);
+        sect_block_put(raw + BT(BANK_SECT_OFF) + 4u);   /* (song_sect.c) */
     }
     motion_unguard(f); return 1;
 }
@@ -494,14 +489,8 @@ static int bankl_tail_valid(const uint8_t *raw)
     }
     for (; pos < bank_data_end; pos++) if (raw[pos]) return 0;
     for (uint32_t i = 0; i < CHAIN_LEGACY_ROWS * NTRK; i++) if (raw[BT(BL.chain) + i] >= BL.npat) return 0;
-    if (bank_sect) {                                    /* the columns' letters and lengths: none past the song */
-        const uint8_t *in = raw + BT(BANK_SECT_OFF);
-        uint32_t count = bank_song64 ? raw[BT(BL.steps)] : proj_scratch.chain.count;
-        for (uint32_t r = 0; r < CHAIN_ROWS; r++) {
-            uint32_t len = in[4u + CHAIN_ROWS + 2u * r] | (uint32_t)in[5u + CHAIN_ROWS + 2u * r] << 8;
-            if (r < count ? in[4u + r] >= SONG_SECTIONS || len > SECT_LEN_MAX : in[4u + r] || len) return 0;
-        }
-    }
+    if (bank_sect && !sect_block_ok(raw + BT(BANK_SECT_OFF) + 4u,   /* (song_sect.c) */
+                                    bank_song64 ? raw[BT(BL.steps)] : proj_scratch.chain.count)) return 0;
     if (!bank_tail_common(raw, BL.motion, BL.fn)) return 0;
     /* Reserve before project_restore_runtime replaces any active music. The
      * old pool's bytes remain intact when validation or allocation fails. */
@@ -623,14 +612,8 @@ static void bankl_restore_tail(const uint8_t *raw)
         }
     }
     scale_share(TSEL);                                  /* the selected MIDI track's key is available only now */
-    if (bank_sect) {
-        const uint8_t *in = raw + BT(BANK_SECT_OFF);
-        for (uint32_t r = 0; r < CHAIN_ROWS; r++) {
-            chain_config.sect[r] = in[4u + r];
-            chain_config.len[r] = (uint16_t)(in[4u + CHAIN_ROWS + 2u * r] | in[5u + CHAIN_ROWS + 2u * r] << 8);
-        }
-    }
-    song_note = (uint8_t)song_sections_normalize(bank_sect);   /* (the banks' timings are in: AUTO) */
+    if (bank_sect) sect_block_get(raw + BT(BANK_SECT_OFF) + 4u);   /* (song_sect.c) */
+    song_note = (uint8_t)song_sections_normalize(bank_sect);   /* (song_sect.c; the banks' timings are in: AUTO) */
     pattern_loading = 0;
     motion_unguard(f);
 }
@@ -657,7 +640,7 @@ static void bank_restore_tail(const uint8_t *raw)
             pattern_write(k, b, &p);
         }
     }
-    song_note = (uint8_t)song_sections_normalize(0);
+    song_note = (uint8_t)song_sections_normalize(0);   /* (song_sect.c) */
     pattern_loading = 0;
     motion_unguard(f);
 }

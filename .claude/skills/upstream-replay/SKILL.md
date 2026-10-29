@@ -22,7 +22,13 @@ git tag -l 'v*' --sort=-v:refname | head         # the newest tags
 git log --oneline --reverse <base>..HEAD         # our stack, in order
 git log --oneline <base>..<target>               # what upstream changed
 git diff --stat <base> <target>                  # which files
+python3 tools/upstream_shadow.py --from <base> --to <target>   # upstream's changes to the code ours replaces
 ```
+
+The last one matters most for keeping upstream's work: where a feature of ours replaces upstream code, that code stays
+in its file verbatim inside `#ifdef MELODEE_UPSTREAM_<FEATURE>` (never defined), so upstream's edits there merge
+without a conflict but reach nothing of ours. The tool lists each such edit (and changes to upstream test files ours
+replaces). Preview it here; it becomes a checklist after the replay (step 4).
 
 Pick the target: the newest **stable** tag unless the user asks for a release candidate (RCs come often; DEV.md
 suggests a throwaway branch for them, and rerere then remembers the resolutions). Show the user: our base, the target,
@@ -52,8 +58,9 @@ For each stop:
 1. `git status` and `git diff --name-only --diff-filter=U` for the conflicted files; `git log -1 REBASE_HEAD` for
    which of our commits is being applied, then its DEV.md row and feature section.
 2. Resolve by the rule DEV.md gives: **keep upstream's change and re-apply ours on top.** Our hooks are calls into our
-   own files (`nav_*()`, `gn_*()`, `seqt_*()`, `cseq_*()`, `shape_*()`) with a comment naming the file, so the conflict
-   shows what is ours. Files deleted on purpose (SID, TRIO) stay deleted (`git rm`). Upstream tests we changed on
+   own files (`nav_*()`, `gn_*()`, `seqt_*()`, `cseq_*()`, `shape_*()`, `sect_*()`) with a comment naming the file, so
+   the conflict shows what is ours. Inside a `MELODEE_UPSTREAM_*` marker, always take upstream's new text whole: it is
+   their code kept for reference, and the tool compares it, so it must stay verbatim. Files deleted on purpose (SID, TRIO) stay deleted (`git rm`). Upstream tests we changed on
    purpose: take their new version, then re-apply our listed changes.
 3. A function upstream moved to another file takes our hook with it: `git grep` the function name and re-add our
    lines where it now lives (DEV.md's `param_kept` example).
@@ -67,7 +74,20 @@ For a large conflict, building at that point (`./build.sh`) is cheaper than find
 
 ## 4. Check the result
 
-A clean rebase does not mean a working build. Run everything:
+A clean rebase does not mean a working build, nor that upstream's work reached ours. First the port list:
+
+```sh
+python3 tools/upstream_shadow.py --from <base> --to <target>   # exit 1 while items are listed
+```
+
+For each item: read upstream's diff and the matching code in our file (the marker's comment names it; the block's
+first line names the function). Port the change when it applies to ours (a fix, a new case, a renamed field, a new
+parameter our version must take too), or decide it does not (it only concerns what we removed, such as the jam log or
+held blocks) and say why. Ask the user when the choice changes behaviour. Keep the decisions for the DEV.md paragraph
+(step 5). A block reported as matching neither tag means our marker no longer holds upstream's text: restore it from
+the tag (`git show <target>:<file>`).
+
+Then everything else:
 
 ```sh
 source ~/.cache/melodee-venv/bin/activate
@@ -90,7 +110,8 @@ If upstream now ships something we carry (DEV.md's *Drop when*), drop that commi
 ## 5. Record it in DEV.md and commit
 
 Add a paragraph like the existing one under the table: "Replayed onto <target> on <date> (`tj/<target>`): …" with the
-commits dropped or squashed, the conflicts met and how each was resolved, the tests fixed after it. Update the table
+commits dropped or squashed, the conflicts met and how each was resolved, the tests fixed after it, and each
+`upstream_shadow.py` item: ported (to which function) or not applicable (why). Update the table
 and lists for anything that moved (new hook files, renamed functions). Commit that with the docs row (the
 `fork-commit` skill).
 

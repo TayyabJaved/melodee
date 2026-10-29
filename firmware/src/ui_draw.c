@@ -1012,6 +1012,13 @@ static void confirm_text(char *a, char *b)
         a[15] = (char)('A' + chain_config.sect[k % CHAIN_ROWS]);
         str_cpy(b, sect_uses(chain_config.sect[k % CHAIN_ROWS]) > 1u ? "This column only" : "Its last column", 32);
         break;
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+    case CF_TAKE_JAM:                                   /* the rows it replaces */
+        str_cpy(a, "SONG FROM JAM?", 24);
+        fmt_int(b, (int32_t)chain_config.count);
+        str_cpy(b + str_len(b), " rows replaced", 16);
+        break;
+#endif                                          /* MELODEE_UPSTREAM_SONG */
     case CF_CLEAR_SONG:
         str_cpy(a, "CLEAR SONG ORDER?", 24);
         break;

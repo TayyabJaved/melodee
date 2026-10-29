@@ -2762,7 +2762,7 @@ static int test_chain(void)
     trk[0].seq_idx = 1;
     last = step_samples(&trk[0], div_samples((uint32_t)trk[0].p[P_SDIV]), 1);
     trk[0].seq_pos = last - n + 19u;
-    chain.rest_pos = chain.len - n + 19u;
+    chain.rest_pos = sect_clk.len - n + 19u;
     events_block(n);
     ok = chain.row == 1;
     for (i = 0; i < NPART; i++) ok &= trk[i].seq_pos == 19u && trk[i].seq_idx == 0;
@@ -2816,7 +2816,7 @@ static int test_chain(void)
     turn(EN_PRESET, -10);
     bad += check("  turned below a beat: AUTO again", !chain_config.len[0]);
     press(B_PLAY); events_block(32);
-    bad += check("  PLAY loops the section (the header: LOOPING A)", chain.running && chain.solo && str_eq(song_edit_status(), "LOOPING A"));
+    bad += check("  PLAY loops the section (the header: LOOPING A)", chain.running && sect_clk.solo && str_eq(song_edit_status(), "LOOPING A"));
     turn(EN_PRESET, 2);
     bad += check("  edits while it loops", chain_config.len[0] && chain.config.len[0] == chain_config.len[0]);
     press(B_PLAY); events_block(32);

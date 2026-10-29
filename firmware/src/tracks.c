@@ -65,6 +65,11 @@ static int track_remove(uint32_t k)
     bank_restore(raw);
 #endif
     proj_cur = (uint8_t)cur;                            /* (still the project of its slot) */
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by song_sect.c (tools/upstream_shadow.py) */
+    for (r = 0; r < CHAIN_ROWS; r++)                    /* the jam so far, the armed and solo tracks too */
+        for (j = k; j + 1u < NTRK; j++)
+            jam.pat[r][j] = jam.pat[r][j + 1u];
+#endif                                          /* MELODEE_UPSTREAM_SONG */
     song.rec = trk_bits_remove(song.rec, k);
     song.rec_latch = trk_bits_remove(song.rec_latch, k);
     track_solo = trk_bits_remove(track_solo, k);

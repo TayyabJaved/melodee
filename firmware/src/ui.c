@@ -21,7 +21,6 @@ static void template_save(void);
 static void template_load(void);
 static uint32_t chain_prepare(void);
 static uint32_t chain_prepare_from(uint32_t start);
-static uint32_t chain_prepare_solo(uint32_t start, uint32_t solo);
 static int up_used(uint32_t k);              /* user presets: upreset.c */
 static int up_load(uint32_t k);
 static int up_favorite(uint32_t k);
@@ -243,7 +242,7 @@ static void (*designer_quit)(int discard);   /* designer_close while it is open 
 #include "screen.c"
 
 enum { CF_NONE, CF_CLEAR_SEQ, CF_CLEAR_TRK, CF_OVR_PROJ, CF_OVR_USER,
-       CF_DEL_ROW, CF_CLEAR_SONG, CF_INIT_SOUND, CF_CLEAR_MOTION, CF_ERASE_USER, CF_NEW_SONG, CF_ERASE_PROJ,
+       CF_DEL_ROW, CF_CLEAR_SONG, CF_INIT_SOUND, CF_CLEAR_MOTION, CF_ERASE_USER, CF_TAKE_JAM, CF_NEW_SONG, CF_ERASE_PROJ,
        CF_DEL_PAT, CF_PASTE_PAT, CF_DISCARD_DESIGN, CF_IMPORT, CF_BULK_ERASE, CF_OLD_SETTINGS, CF_OLD_TEMPLATE,
        CF_DEL_TRACK, CF_PAT_KEY, CF_CLEAR_SHARED, CF_BLE_FORGET };   /* ui.confirm: REC held on SEQ / ARP, on TRACKS; SAVE over a used slot; a
                                       * pattern over the user's steps; USER ERASE; PATTERNS: Delete pattern, Copy to

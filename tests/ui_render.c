@@ -765,7 +765,7 @@ static void ref_scene(int s)
         (void)song_sections_normalize(0);               /* (A B B C: B two loops of track 1's pattern) */
         ui.song_row = 3; go_page(GR_SONG);
         song.playing = 1; chain.running = 1; chain.row = 1; chain.remaining = 1; trk[0].seq_idx = 4;
-        chain.config = chain_config; chain.len = (uint32_t)chain_row_samples(1); chain.rest_pos = chain.len / 4u;
+        chain.config = chain_config; sect_clk.len = (uint32_t)chain_row_samples(1); chain.rest_pos = sect_clk.len / 4u;
         break;
     }
     case S_REF_ENV: case S_REF_LFO: case S_REF_EDIT_OSC: case S_REF_NOTES:

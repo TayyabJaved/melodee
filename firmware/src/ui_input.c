@@ -775,6 +775,29 @@ static void gn_print(void)
         ui_message("PRINTED: GEN OFF");
     }
 }
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+/* SEQ > SONG TAKE JAM: the patterns played since PLAY (seq.c jam) become the song's rows */
+static void jam_take(void)
+{
+    uint32_t i, k;
+    if (chain_busy()) { ui_message("STOP TO EDIT"); return; }
+    if (!song_edit_begin()) return;
+    chain_defaults(&chain_config);
+    memset(chain_patterns, 0, sizeof chain_patterns);
+    for (i = 0; i < jam.n; i++) {
+        for (k = 0; k < NTRK; k++)
+            chain_patterns[i][k] = jam.pat[i][k];
+        chain_config.row[i].slot = jam.pat[i][0];
+        chain_config.row[i].repeat = jam.rep[i];
+    }
+    chain_config.count = jam.n;
+    ui.song_row = 0;
+    ui.act = 0;
+    song_edit_cancel(); song_edit_end();
+    ui_message("SONG FROM JAM");
+    ui.force = 1;
+}
+#endif                                          /* MELODEE_UPSTREAM_SONG */
 
 /* Autosave: stopped and untouched for AUTOSAVE_MS (no key, button, knob or MIDI), the project back to its slot when it
  * differs from what is there (project.c project_autosave); once per rest */
@@ -1049,19 +1072,26 @@ static void edit_param(uint32_t slot, int32_t steps)
         patgrid_edit(slot, steps);
         return;
     }
-    if (pg->graph == GR_SONG) {                       /* KNOB 1 the column, 2 the section it plays; the section page:
-                                                       * KNOB k track k's pattern in it (ui_song.c) */
-        if (sect_on()) { sect_pattern(trk_group() + slot % NPART, steps); return; }
+    if (pg->graph == GR_SONG) { sect_song_knob(slot, steps); return; }   /* (ui_sect.c) */
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+    if (pg->graph == GR_SONG) {                       /* KNOB 1 the section, 2 the track, 3 its pattern there, 4 the
+                                                       * selected block's span (TAKE JAM: REC held) */
         if (slot == 0u) {
             ui.song_row = (uint8_t)clamp((int32_t)ui.song_row + steps, 0,
                 chain_config.count < CHAIN_ROWS || se.pending == SONG_SECTIONS_MOVE ? chain_config.count : CHAIN_ROWS - 1u);
             return;
         }
+        if (slot == 1u) {
+            track_select((uint32_t)clamp((int32_t)song.sel + (steps > 0 ? 1 : -1), 0, (int32_t)trk_n() - 1));
+            return;
+        }
         if (chain_busy()) { ui_message("STOP TO EDIT"); return; }
-        if (se.pending) return;
-        if (slot == 1u) song_column_section(steps);
+        if (se.pending && slot >= 2u) return;
+        if (slot == 2u) song_cell_pattern(steps);
+        if (slot == 3u) song_block_resize(steps);
         return;
     }
+#endif                                          /* MELODEE_UPSTREAM_SONG */
     if (chain_busy() && (pg->scope == SC_STEP || pg->graph == GR_STEPS ||
         0)) {
         ui_message("STOP TO EDIT"); return;
@@ -1767,10 +1797,7 @@ static void page_tap(uint32_t b)
 /* messages of things that happened elsewhere (a load, the editor, MIDI in): after this frame's own */
 static void ui_notices(void)
 {
-    if (song_note) {                                    /* a loaded song made into sections (song_chain.c) */
-        ui_message(song_note & SN_CUT ? "SONG CUT: 26 SECTIONS" : "SONG BLOCKS RESTART");
-        song_note = 0;
-    }
+    sect_notices();                                     /* (ui_sect.c: a loaded song made into sections) */
     if (motion_full) { motion_full = 0; ui_message("MOTION FULL"); }
     if (pattern_full) { pattern_full = 0; ui_message("PATTERN STORAGE FULL"); }
     if (recording_quant_blocked) { recording_quant_blocked = 0; ui_message("QNT STEP OCCUPIED"); }
@@ -2099,10 +2126,14 @@ static void ui_confirm_accept(void)
         }
     } else if (kind == CF_DEL_TRACK) {
         track_remove(ui.confirm_trk % NTRK);
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+    } else if (kind == CF_TAKE_JAM) {
+        jam_take();
+#endif                                          /* MELODEE_UPSTREAM_SONG */
     } else if (kind == CF_NEW_SONG) {
         new_open();
     } else if (kind == CF_CLEAR_SONG) {
-        if (song_edit_begin()) { chain_defaults(&chain_config); memset(chain_patterns, 0, sizeof chain_patterns); ui.song_row = 0; sp.open = 0; song_edit_cancel(); song_edit_end(); ui_message("SONG CLEARED"); }
+        if (song_edit_begin()) { chain_defaults(&chain_config); memset(chain_patterns, 0, sizeof chain_patterns); ui.song_row = 0; song_edit_cancel(); song_edit_end(); ui_message("SONG CLEARED"); }
     } else if (kind == CF_PASTE_PAT) {          /* PATTERNS' Copy to over a pattern in use */
         if (ui.ptc_on && ui.ptc_trk == ui.confirm_trk)
             ptc_paste(1);
@@ -2272,10 +2303,8 @@ static void ui_input(void)
         ui.seen_pattern_gen = TSEL->pattern_gen;
     }
     song_edit_sync();
-    if (ui.home || cur_page()->graph != GR_SONG) {
-        se.pending = se.range = 0;
-        if (!song_picker.active) sp.open = 0;          /* (the section page is SONG's; a preset picked returns to it) */
-    }
+    if (ui.home || cur_page()->graph != GR_SONG) se.pending = se.range = 0;
+    sect_page_left();                                   /* (ui_sect.c) */
     if(bulk.on && (ui.home || slot_kind()==SK_PROJECT || bulk.track!=song.sel || bulk.pattern!=TSEL->pattern || bulk.engine!=library_engine() ||
        (!slot_kind() && (cur_page()->graph!=GR_ROLL || (bulk.on==1u?bulk.generation!=TSEL->pattern_gen:bulk.generation!=recording_generation)))))bulk_clear();
     step_history_sync();                                /* (seq_undo.c: a change from elsewhere: a fresh history) */
@@ -2304,8 +2333,12 @@ static void ui_input(void)
     } else if (rec == BT_TAP) {
         rec_tap();
     } else if (rec == BT_HOLD) {
-        if (!ui.home && cur_page()->graph == GR_SONG)    /* (the section page: nothing to capture into) */
-            ;
+        if (!ui.home && cur_page()->graph == GR_SONG)    /* SONG: TAKE JAM (the jam's rows as the song) */
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+            ps_jam();
+#else
+            ;                                           /* (ui_sect.c: no jam; nothing to capture into) */
+#endif                                          /* MELODEE_UPSTREAM_SONG */
         else if (gn_active(TSEL))
             gn_print();
         else
@@ -2534,14 +2567,14 @@ static void ui_input(void)
     if(bulk.on && !slot_kind() && !ui.home && cur_page()->graph==GR_ROLL && (oct&2u)){
         notes_bulk_sheet_open();oct=0;
     } else if((bulk.on||ui.note_move||ui.note_copy)&&(oct&1u)){bulk_clear();oct=0;}
+    if (!ui.home && cur_page()->graph == GR_SONG && !ui.layer && sect_song_oct(oct)) {   /* (ui_sect.c) */
+#ifdef MELODEE_UPSTREAM_SONG                    /* upstream's, replaced by ui_sect.c (tools/upstream_shadow.py) */
+    } else
     if (!ui.home && cur_page()->graph == GR_SONG && !ui.layer && (oct & 2u)) {
-        if (sect_on()) sect_sheet_open();               /* the section page: its sheet */
-        else if (se.pending) song_apply_destination();
+        if (se.pending) song_apply_destination();
         else if (se.range) song_range_sheet_open();
-        else if (ui.song_row >= chain_config.count) song_add_playing();   /* "+": a section of what plays now */
-        else sect_open(ui.song_row);                    /* a column: its section's page */
-    } else if (!ui.home && cur_page()->graph == GR_SONG && !ui.layer && (oct & 1u) && sect_on()) {
-        sect_close();
+        else song_cell_sheet_open();
+#endif                                          /* MELODEE_UPSTREAM_SONG */
     } else if (!ui.home && cur_page()->graph == GR_SONG && (oct & 1u) && (se.pending || se.range)) {
         song_edit_cancel();
     } else if (list_on() && (oct & 2u)) {                      /* a list page: OCT+ the row's list, OCT- Stage */
