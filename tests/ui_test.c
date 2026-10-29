@@ -454,11 +454,13 @@ static int test_sound_loads(void)
     bad += check("DRUM KIT 808 -> 909 stops the old kit and drops its different state layout",
                  t->p[P_E0] == DK_909 && (panic_req & 1u) && !resource[RES_ENGINE0].size);
     panic_req = 0; turn(EN_K1, 20);
-    bad += check("DRUM KIT stops at 909 when turned farther right",
-                 t->p[P_E0] == DK_909 && t->eng_req == ENGI_DRUM && !panic_req);
+    bad += check("DRUM KIT reaches FM when turned farther right",
+                 t->p[P_E0] == DK_FM && t->eng_req == ENGI_DRUM && (panic_req & 1u));
+    panic_req = 0; turn(EN_K1, 1);
+    bad += check("DRUM KIT stops at FM", t->p[P_E0] == DK_FM && !panic_req);
     t->p[P_E0] = 6;                                  /* a project saved with the removed SID kit */
     frame(); turn(EN_K1, 1);
-    bad += check("a removed SID kit value becomes 909 on the next KIT turn", t->p[P_E0] == DK_909);
+    bad += check("a removed SID kit value advances to CR78 on the next KIT turn", t->p[P_E0] == DK_CR78);
     printf("ui: undo level %u bytes\n", (unsigned)sizeof undo);
     return bad;
 }
@@ -2209,14 +2211,13 @@ static int test_patterns_queue(void)
     press(B_OCTDN);
     bad += check("..OCT- again: Stage", ui.home);
     stop_transport();
-    /* a part's 16 patterns: two pages of eight, the page goes with the pattern turned to */
+    /* a part's 16 patterns (upstream: two pages of eight, pt_page; ours: all 16 on screen, two rows, ui_sect_draw.c) */
     go_title("PATTERNS"); frame();
     pattern_switch(&trk[0], 7); ui.force = 1; frame();
-    bad += check("PATTERNS: track 1 on 8, the first page", pt_page() == 0u);
     turn(EN_K1, 1); frame();
-    bad += check("..KNOB 1 to 9: the second page", trk[0].pattern == 8u && pt_page() == 1u);
+    bad += check("PATTERNS: KNOB 1 from 8 to 9 (all 16 on screen)", trk[0].pattern == 8u);
     turn(EN_K2, 1); frame();
-    bad += check("..KNOB 2 (track 2 to 2): back to the first", trk[1].pattern == 1u && pt_page() == 0u);
+    bad += check("..KNOB 2: track 2 to 2", trk[1].pattern == 1u);
     pattern_switch(&trk[1], 0); pattern_switch(&trk[0], 0); frame();
     return bad;
 }

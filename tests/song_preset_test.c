@@ -246,7 +246,7 @@ static void pattern_presets(void)
 
 static void pattern_native_and_recorded_undo(void)
 {
-    const uint32_t engines[] = {ENGI_FM6, ENGI_CZ, ENGI_PROPHET, ENGI_DRUM, 3};
+    const uint32_t engines[] = {ENGI_FM6, ENGI_CZ, ENGI_PROPHET, ENGI_DRUM};   /* (3: the removed SID) */
     for (uint32_t e = 0; e < NELEM(engines); e++) {
         setup(0); engine_load_of(TSEL, ENGI_FM6, 9);
         song_sound_t base, live;

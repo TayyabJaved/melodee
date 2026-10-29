@@ -391,8 +391,7 @@ static const param_desc_t *track_desc(const track_t *t, uint32_t id)
     }
     if (id >= P_E0 && id <= P_E7) {                   /* the engine asked for (t->engine follows after a fade) */
         const engine_t *e = ENGINES[eng_idx(t->eng_req)];
-        const param_desc_t *d = MELODEE_LEGACY_EXTRAS && e->desc ? e->desc(t, id - P_E0) : 0;   /* a mode-dependent label /
-                                                                            * names (only legacy engines have one now) */
+        const param_desc_t *d = e->desc ? e->desc(t, id - P_E0) : 0;   /* a mode-dependent label / names */
         return d ? d : &e->edit[id - P_E0];
     }
     return &TP[id];

@@ -12,9 +12,9 @@
 static int fails;
 static void check(const char *s, int ok) { printf("DRUM KITS: %-84s %s\n", s, ok ? "ok" : "FAIL"); fails += !ok; }
 #define P_808 0u
-#define P_CR78 4u
-#define P_FM 5u
-static const char *const KIT_NAME[6] = {"808", "", "", "", "CR78", "FM"};
+#define P_CR78 2u                                       /* (this fork: SID KIT, SID DIGI removed, DEV.md row 14) */
+#define P_FM 3u
+static const char *const KIT_NAME[] = {"808", "909", "CR78", "FM"};
 
 static void kit(uint32_t preset)                 /* part 1 on a DRUM preset, nothing sounding */
 {
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     static const uint32_t KITS[2] = {P_CR78, P_FM};
     uint32_t s, k, i, j;
     check("KIT 7 is CR78, 8 FM: factory kits CR78 KIT and FM KIT", ENG_DRUM.edit[0].max == DK_FM &&
-          !strcmp(N_DRUM_KIT[DK_CR78], "CR78") && !strcmp(N_DRUM_KIT[DK_FM], "FM") && ENG_DRUM.npresets == 6u &&
+          !strcmp(N_DRUM_KIT[DK_CR78], "CR78") && !strcmp(N_DRUM_KIT[DK_FM], "FM") && ENG_DRUM.npresets == 4u &&
           !strcmp(ENG_DRUM.presets[P_CR78].name, "CR78 KIT") && ENG_DRUM.presets[P_CR78].e[0] == DK_CR78 &&
           !strcmp(ENG_DRUM.presets[P_FM].name, "FM KIT") && ENG_DRUM.presets[P_FM].e[0] == DK_FM);
     {   /* the names: CR78's own percussion where the 808 has drums the box had not */
@@ -123,10 +123,13 @@ int main(int argc, char **argv)
         check("CR78 names: TAMB on the clap lane, CONGA BONGL BONGH, HATS on KICK's knob",
               !strcmp(drum_sound_name(&trk[0], D9_CP), "TAMB") && !strcmp(drum_lane_name(&trk[0], DV_CLAP), "TAMB") &&
               !strcmp(drum_sound_name(&trk[0], 11), "CONGA") && !strcmp(drum_sound_name(&trk[0], 13), "BONGH") &&
-              drum_desc(&trk[0], 6) == &DRUM_CR_HATS && drum_cap(&trk[0]) == 1u);
+              ENG_DRUM.desc && ENG_DRUM.desc(&trk[0], 6) == &DRUM_CR_HATS &&
+              track_desc(&trk[0], P_E6) == &DRUM_CR_HATS &&
+              ENG_DRUM.cap && ENG_DRUM.cap(&trk[0]) == 1u);
         kit(P_FM);
         check("FM names: the 808's; one voice", !strcmp(drum_sound_name(&trk[0], D9_CP), "CLAP") &&
-              drum_desc(&trk[0], 6) == 0 && drum_cap(&trk[0]) == 1u);
+              ENG_DRUM.desc && ENG_DRUM.desc(&trk[0], 6) == 0 &&
+              ENG_DRUM.cap && ENG_DRUM.cap(&trk[0]) == 1u);
     }
     for (j = 0; j < 2u; j++) {   /* every drum alone: sounds, bounded, deterministic, over */
         for (int metal = 0; metal < (j ? 1 : 2); metal++) {

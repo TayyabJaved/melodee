@@ -508,6 +508,8 @@ static const engine_t ENG_DRUM = {
     .block = drum_block,
     .knob = {P_E1, P_E2, P_E3, P_E4},
     .poly = DV_NLANE,
+    .cap = drum_cap,
+    .desc = drum_desc,
     .oneshot = 1,
     .keys = drum_keys,
 };
