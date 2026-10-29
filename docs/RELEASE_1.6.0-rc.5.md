@@ -82,7 +82,9 @@ in one part of the song, and the song places sections in up to 64 columns.
 
 - Hold **F#5** (M3) and press the white keys **F3 .. D4** for FX, SCL, ENV,
   LFO, EDIT and GLO, and **F4 .. D5** for HOME, SAVE, ARP, SEQ, PLAY and REC;
-  E4 is left free as a gap between the two groups. A key
+  E4 is left free as a gap between the two groups.
+- **F#3 / G#3** with M3 held are OCT− / OCT+, as C#5 / D#5 are: the pair nearer the
+  left hand, on every page (ARP's SHAPE page too). A key
   held holds its button, so long presses work as on the panel.
 - While M3 is held, each key shows the same light as its button (bright,
   dim, pulsing); one whose button is dark glows faintly. On the ARP page in

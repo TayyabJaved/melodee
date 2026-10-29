@@ -157,6 +157,30 @@ int main(void)
     ok &= released == 2u && !fm1_in.buttons;
     check("M3 + C#5 + D#5: OCT- and OCT+ held together, each released by its own key", ok);
 
+    {   /* F#3 G#3: M3's OCT- OCT+ too (panel.c), white keys kept notes or not; notes without a table or with M1 */
+        static const uint8_t OCT[FM1_NAV_M3X] = {0, 1};   /* (PANEL_DEFAULT: OCT- 0, OCT+ 1) */
+        reset(MAP);
+        down(M3); down(1); take();
+        ok = noted == 1u << 1 && !fm1_in.buttons;          /* (no table yet: a note) */
+        up(1); take();
+        fm1_input_nav_m3x(OCT);
+        fm1_input_nav_whites_on(0);                     /* (ARP > SHAPE: these stay OCT) */
+        down(1); take();
+        ok &= pressed == 1u << OCT[0] && !noted;
+        down(3); take();
+        ok &= pressed == 1u << OCT[1] && fm1_in.buttons == 3u;
+        up(1); take();
+        ok &= released == 1u << OCT[0];
+        up(3); up(M3); take();
+        ok &= released == 1u << OCT[1] && !fm1_in.buttons;
+        down(M1); down(1); take();
+        ok &= noted == 1u << 1 && !fm1_in.buttons;
+        up(1); up(M1);
+        ok &= quiet();
+        fm1_input_nav_whites_on(1);
+        check("M3 + F#3 / G#3: OCT- / OCT+ too (also on ARP > SHAPE); M1 + F#3 plays", ok);
+    }
+
     reset(MAP);
     down(M1);
     down(M3);

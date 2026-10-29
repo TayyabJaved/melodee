@@ -443,6 +443,9 @@ static int test_modifier_lights(void)
     bad += check("M3 held: F#5 and A#4 (hear) lit, the buttons their usual lights (ARP's page), M1's black keys dark",
                  lit(14 + 25) && lit(14 + 17) && !lit(14 + 13) && !lit(14 + 15) && lit(panel.btn[B_ARP]) &&
                  !lit(panel.btn[B_FX]) && !lit(panel.btn[B_OCTUP]));
+    bad += check("..F#3 G#3 (OCT- OCT+) as their buttons too", led_get(fm1_led, 14 + 1) == lit(panel.btn[B_OCTDN]) &&
+                 led_get(fm1_led, 14 + 3) == lit(panel.btn[B_OCTUP]) && led_get(fm1_led_dim[1], 14 + 1) &&
+                 led_get(fm1_led_dim[1], 14 + 3));
     bad += check("..each key as its button: A4 (ARP) lit, F3 (FX) C5 (PLAY) D#5 (OCT+) dark but glowing, E4 (the gap) dark",
                  lit(14 + 16) && !lit(14 + 0) && !lit(14 + 19) && !lit(14 + 22) && !lit(14 + 11) &&
                  !led_get(fm1_led_dim[1], 14 + 11) &&

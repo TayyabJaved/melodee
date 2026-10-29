@@ -242,7 +242,7 @@ static void fm1_input_init(void)
 
 #if MELODEE_KEY_NAV
 /* F5 / G5 / F#5 held (M1 / M2 / M3): black keys press panel buttons, M1 the top row, M2 the bottom row, M3 OCT- and
- * OCT+ (C#5, D#5); M3 also the white keys F3 .. D5, the twelve buttons in one row, FX .. GLO, E4 a gap, HOME .. REC (but
+ * OCT+ (C#5, D#5, and F#3, G#3); M3 also the white keys F3 .. D5, the twelve buttons in one row, FX .. GLO, E4 a gap, HOME .. REC (but
  * where the UI keeps them notes: fm1_input_nav_whites_on, ARP > SHAPE's steps). The UI may free F5 / G5 / F#5 to be
  * notes for a while (fm1_input_nav_free: FX's punches, the drum grid). F#5 is M3 only when pressed alone: with M1 / M2
  * held it is their GLO / REC. A key's route is chosen at its press and undone at its release; two modifiers held: new keys do nothing. While a momentary edit is
@@ -256,6 +256,8 @@ static const uint8_t FM1_NAV_KEY[FM1_NAV_N] = {13, 15, 17, 20, 22, 25};       /*
 #define FM1_NAV_WHITES 12u
 static const uint8_t FM1_NAV_WHITE[FM1_NAV_WHITES] = {0, 2, 4, 6, 7, 9, 12, 14, 16, 18, 19, 21};   /* F3 G3 A3 B3 C4 D4,
                                                                                      * (E4: a note) F4 G4 A4 B4 C5 D5: M3's */
+#define FM1_NAV_M3X 2u
+static const uint8_t FM1_NAV_M3X_KEY[FM1_NAV_M3X] = {1, 3};   /* F#3 G#3: M3's OCT- OCT+ too, as C#5 D#5 (all pages) */
 #ifdef __ELF__
 #define FM1_NAV_POOL __attribute__((section(".pool")))   /* zeroed at boot; off the full .bss bank */
 #else
@@ -269,6 +271,7 @@ static volatile struct {
                                              * none (a note) */
     uint8_t white[FM1_NAV_WHITES];          /* M3's white keys: matrix button ids, as row */
     uint8_t whites, whites_off;             /* that table set; the keys kept notes for now (the UI, each pass) */
+    uint8_t m3x[FM1_NAV_M3X], m3x_on;       /* M3's F#3 G#3: matrix button ids, as row; that table set */
     uint32_t free;                          /* modifier keys that are notes for now (the UI, each pass) */
 } fm1_nav FM1_NAV_POOL;
 
@@ -290,6 +293,14 @@ static void fm1_input_nav_whites(const uint8_t *btn)    /* M3's white keys (as f
     for (i = 0; btn && i < FM1_NAV_WHITES; i++)
         fm1_nav.white[i] = btn[i];
     fm1_nav.whites = btn != 0;
+}
+static void fm1_input_nav_m3x(const uint8_t *btn)       /* M3's F#3 G#3 (as fm1_input_nav; 0: notes) */
+{
+    uint32_t i;
+    fm1_nav.m3x_on = 0;
+    for (i = 0; btn && i < FM1_NAV_M3X; i++)
+        fm1_nav.m3x[i] = btn[i];
+    fm1_nav.m3x_on = btn != 0;
 }
 static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }   /* (main loop) */
 static void fm1_input_nav_whites_on(int on) { fm1_nav.whites_off = (uint8_t)(on == 0); }   /* (main loop) */
@@ -345,6 +356,9 @@ static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a 
     for (i = 0; fm1_nav.mod == m3 && fm1_nav.whites && !fm1_nav.whites_off && i < FM1_NAV_WHITES; i++)
         if (k == FM1_NAV_WHITE[i])
             to = fm1_nav.white[i];
+    for (i = 0; fm1_nav.mod == m3 && fm1_nav.m3x_on && i < FM1_NAV_M3X; i++)
+        if (k == FM1_NAV_M3X_KEY[i])
+            to = fm1_nav.m3x[i];
     if (to > FM1_NAV_ACTION)                             /* (none: a note) */
         return 0;
     fm1_nav.to[k] = (uint8_t)to;

@@ -305,9 +305,12 @@ static void nav_mirror(uint8_t *const pl[4])
     uint32_t i, p, b, k, q, on;
     if (fm1_nav.mod != 1u << FM1_NAV_MOD[2])
         return;
-    for (i = 0; i < FM1_NAV_WHITES + FM1_NAV_N; i++) {
-        k = i < FM1_NAV_WHITES ? FM1_NAV_WHITE[i] : FM1_NAV_KEY[i - FM1_NAV_WHITES];
-        b = i >= FM1_NAV_WHITES ? fm1_nav.row[2][i - FM1_NAV_WHITES] :
+    for (i = 0; i < FM1_NAV_WHITES + FM1_NAV_N + FM1_NAV_M3X; i++) {
+        uint32_t j = i - FM1_NAV_WHITES - FM1_NAV_N;   /* (past the row: F#3 G#3) */
+        k = i < FM1_NAV_WHITES ? FM1_NAV_WHITE[i] : i < FM1_NAV_WHITES + FM1_NAV_N ? FM1_NAV_KEY[i - FM1_NAV_WHITES] :
+            FM1_NAV_M3X_KEY[j];
+        b = i >= FM1_NAV_WHITES + FM1_NAV_N ? (fm1_nav.m3x_on ? fm1_nav.m3x[j] : 0xFFu) :
+            i >= FM1_NAV_WHITES ? fm1_nav.row[2][i - FM1_NAV_WHITES] :
             fm1_nav.whites && !fm1_nav.whites_off ? fm1_nav.white[i] : 0xFFu;
         if (b >= FM1_NAV_ACTION || (q = led_pos[14u + k]) == 0xFFu)
             continue;

@@ -48,7 +48,7 @@ F5, G5 and F#5 are modifiers and do not play notes.
 | **G5** (M2) | F#4 G#4 A#4 C#5 D#5 F#5 | HOME SAVE ARP SEQ PLAY REC |
 | **F#5** (M3) | F3 G3 A3 B3 C4 D4 | FX SCL ENV LFO EDIT GLO |
 | **F#5** (M3) | F4 G4 A4 B4 C5 D5 (E4 is a gap) | HOME SAVE ARP SEQ PLAY REC |
-| **F#5** (M3) | C#5 / D#5 | OCT− / OCT+ |
+| **F#5** (M3) | C#5 / D#5, or F#3 / G#3 | OCT− / OCT+ (either pair) |
 | **F#5** (M3) | A#4 | Hear the note or chord at the cursor (NOTES, drum grid, DRUM HIT; stopped) |
 
 - A key held with M3 holds its button, so long presses work: **M3 + C4** held is undo, **M3 + F4** held the menu.

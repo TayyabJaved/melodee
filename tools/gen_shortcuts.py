@@ -180,14 +180,14 @@ def keys_m(n):
         held, mod = (G5,), "G5"
     else:
         keys = btn_keys(M3_WHITE, ROW1 + ROW2)
-        keys.update(btn_keys([20, 22], ["OCT−", "OCT+"]))
+        keys.update(btn_keys([20, 22, 1, 3], ["OCT−", "OCT+", "OCT−", "OCT+"]))   # (F#3 G#3: the pair again)
         keys[17] = ("HEAR", ACT_C)
         held, mod = (FS5,), "F#5"
     keys[held[0]] = (f"M{n}", SOFT)
     foot = {1: ["The top row of buttons on the black keys. F#5 is GLO here, not M3."],
             2: ["The bottom row of buttons on the black keys. F#5 is REC here, not M3."],
             3: ["All twelve buttons on the white keys, in one row: the top row's six, a gap at E4, then the bottom "
-                "row's. C#5 / D#5 are OCT− / OCT+, A#4 hears the note or chord at the cursor (stopped).",
+                "row's. C#5 / D#5 and F#3 / G#3 are OCT− / OCT+, A#4 hears the note or chord at the cursor (stopped).",
                 "A key held holds its button, so long presses work (C4: undo, F4: the menu). Each key lights as its "
                 "button does. On ARP in SHAPE mode the white keys stay SHAPE's steps. F5 and G5 play notes here."]}[n]
     return keys_page(f"Hold {mod} (M{n})", f"Hold {mod} (M{n})",

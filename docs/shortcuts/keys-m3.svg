@@ -46,10 +46,12 @@
 <text x="755" y="304" font-size="10" fill="#9A93A8" text-anchor="middle" font-weight="400">F5</text>
 <rect x="781" y="142" width="48" height="172" rx="5" fill="#EDE8F2" stroke="#2E2939" stroke-width="1" opacity="0.18"/>
 <text x="805" y="304" font-size="10" fill="#9A93A8" text-anchor="middle" font-weight="400">G5</text>
-<rect x="65" y="142" width="30" height="106" rx="4" fill="#262033" stroke="#17141F" stroke-width="2"/>
-<text x="80" y="239" font-size="8" fill="#5A5468" text-anchor="middle" font-weight="400">F#3</text>
-<rect x="115" y="142" width="30" height="106" rx="4" fill="#262033" stroke="#17141F" stroke-width="2"/>
-<text x="130" y="239" font-size="8" fill="#5A5468" text-anchor="middle" font-weight="400">G#3</text>
+<rect x="65" y="142" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="80" y="239" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">F#3</text>
+<text x="80" y="134" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">OCT−</text>
+<rect x="115" y="142" width="30" height="106" rx="4" fill="#9D8CFF" stroke="#17141F" stroke-width="2"/>
+<text x="130" y="239" font-size="8" fill="#17141F" text-anchor="middle" font-weight="400">G#3</text>
+<text x="130" y="134" font-size="10.5" fill="#9D8CFF" text-anchor="middle" font-weight="600">OCT+</text>
 <rect x="165" y="142" width="30" height="106" rx="4" fill="#262033" stroke="#17141F" stroke-width="2"/>
 <text x="180" y="239" font-size="8" fill="#5A5468" text-anchor="middle" font-weight="400">A#3</text>
 <rect x="265" y="142" width="30" height="106" rx="4" fill="#262033" stroke="#17141F" stroke-width="2"/>
@@ -76,7 +78,7 @@
 <rect x="28" y="325" width="22" height="14" rx="3" fill="none" stroke="#F3EEF8" stroke-width="2" stroke-dasharray="5 3"/>
 <text x="58" y="336" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">held for the layer</text>
 <text x="28" y="358" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">All twelve buttons on the white keys, in one row: the top row's six, a gap at E4, then the bottom row's. C#5 /</text>
-<text x="28" y="376" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">D#5 are OCT− / OCT+, A#4 hears the note or chord at the cursor (stopped).</text>
+<text x="28" y="376" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">D#5 and F#3 / G#3 are OCT− / OCT+, A#4 hears the note or chord at the cursor (stopped).</text>
 <text x="28" y="398" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">A key held holds its button, so long presses work (C4: undo, F4: the menu). Each key lights as its button</text>
 <text x="28" y="416" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">does. On ARP in SHAPE mode the white keys stay SHAPE's steps. F5 and G5 play notes here.</text>
 </svg>

@@ -42,7 +42,7 @@ static void panel_nav(int on)
     static const uint8_t ROW[FM1_NAV_ROWS][FM1_NAV_N] = {{B_FX, B_SCL, B_ENV, B_LFO, B_EDIT, B_GLO},
                                                         {B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC},
                                                         {NB, NB, B_NAV_HEAR, B_OCTDN, B_OCTUP, NB}};
-    uint8_t btn[FM1_NAV_ROWS][FM1_NAV_N], white[FM1_NAV_WHITES];
+    uint8_t btn[FM1_NAV_ROWS][FM1_NAV_N], white[FM1_NAV_WHITES], m3x[FM1_NAV_M3X];
     uint32_t r, i;
     for (r = 0; r < FM1_NAV_ROWS; r++)
         for (i = 0; i < FM1_NAV_N; i++)
@@ -51,6 +51,9 @@ static void panel_nav(int on)
         white[i] = panel.btn[ROW[i / FM1_NAV_N][i % FM1_NAV_N]];
     fm1_input_nav(on ? (const uint8_t (*)[FM1_NAV_N])btn : 0);
     fm1_input_nav_whites(on ? white : 0);
+    m3x[0] = panel.btn[B_OCTDN];                       /* M3's F#3 G#3: OCT- OCT+, as its C#5 D#5 */
+    m3x[1] = panel.btn[B_OCTUP];
+    fm1_input_nav_m3x(on ? m3x : 0);
 }
 #endif
 
