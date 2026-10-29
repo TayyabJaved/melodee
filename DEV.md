@@ -512,7 +512,7 @@ work is a stack of commits kept on top of an upstream release tag, in this order
 
 | # | Commit | What it changes | Upstream files it hooks into | Drop when |
 | --- | --- | --- | --- | --- |
-| 1 | M1/M2 key navigation (`MELODEE_KEY_NAV`) | F5 / G5 + black keys press panel buttons | `hal/fm1_input.h`, `panel.c`, `ui_input.c`, `melodee.c`, `tools/build.py`, `BUILDING.md`; host stand-ins in `tests/hostsim.c`, `tests/settings_test.c` | never (ours) |
+| 1 | M1/M2 key navigation (`MELODEE_KEY_NAV`) | F5 / G5 + black keys press panel buttons; on by default, in the one package (`build/melodee.fwsc`; `0`: the `-nonav` comparison build) | `hal/fm1_input.h`, `panel.c`, `ui_input.c`, `melodee.c`, `tools/build.py`, `BUILDING.md`; host stand-ins in `tests/hostsim.c`, `tests/settings_test.c` | never (ours) |
 | 2 | Humanize velocity | SCL > Humanize (OFF / LOW / HIGH), parameter slot 45, web editor `HVEL` | `core.h`, `params.c` (`param_kept`), `seq.c`, `midi_control.c`, `motion.c`, `project.c`, `upreset.c`, `ui_list.c`, `web/editor.html`, `web/EDITOR_PROTOCOL.md`; tests | upstream takes it |
 | 3 | Generators (ARP > GEN) | Tessera's generators on tracks 1–4, GEN / GEN 2 pages, the project's `'G'` block; TURING's display from the step sounding, its loop's first step marked | new `gen*.c/h`, `gen_track.c`; `seq.c` (one line), `params.c`, `project.c`, `project_stream.c`, `tracks.c`, `ui.c`, `ui_draw.c`, `ui_input.c`, `ui_pages.c`, `ui_popup.c`, `tools/audio_ram.py` (`XIP`) | never (ours) |
 | 4 | Pattern tools | Double, Half, Euclid, Euclid turn in the pattern sheet | new `seq_tools.c`; `ui.c` (one include), `ui_popup.c` | upstream takes it |
@@ -530,11 +530,11 @@ work is a stack of commits kept on top of an upstream release tag, in this order
 | 16 | Drum keys are the grid's black keys | a drum track's first eight black keys play its eight lanes everywhere, white keys silent | `eng_drum.c` (`drum_keys`); `tests/mpc_octave_test.c`, `tests/ui_test.c`, `tests/chord_test.c` | never (ours) |
 | 17 | ARP: SHAPE mode, a rhythm of ON / OFF steps | ARP > MODE SHAPE (7): each step ON (the next held note, DIR's order) or OFF (a rest); STEPS and DIR in PROB and ORD's places on ARP 2 (`shape.ctrl`, not those bytes); M3 / OCT− held on the ARP page: the white keys are the steps; stored in `project_t.shape` (10 B a track) and, on flash, in the SHP1 block of FBKP records (FBKL–FBKO as our rc.4 build wrote them) | new `arp_shape.c`; `seq.c` (`arp_step`: the gate, `keyboard_block`), `params.c` (include, MODE name, `page_desc`), `ui.c`, `ui_input.c` (`ui_leds`, `shape_keys`, PRESETS), `ui_name.c` (`keys_mode`), `ui_pages.c` (`pv_arp`), `project.c`, `pattern_store.c`, `web/editor.html` (MODE names) | never (ours) |
 | 18 | FX: SHARED first, then the track's NOTE FX | SHARED (audio) is the first FX page and FX opens it; the track's rack is NOTE FX, its send row "Send" | `params.c` (`PAGES` order, title), `ui.c` (`fx_rack_page`, the FX button), `ui_input.c` (`fx_rack_enter` / `fx_rack_back`), `ui_draw.c`, `ui_pages.c`, `docs/design/README.md`, `web/manual/index.html`; `fx_test.c`, `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` | never (ours) |
-| 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1 | `core.h` (`chain_config_t.sect`, `.len`), `song_chain.c` (sections, `song_sections_normalize`, section clock, `chain.solo`, `live_*`), `seq.c` (`live_tick`, no `jam`), `pattern_store.c` (SEC1, `pattern_room`), `project.c` (`chain_prepare_solo`), `editor.c` (rows converted), `tracks.c`, `ui_song.c` (rewritten), `ui_patterns.c` (SONG, the section page), `ui_popup.c`, `ui_input.c`, `ui_song_sound.c`, `ui_song_punch.c`, `ui_draw.c`, `ui.c`; tests `song_mode_test.c`, `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
+| 19 | SONG: sections, the section page, live launch | a song is columns of sections A–Z (one definition each: patterns or rests, a length, sounds, punches); OCT+ on + adds what plays; the section page (OCT+ on a column) sets each track's pattern and the length (AUTO: the longest pattern), PLAY loops it; REC launches a section live; the jam log, repeats and held blocks removed; older songs convert on load; the SEC1 block before SHP1; one look on PATTERNS, the section page and SONG (pattern numbers in the cells, empty cells blank, REST, SONG's cards in bars:beats) | `core.h` (`chain_config_t.sect`, `.len`), `song_chain.c` (sections, `song_sections_normalize`, section clock, `chain.solo`, `live_*`), `seq.c` (`live_tick`, no `jam`), `pattern_store.c` (SEC1, `pattern_room`), `project.c` (`chain_prepare_solo`), `editor.c` (rows converted), `tracks.c`, `ui_song.c` (rewritten), `ui_patterns.c` (PATTERNS' numbered cells, SONG, the section page), `ui_popup.c`, `ui_input.c`, `ui_song_sound.c`, `ui_song_punch.c`, `ui_draw.c`, `ui.c`; tests `song_mode_test.c`, `song_preset_test.c`, `song_punch_test.c`, `ui_test.c`, `ui_render.c`, `editor_test.c`, `project_stream_test.c`, `pattern_test.c`, `midi_track_test.c` | never (ours) |
 | 20 | GLO: its main page first | a GLO tap opens the GLO layer locked open as its main page (mutes, solos, TAP, levels); GLO again: MIXER, GLOBAL .. WEIGHTS 2, then the main page; SELECT: the six as one list, no wrap (GLO SELECT only with GLO held); held: the layer while held; no double-tap lock for GLO | `ui_layer.c` (`glo_main`, `glo_open`, `glo_scroll`, `layer_lock_input`, the footer), `ui_nav.c` (MIXER in GLO's `nav_pages`, `nav_pos`), `ui_input.c`, `ui.c` (`open_global`'s comment); tests `ui_test.c`, `layer_screen_test.c`, `ui_render.c` (`layer_glo_main`) | never (ours) |
 | 21 | M3: the white keys press all twelve buttons | M3 + F3 .. D4: FX SCL ENV LFO EDIT GLO, E4 a gap (a note), F4 .. D5: HOME SAVE ARP SEQ PLAY REC, held as long as the key; on ARP > SHAPE they stay its steps; M3's keys lit as their buttons (lit, dim, glow, breathing; dark ones glow), the buttons their usual lights | `hal/fm1_input.h` (`FM1_NAV_WHITE`, `fm1_input_nav_whites`, `_whites_on`), `panel.c` (`panel_nav`), `ui_nav.c` (`nav_keep`, `nav_leds`, `nav_mirror`), `ui_input.c` (`ui_leds`), `ui.c`; tests `key_nav_test.c`, `nav_test.c`, `hostsim.c` and `settings_test.c` stand-ins | never (ours) |
 | 22 | Navigation: one set of rules | docs/NAVIGATION.md's decisions: SELECT pages only, stopping at both ends (and `nav_next_group`; ENV / LFO taps still go round); PRESETS the bigger step and the row where KNOB 2 picks one (lists, sheets, value lists, the menu, slots, FX racks, MOD, MOTION, the drum grid's lanes, the punch editor's lanes), the section page's length, PRESETS: GO TO STAGE where it has nothing to do; the section map KNOB 1 / PRESETS category, KNOB 2 / SELECT page; slot pages KNOB 1 ten slots; the menu's PRESETS stops; the section page SELECT walks the sections (`sect_step`), its position k/n of them; GLO's main page 1/6; F5 G5 F#5 freed under FX and on the drum grid | `ui_nav.c` (`nav_scroll`, `nav_next_group`, `nav_pos`, `nav_head_pos`, `nav_keep`), `ui.c` (`open_family`), `ui_input.c` (PRESETS, SELECT, the map, sheets, `slot_jump`), `ui_designer_input.c`, `ui_menu.c`, `ui_song.c` (`sect_step`), `ui_song_punch.c`, `hal/fm1_input.h` (`fm1_input_nav_free`); tests `ui_test.c` (`test_navigation_rules`), `nav_test.c`, `layer_screen_test.c`, `key_nav_test.c`, `scale_picker_test.c`, `fx_test.c`, `hostsim.c` | never (ours) |
-| 23 | DEV.md, plan.md | this file, the plan, task.md, README's sections on our features | `README.md` | never (ours); keep it last |
+| 23 | DEV.md, plan.md, our docs | this file, the plan, task.md, README's sections on our features; the manual's and design notes' sections on them; docs/SHORTCUTS.md, docs/NAVIGATION.md, the PATTERNS and SONG guide and their generated pictures; the rc.5 notes | `README.md`, `web/manual/index.html`, `docs/design/README.md`, `BUILDING.md`, `docs/RELEASE_1.6.0-rc.5.md` | never (ours); keep it last |
 
 Replayed onto 1.6.0-rc.5 on 2026-10-27 (`tj/1.6.0-rc.5`): PR #90's own commit dropped (upstream merged it), the
 SHAPE commits squashed, the docs commit last again. Conflicts met: `melodee.c` (the version), `project_stream.c`
@@ -544,9 +544,18 @@ SHAPE storage written for rc.4 (now in FBKP, `pattern_room` keeps its 44 B). Tes
 `recorded_note()` / `recorded_set_note()` accessors in `seq_tools_test.c` and `gen_track_test.c`; the CHORDS card
 label is CHRD (CHORD is cut in Rubik).
 
+Since that replay the newer rows are working commits, not yet one a row: `e82af04` (row 19), `0367108` (the guide,
+row 23, and row 1's one build: `MELODEE_KEY_NAV` on by default), `4034a6a` (row 19's one look), `fd6b582` (rows 20 and 11's M3 + A#4, the
+PATTERNS empty cells), `96d9cc3` (row 21 and the shortcuts docs), then row 22 (the navigation rules, after it).
+Before the next replay, squash them into one commit per row in the table's order (`git rebase -i` by hand, outside
+this tool), keeping DEV.md and the docs (row 23) last.
+
 Our own files (no conflicts): `gen_track.c`, `seq_tools.c`, `ui_nav.c`, `chord_seq.c`, `ui_chords.c`, `arp_shape.c`
 (the SHAPE arp), the copied Tessera files, our tests (`key_nav_test.c`, `gen_test.c`, `gen_track_test.c`,
-`seq_tools_test.c`, `nav_test.c`, `arp_shape_seq_test.c`, `arp_shape_stream_test.c`), DEV.md, plan.md, task.md.
+`seq_tools_test.c`, `nav_test.c`, `arp_shape_seq_test.c`, `arp_shape_stream_test.c`), DEV.md, plan.md, task.md, and
+the docs with their generators: `docs/SHORTCUTS.md`, `docs/NAVIGATION.md`, `docs/shortcuts/` (`tools/gen_shortcuts.py`),
+`docs/song-guide/` (`tools/gen_song_guide.py`), `docs/design/mock/song_workflow_proposal.svg`. After a replay, run
+both generators with `--check`: a control upstream moved shows as a stale picture only if we change the text.
 Our hooks in upstream files are calls into our files, so a conflict shows what it belongs to: the UI's call
 `nav_*()` functions (`ui_nav.c`), the generators' `gn_*()` (`gen_track.c`), the pattern tools' `seqt_*()`
 (`seq_tools.c`), the chord sequencer's `cseq_*()` (`chord_seq.c`, `ui_chords.c`), the SHAPE arp's `shape_*()` and
@@ -558,7 +567,9 @@ its `shape` state (`arp_shape.c`); M1/M2's sit under `#if MELODEE_KEY_NAV`. To l
 **Expect conflicts in:** `ui_draw.c` (`draw_head`), `ui.c` (`grid_on`), `ui_input.c`, `ui_sections.c`, `ui_pages.c`
 (`pv_grid`, `pv_arp`), `ui_popup.c`, `seq.c`, `params.c`, `chord.c`, `engines.c`, `voice.c`, `eng_drum.c`,
 `project.c`, `pattern_store.c`, the song's files (`song_chain.c`, `ui_song.c`, `ui_patterns.c`, `ui_song_sound.c`,
-`ui_song_punch.c`, `editor.c`, `tracks.c`: see "Song sections") and README. **Deleted upstream files** (`eng_sid.c`, `drum_sid.c`, `eng_trio.c`, the
+`ui_song_punch.c`, `editor.c`, `tracks.c`: see "Song sections"), the navigation's (`ui_layer.c` GLO, `ui_menu.c`,
+`ui_designer_input.c`, `panel.c`, `seq_notes.c`, `hal/fm1_input.h`: rows 20–22), README, `web/manual/index.html` and
+`docs/design/README.md` (our sections in upstream's text). **Deleted upstream files** (`eng_sid.c`, `drum_sid.c`, `eng_trio.c`, the
 SID tests): when upstream changes them, keep them deleted (`git rm`), then `git grep -iw sid` for new references. Upstream tests we changed on purpose (when upstream changes one, keep their change and re-apply ours):
 
 - **UI and navigation:** `tests/ui_test.c` (the FM6 / CZ-1 EDIT cycles, the section tests, the general-engine
@@ -582,6 +593,12 @@ SID tests): when upstream changes them, keep them deleted (`git rm`), then `git 
   `project_stream_test.c` (valid sections in its oracles), `pattern_test.c`, `midi_track_test.c` (one-beat sections).
 - **FX pages (SHARED first):** `fx_test.c` (the FX button opens SHARED, OCT− on a rack goes home, NOTE FX titles),
   `midi_insert_test.c`, `midi_knob_test.c`, `midi_track_test.c`, `ui_render.c` (the track rack is "NOTE FX").
+- **GLO and navigation (rows 20–22):** `ui_test.c` (GLO's cycle and its SELECT list, `test_tempo_select`; the EDIT
+  cycles end on their last page, `engine_cycle` clears `fam_last`; the EDIT map's KNOB 1 / KNOB 2 swapped; the section
+  page's length on PRESETS; FM6 STORE moved with KNOB 2; `test_navigation_rules`), `layer_screen_test.c` (a GLO tap
+  locks, GLO SELECT on its main page, the EDIT map's encoder roles, SELECT stopping at a section's ends),
+  `scale_picker_test.c` and `fx_test.c` (SELECT stops at the last page), `settings_test.c` and `hostsim.c` (the
+  M-key stand-ins: `FM1_NAV_ACTION`, the white keys, `fm1_input_nav_free`).
 
 `git log <upstream tag>..HEAD` shows exactly what we change. When upstream absorbs one of
 our changes, drop that commit; upstream fixed our web editor port and favorites fixes
