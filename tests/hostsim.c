@@ -48,6 +48,8 @@ static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }
 static void fm1_input_nav_whites(const uint8_t *btn)
 { for (uint32_t i = 0; btn && i < FM1_NAV_WHITES; i++) fm1_nav.white[i] = btn[i]; fm1_nav.whites = btn != 0; }
 static void fm1_input_nav_whites_on(int on) { fm1_nav.whites_off = (uint8_t)(on == 0); }
+static uint32_t fm1_nav_free;
+static void fm1_input_nav_free(uint32_t keys) { fm1_nav_free = keys; }
 #endif
 /* Serial host fixtures retain their established admission policy. Dedicated
  * resident/dual-core tests select the target policy explicitly. */

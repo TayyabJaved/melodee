@@ -111,9 +111,10 @@ static void test_glo_select(void)
         assert(select_takes == 1u && !ui.ly && !ui.lock);
         assert(ui.home == home && ui.page == pg && TSEL->p[P_LEVEL] == level);
         swing = song.g[G_SWING];
+        uint32_t at, n = nav_pos(&at);                  /* (SELECT stops at a section's first and last page) */
         turn(EN_SELECT, dir);
         assert(song.g[G_SWING] == swing);
-        assert(home ? TSEL->p[P_LEVEL] != level : ui.page != pg);
+        assert(home ? TSEL->p[P_LEVEL] != level : (ui.page != pg) == (dir < 0 ? at > 0u : at + 1u < n));
     }
     reset_controls();
     HOME_SELECT = HS_LEVEL;
@@ -160,14 +161,14 @@ static void test_map_encoder_reads(void)
         assert(map_takes[role] == 1u);
         for (uint32_t r = 0; r < NE; r++) assert(map_takes[r] == 1u);
         assert(host_enc[panel.enc[role]] == dir * panel.dir[role]);
-        assert(ui.page == page && smap.row == row + (role == EN_K2 ? dir : 0) &&
-               smap.col == (role == EN_K2 ? 0u : col + dir));
+        assert(ui.page == page && smap.row == row + (role == EN_K1 ? dir : 0) &&   /* (KNOB 1 the category) */
+               smap.col == (role == EN_K1 ? 0u : col + dir));
         memset(map_takes, 0, sizeof map_takes); map_watch = 1;
         frame();
         map_watch = 0;
         assert(map_takes[role] == 1u && !host_enc[panel.enc[role]]);
-        assert(ui.page == page && smap.row == row + (role == EN_K2 ? 2 * dir : 0) &&
-               smap.col == (role == EN_K2 ? 0u : col + 2 * dir));
+        assert(ui.page == page && smap.row == row + (role == EN_K1 ? 2 * dir : 0) &&
+               smap.col == (role == EN_K1 ? 0u : col + 2 * dir));
     }
     puts("EDIT map: detents arriving after a knob read survive until the next input pass, both axes and directions");
 }

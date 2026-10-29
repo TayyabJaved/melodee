@@ -40,7 +40,7 @@ static void song_punch_input(uint32_t notes, uint32_t pressed, uint32_t oct, int
         else chain_play_ui();
     }
     if (oct & 1u) { pop_close(); return; }
-    int32_t delta = panel_enc(EN_K2);
+    int32_t delta = panel_enc(EN_K2) + panel_enc(EN_PRESET);   /* (PRESETS: the lane, as KNOB 2) */
     if (delta) song_punch.event = (uint8_t)clamp((int32_t)song_punch.event + delta, 0, CHAIN_FX_EVENTS - 1u);
     if (oct & 2u) song_punch_next();
     chain_fx_t *e = &chain_config.fx[song_punch.row][song_punch.event];

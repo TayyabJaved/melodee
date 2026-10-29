@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="860" height="340" viewBox="0 0 860 340" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="The effects racks">
-<rect x="0" y="0" width="860" height="340" rx="0" fill="#17141F"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="394" viewBox="0 0 860 394" font-family="Rubik, Inter, 'Helvetica Neue', Arial, sans-serif" role="img" aria-label="The effects racks">
+<rect x="0" y="0" width="860" height="394" rx="0" fill="#17141F"/>
 <text x="28" y="40" font-size="22" fill="#F3EEF8" text-anchor="start" font-weight="600">FX: SHARED, then NOTE FX</text>
 <text x="28" y="64" font-size="13" fill="#9A93A8" text-anchor="start" font-weight="400">SHARED: three slots every track can send to. NOTE FX: the track's note effects and its Send.</text>
 <rect x="28" y="88" width="192" height="112" rx="10" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
@@ -31,15 +31,19 @@
 <text x="44" y="236" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">OCT+</text>
 <text x="44" y="254" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">open the slot (empty: the picker)</text>
 <rect x="436" y="216" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
-<rect x="436" y="216" width="5" height="46" rx="2" fill="#9D8CFF"/>
-<text x="452" y="236" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">hold OCT+</text>
-<text x="452" y="254" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">SHARED: Routing, Clear shared FX</text>
+<rect x="436" y="216" width="5" height="46" rx="2" fill="#C9C2D6"/>
+<text x="452" y="236" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="700">PRESETS</text>
+<text x="452" y="254" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the row, as KNOB 2</text>
 <rect x="28" y="270" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
-<rect x="28" y="270" width="5" height="46" rx="2" fill="#C9C2D6"/>
-<text x="44" y="290" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="700">SELECT</text>
-<text x="44" y="308" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the racks and used slots</text>
+<rect x="28" y="270" width="5" height="46" rx="2" fill="#9D8CFF"/>
+<text x="44" y="290" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">hold OCT+</text>
+<text x="44" y="308" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">SHARED: Routing, Clear shared FX</text>
 <rect x="436" y="270" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
-<rect x="436" y="270" width="5" height="46" rx="2" fill="#9D8CFF"/>
-<text x="452" y="290" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">OCT−</text>
-<text x="452" y="308" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">slot, rack, Stage</text>
+<rect x="436" y="270" width="5" height="46" rx="2" fill="#C9C2D6"/>
+<text x="452" y="290" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="700">SELECT</text>
+<text x="452" y="308" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">the racks and used slots</text>
+<rect x="28" y="324" width="396" height="46" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
+<rect x="28" y="324" width="5" height="46" rx="2" fill="#9D8CFF"/>
+<text x="44" y="344" font-size="12" fill="#9D8CFF" text-anchor="start" font-weight="700">OCT−</text>
+<text x="44" y="362" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">slot, rack, Stage</text>
 </svg>

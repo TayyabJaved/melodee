@@ -1892,6 +1892,15 @@ static int fx_rack_back(void)
 }
 
 /* KNOB k turned s on the page shown (the sound designer's pages too): what it edits there, its card hot */
+static void slot_jump(uint32_t kind, int32_t d)         /* USER, FM6 STORE, P5 STORE: d slots on, stopping at the ends */
+{
+    uint32_t to = (uint32_t)clamp((int32_t)slot_cur(kind) + d, 0, (int32_t)slot_count(kind) - 1);
+    if (kind == SK_FM6) fm6_bslot = (uint16_t)to;
+    else if (kind == SK_P5) p5_store_slot = (int16_t)(to + 1u);
+    else ui.uslot = (uint16_t)to;
+    ui.force = 1;
+}
+
 static void page_knob_edit(uint32_t k, int32_t s)
 {
     const page_t *pg = cur_page();
@@ -1907,8 +1916,11 @@ static void page_knob_edit(uint32_t k, int32_t s)
         list_knob(k, s);
         return;
     }
-    if (slot_kind()) {                                  /* a slot page: KNOB 1 / 2 the slot (ui_slots.c) */
-        if (k < 2u)
+    if (slot_kind()) {                                  /* a slot page: KNOB 2 the slot, KNOB 1 ten a detent (PROJECT's
+                                                         * few: one, as KNOB 2; ui_slots.c) */
+        if (k == 0u && slot_kind() != SK_PROJECT)
+            slot_jump(slot_kind(), s * 10);
+        else if (k < 2u)
             edit_param(0, s);
         return;
     }
@@ -2368,13 +2380,15 @@ static void ui_input(void)
         enc_drop();
         return;
     }
-    if (smap.on) {                                      /* KNOB 1 / SELECT pages, KNOB 2 categories; OCT+ opens */
-        int32_t k1 = panel_enc(EN_K1), k2 = panel_enc(EN_K2);   /* closes it too (page_tap) */
-        int32_t sel = panel_enc(EN_SELECT);
+    if (smap.on) {                                      /* KNOB 1 / PRESETS categories (the group, as every picker),
+                                                         * KNOB 2 / SELECT pages; OCT+ opens; EDIT closes it too
+                                                         * (page_tap) */
+        int32_t k1 = panel_enc(EN_K1), k2 = panel_enc(EN_K2);
+        int32_t sel = panel_enc(EN_SELECT), pre = panel_enc(EN_PRESET);
         if (home == BT_TAP) {
             smap_close();
             go_home();
-        } else smap_input(k1 + sel, k2, oct);
+        } else smap_input(k2 + sel, k1 + pre, oct);
         if (lytap)
             layer_tap(lytap);
         b = ui.pg_down & ~fm1_in.buttons;
@@ -2385,7 +2399,7 @@ static void ui_input(void)
         /* The map already took these three controls. A scan interrupt can publish another detent before
          * this cleanup; leave it queued for the next pass while the map stays open. */
         for (k = 0; k < NE; k++)
-            if (!smap.on || (k != EN_K1 && k != EN_K2 && k != EN_SELECT))
+            if (!smap.on || (k != EN_K1 && k != EN_K2 && k != EN_SELECT && k != EN_PRESET))
                 panel_enc(k);
         return;
     }
@@ -2404,7 +2418,8 @@ static void ui_input(void)
             else if (sect_on()) sect_play();
             else chain_play_ui();
         }
-        int32_t k1 = panel_enc(EN_K1), k2 = panel_enc(EN_K2);
+        int32_t k1 = panel_enc(EN_K1), k2 = panel_enc(EN_K2) + panel_enc(EN_PRESET);   /* (PRESETS: the row, as
+                                                                                     * KNOB 2) */
         if (pop.on == POP_LIST) vlist_input(k1, k2, oct);
         else sheet_input(k1, k2, oct);
         ui.pg_down = 0;
@@ -2632,6 +2647,17 @@ static void ui_input(void)
     } else if (s && !ui.home && cur_page()->scope == SC_FMOP) {   /* FM6's operator pages: the operator */
         fm6_opsel = (uint8_t)clamp((int32_t)fm6_opsel + (s > 0 ? 1 : -1), 0, 5);
         ui.force = 1;
+    } else if (s && sect_on()) {                        /* SONG's section page: its length, a beat a detent */
+        sect_length(s);
+    } else if (s && list_on()) {                        /* a list page: the row, as KNOB 2 (ui_list.c) */
+        list_knob(1, s);
+    } else if (s && !ui.home && (slot_kind() || grid_on() || motion_page() || cur_page()->graph == GR_FXRACK ||
+                                 cur_page()->graph == GR_MOD)) {
+        page_knob(1, s);                                /* the rows KNOB 2 picks: a slot, a drum lane, a motion lane, a
+                                                         * rack's row, a MOD route */
+    } else if (s) {
+        ui_message("PRESETS: GO TO STAGE");             /* (nothing here: it browses sounds on Stage, the browser and
+                                                         * PATTERNS; never here, where it would replace a sound) */
     }
     if ((s = panel_enc(EN_ALGO)) != 0) {           /* ALGORITHM: the selected track, on every page (PATTERNS' Copy
                                                      * to: the track it goes to, the page showing its four) */
@@ -2654,8 +2680,8 @@ static void ui_input(void)
             ui.force = 1;
         } else if (step_gesture(s)) {                   /* ENV / SCL / a key held: the note's length, its place */
         } else if (glo_scroll(s, now)) {                /* GLO's main page, MIXER, GLOBAL ..: one list (ui_layer.c) */
-        } else if (sect_on()) {                         /* SONG's section page: its length, a beat a detent */
-            sect_length(s);
+        } else if (sect_on()) {                         /* SONG's section page: the song's next / previous section */
+            sect_step(s);
         } else if (!ui.home) {                          /* the section's pages (BPM: SEQ > TEMPO; the notes, the hits:
                                                          * KNOB 1) */
             page_scroll(s);

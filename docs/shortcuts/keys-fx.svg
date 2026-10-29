@@ -114,6 +114,6 @@
 <text x="413" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">SPACE</text>
 <rect x="464.5" y="343" width="14" height="14" rx="3" fill="#9A93A8"/>
 <text x="484.5" y="354" font-size="12" fill="#C9C2D6" text-anchor="start" font-weight="400">MIX</text>
-<text x="28" y="378" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">F5 (ECHO), G5 (WOBBLE) and F#5 (FADE OUT) are M1, M2 and M3 with the key shortcuts built in: reach those three</text>
-<text x="28" y="396" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">in a section's punch editor with KNOB 1.</text>
+<text x="28" y="378" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">While FX is held the M-keys step aside: F5, G5 and F#5 play ECHO, WOBBLE and FADE OUT (in a section's punch</text>
+<text x="28" y="396" font-size="13" fill="#C9C2D6" text-anchor="start" font-weight="400">editor too).</text>
 </svg>

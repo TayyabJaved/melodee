@@ -407,11 +407,12 @@ STEPS = [
     ("set-length", "SECTION PAGE", "Set the section's length",
      section_screen("C", "3 bars", False, uses=1),
      [(4, 30, 232, 24), (226, 210, 12, 12)],
-     ["Turn [SELECT]: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).",
+     ["Turn [PRESETS]: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).",
       "A pattern longer than the section is cut where it ends: the red mark."],
      "The AUTO chip goes when you set a length. On SONG its card shows it as bars:beats (3:0). Shorter patterns loop "
      "to fill the section.",
-     "There are no repeats: make a section longer, or place it twice. Every track starts again at each column."),
+     "There are no repeats: make a section longer, or place it twice. Every track starts again at each column. "
+     "[SELECT] walks the song's other sections (A, B, C …), each on its own page."),
     ("hear-section", "SECTION PAGE", "Hear just this section",
      section_screen("B", "4 bars", True, uses=1, looping=True),
      [(150, 6, 86, 18), (108, 199, 10, 40)],
@@ -427,7 +428,7 @@ STEPS = [
      ["On the section page tap [OCT+]: its sheet. [KNOB_2] picks a row, [OCT+] does it.",
       "Set preset: a sound for the selected track in this section ([ALGORITHM] picks the track).",
       "Punch FX (or [FX]): master effects at steps of the section."],
-     "Set preset, Remove preset, Punch FX, Copy as new section. (The length is on [SELECT], step 11.) A section's "
+     "Set preset, Remove preset, Punch FX, Copy as new section. (The length is on [PRESETS], step 11.) A section's "
      "sound plays in that section only; the normal one returns elsewhere and on STOP.",
      "Copy as new section makes the next letter with the same contents, then shows it, for a variation."),
     ("copy-as-new", "SONG", "Make a variation of a section",
@@ -538,7 +539,8 @@ def guide_md():
            "| SONG | FX | the picked section's master punches |",
            "| SONG | EDIT held | undo (EDIT + OCT- / OCT+: undo / redo) |",
            "| Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below pattern 1: REST) |",
-           "| Section page | SELECT | its length, a beat a click (below a beat: AUTO) |",
+           "| Section page | PRESETS | its length, a beat a click (below a beat: AUTO) |",
+           "| Section page | SELECT | the song's next / previous section (stops at the first and last) |",
            "| Section page | PLAY | loop just this section / stop |",
            "| Section page | OCT+ | Set / Remove preset, Punch FX, Copy as new section |",
            "| Section page | OCT- | back to SONG |", ""]

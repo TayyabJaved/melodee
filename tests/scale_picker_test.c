@@ -84,8 +84,10 @@ int main(void)
     assert(scale_settings_page(cur_page()));
     press(B_SCL); frames(400); assert(cur_page()->graph == GR_CHORD);
     press(B_SCL); frames(400); assert(scale_settings_page(cur_page()));
-    turn(EN_SELECT, -1); frame(); assert(cur_page()->graph == GR_CHORD);
-    turn(EN_SELECT, 1); frame(); assert(scale_settings_page(cur_page()));
+    turn(EN_SELECT, -1); frame(); assert(scale_settings_page(cur_page()));   /* (the first: SELECT stops) */
+    turn(EN_SELECT, 1); frame(); assert(cur_page()->graph == GR_CHORD);
+    turn(EN_SELECT, 1); frame(); assert(cur_page()->graph == GR_CHORD);     /* (the last: stops) */
+    turn(EN_SELECT, -1); frame(); assert(scale_settings_page(cur_page()));
     open_picker();
     assert(cur_page()->graph == GR_SCALE_PICKER && ui.scale_family == 1);
     assert(cur_page()->id[1] == P_SCALE && cur_page()->id[2] == P_ROOT);

@@ -597,9 +597,10 @@ Thanks to [@aroum](https://github.com/aroum) for the detailed feedback in
 
 ![Current FM-1 controls in Melodee](docs/media/melodee-controls.svg)
 
-- **SELECT** turns the pages of the open section (both ways); **MASTER** sets the volume,
-  **ALGORITHM** picks the track (T1 up to the last one in use), and **PRESETS** browses its sounds. KNOB 1 moves across
-  lists and grids, KNOB 2 moves down; on parameter pages KNOB 1–4 edit the four controls
+- **SELECT** turns the pages of the open section (both ways, stopping at the first and last); **MASTER** sets the
+  volume, **ALGORITHM** picks the track (T1 up to the last one in use), and **PRESETS** browses its sounds (elsewhere:
+  the page's next part or row, [docs/NAVIGATION.md](docs/NAVIGATION.md)). KNOB 1 moves across lists and grids, KNOB 2
+  moves down; on parameter pages KNOB 1–4 edit the four controls
 - **BPM**, the song's **SWG** and the selected track's recording **QNT** are on **SEQ > TEMPO**:
   the project's, saved and loaded with it (power-on: the BOOT project's, the template's or 120);
   GLO > GLOBAL keeps CLK and TUNE, the device's
@@ -720,7 +721,8 @@ On **SEQ > SONG** the song is columns of **sections** (A–Z, up to 64 columns):
 per track, a length, and optionally a sound and master punches per track. Each section is defined once; every
 column of it plays the same. **OCT+ on the + column** adds a section of what every track plays now (or places the
 matching section again); KNOB 1 picks a column, KNOB 2 which section it plays; **OCT+ on a column** opens its
-section page: KNOB k sets track k's pattern there, SELECT its length (AUTO: the longest pattern), PLAY loops it.
+section page: KNOB k sets track k's pattern there, PRESETS its length (AUTO: the longest pattern), SELECT walks
+the song's other sections, PLAY loops it.
 A section plays for its length: shorter patterns loop, longer ones are cut, every track restarts at each column.
 **REC** launches the picked section live: every track switches together on the next bar, then at the end of the
 launched section. PLAY runs the arrangement and the final column stops. STOP returns to the patterns selected
@@ -1297,12 +1299,14 @@ them while a song plays. From [Tessera](https://github.com/Rastapopolix/tessera)
   pitch, length and sound are on **DRUM HIT**. For precise timing edits of recorded hits, hold OCT+ for the pattern
   sheet and set **Drum view** to **Notes** (the piano roll; programmed hits do not show there), back to **Grid** the
   same way. It starts as Grid at power-on.
-- **All shortcuts, page by page, with pictures:** [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
+- **All shortcuts, page by page, with pictures:** [docs/SHORTCUTS.md](docs/SHORTCUTS.md); which knob navigates
+  where: [docs/NAVIGATION.md](docs/NAVIGATION.md).
 - **Keyboard shortcuts (built in):** hold F5 (M1) or G5 (M2) and press F#4 G#4 A#4 C#5 D#5 F#5 for FX SCL
   ENV LFO EDIT GLO / HOME SAVE ARP SEQ PLAY REC; hold F#5 (M3) and press the white keys F3 .. D5 for all twelve, FX SCL ENV LFO EDIT GLO, a gap at E4, HOME SAVE ARP SEQ PLAY
   REC (each key lit as its button is; in ARP > SHAPE they stay its steps), C#5 / D#5 for OCT− / OCT+, or A#4 to hear the note or chord at the NOTES
   cursor (also with NOTE PREVIEW off). While M3 is
-  held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). While one is held, its keys and
+  held, F5 and G5 are ordinary keys, not M1 / M2 (in ARP > SHAPE: steps 15 and 16). Held FX and the punch editor
+  free all three for their effects, the drum grid F5 and G5 for its steps 15 and 16. While one is held, its keys and
   the buttons they press light up. Momentary edits:
   hold LFO and turn knobs, the values spring back when you let go; press F#5 (or OCT+) while holding to keep them.
 - **Bluetooth:** its status shows in the header on Settings > Bluetooth only, and the BLUETOOTH row says OFF, ON or

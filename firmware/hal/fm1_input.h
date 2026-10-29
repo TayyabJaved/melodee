@@ -243,8 +243,9 @@ static void fm1_input_init(void)
 #if MELODEE_KEY_NAV
 /* F5 / G5 / F#5 held (M1 / M2 / M3): black keys press panel buttons, M1 the top row, M2 the bottom row, M3 OCT- and
  * OCT+ (C#5, D#5); M3 also the white keys F3 .. D5, the twelve buttons in one row, FX .. GLO, E4 a gap, HOME .. REC (but
- * where the UI keeps them notes: fm1_input_nav_whites_on, ARP > SHAPE's steps). F#5 is M3 only when pressed alone: with M1 / M2 held it is their GLO / REC. A key's route is
- * chosen at its press and undone at its release; two modifiers held: new keys do nothing. While a momentary edit is
+ * where the UI keeps them notes: fm1_input_nav_whites_on, ARP > SHAPE's steps). The UI may free F5 / G5 / F#5 to be
+ * notes for a while (fm1_input_nav_free: FX's punches, the drum grid). F#5 is M3 only when pressed alone: with M1 / M2
+ * held it is their GLO / REC. A key's route is chosen at its press and undone at its release; two modifiers held: new keys do nothing. While a momentary edit is
  * on (fm1_input_nav_keep), F#5 keeps it instead (fm1_nav.keep). Armed by fm1_input_nav */
 #define FM1_NAV_N 6u
 #define FM1_NAV_ROWS 3u
@@ -268,6 +269,7 @@ static volatile struct {
                                              * none (a note) */
     uint8_t white[FM1_NAV_WHITES];          /* M3's white keys: matrix button ids, as row */
     uint8_t whites, whites_off;             /* that table set; the keys kept notes for now (the UI, each pass) */
+    uint32_t free;                          /* modifier keys that are notes for now (the UI, each pass) */
 } fm1_nav FM1_NAV_POOL;
 
 /* arm the layer with the matrix buttons of its rows, 0: off (keys already routed still release). No lock: the
@@ -291,6 +293,7 @@ static void fm1_input_nav_whites(const uint8_t *btn)    /* M3's white keys (as f
 }
 static void fm1_input_nav_keep(int on) { fm1_nav.keep_on = (uint8_t)(on != 0); }   /* (main loop) */
 static void fm1_input_nav_whites_on(int on) { fm1_nav.whites_off = (uint8_t)(on == 0); }   /* (main loop) */
+static void fm1_input_nav_free(uint32_t keys) { fm1_nav.free = keys; }   /* (main loop: F5 G5 F#5 bits, notes now) */
 #define FM1__NOTES fm1_in.keys
 #define FM1__BUTTONS fm1_in.panel
 
@@ -319,7 +322,7 @@ static int fm1__nav(uint32_t k, uint32_t down)           /* 1: the key is not a 
         }
         return 0;
     }
-    if (!fm1_nav.on)
+    if (!fm1_nav.on || (bit & fm1_nav.free))            /* (a modifier key freed: a note, its release one too) */
         return 0;
     if (bit == m3 && fm1_nav.keep_on) {                  /* a momentary edit: F#5 keeps it */
         fm1_nav.keep = 1;

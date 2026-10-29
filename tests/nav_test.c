@@ -84,20 +84,24 @@ static int test_ble_toasts(void)
 }
 #endif
 
-/* SELECT once round fam's pages from the button: every page fam's, the button lit; back where it started */
+/* SELECT along fam's pages from the button to the last, where it stops: every page fam's, the button lit; as many
+ * back to the first, where it stops too */
 static int walk(uint32_t fam, uint32_t *n_out, const char **first)
 {
-    uint32_t start, n = 0, ok = 1;
+    uint32_t start, prev, n = 0, ok = 1;
     open_family(fam);
     start = ui.page;
     if (first) *first = cur_page()->title;
     do {
         ok &= nav_owner(ui.page) == fam && cur_fam() == fam;
+        prev = ui.page;
         turn(EN_SELECT, 1);
         n++;
-    } while (ui.page != start && n < 64u);
+    } while (ui.page != prev && n < 64u);
+    for (uint32_t i = 0; i < n; i++)
+        turn(EN_SELECT, -1);
     *n_out = n;
-    return ok && n < 64u;
+    return ok && n < 64u && ui.page == start;
 }
 static int test_pages_one_home(void)
 {

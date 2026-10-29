@@ -102,12 +102,12 @@
 <circle cx="54" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
 <line x1="54" y1="449" x2="54" y2="437" stroke="#C9C2D6" stroke-width="2"/>
 <text x="78" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">SELECT</text>
-<text x="78" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">pages (Stage: BPM …)</text>
+<text x="78" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">pages, stops at the ends</text>
 <rect x="231.5" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
 <circle cx="257.5" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
 <line x1="257.5" y1="449" x2="257.5" y2="437" stroke="#C9C2D6" stroke-width="2"/>
 <text x="281.5" y="445" font-size="12" fill="#F3EEF8" text-anchor="start" font-weight="600">PRESETS</text>
-<text x="281.5" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">sounds; EDIT: sections</text>
+<text x="281.5" y="462" font-size="11" fill="#9A93A8" text-anchor="start" font-weight="400">sounds; else the next part</text>
 <rect x="435" y="422" width="193.5" height="54" rx="8" fill="#221E2C" stroke="#2E2939" stroke-width="1"/>
 <circle cx="461" cy="449" r="15" fill="#262033" stroke="#C9C2D6" stroke-width="2"/>
 <line x1="461" y1="449" x2="461" y2="437" stroke="#C9C2D6" stroke-width="2"/>

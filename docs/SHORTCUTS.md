@@ -2,7 +2,8 @@
 
 A quick reference for every page. The [manual](../web/manual/index.html) explains each one in full; the
 [PATTERNS and SONG guide](song-guide/README.md) walks through making a song step by step. The pictures are drawn by
-`tools/gen_shortcuts.py`; each button keeps one colour in all of them, on its shortcut keys too.
+`tools/gen_shortcuts.py`; each button keeps one colour in all of them, on its shortcut keys too. Which knob moves
+through pages, rows and options on each screen: [NAVIGATION.md](NAVIGATION.md).
 
 **Terms:** *tap* means press and let go; *hold* means keep it down past HOLD (0.3–0.6 s, set in the menu); *A + B*
 means hold A, then press or turn B.
@@ -13,13 +14,13 @@ means hold A, then press or turn B.
 
 | Control | Does |
 |---|---|
-| **SELECT** | Turn the pages of the open section (on Stage: the HOME SELECT value, BPM by default) |
+| **SELECT** | Turn the pages of the open section, stopping at the first and last (on Stage: the HOME SELECT value, BPM by default); never up and down a list |
 | **KNOB 1** | Move across, or edit a value. On list pages **KNOB 2** picks the row, **KNOB 1** sets it |
 | **OCT+** | Enter, confirm, or open a sheet |
 | **hold OCT+** | The page's sheet of actions (Stage, sound pages, NOTES, PATTERNS, SONG, …) |
 | **OCT−** | Back or cancel, the innermost thing first (question, popup, sub-screen), then Stage |
 | **ALGORITHM** | Select the track, on every page |
-| **PRESETS** | Browse sounds (on engine EDIT pages: jump between sections; on NOTES: zoom) |
+| **PRESETS** | The bigger step: sounds on Stage, the browser and PATTERNS; elsewhere the page's next part (a section, an envelope group, the operator, NOTES' zoom) or the row of a list, sheet, menu, rack or the slots. Nothing to do: **PRESETS: GO TO STAGE** |
 | **hold EDIT** | Undo. **EDIT + OCT−** further back, **EDIT + OCT+** redo (eight levels) |
 | **HOME** | Stage. **hold HOME**: the settings menu |
 | **SAVE** | PRESETS / USER / PROJECT. **hold SAVE** (or **SAVE + REC**): save the project to its slot |
@@ -93,8 +94,8 @@ F5, G5 and F#5 are modifiers and do not play notes.
 | **KNOB 1** | Browse the key reference |
 | **double-tap FX** | Lock the layer; tap again to close |
 
-F5 (ECHO), G5 (WOBBLE) and F#5 (FADE OUT) are M1, M2 and M3 with the key shortcuts built in; a section's punch
-editor reaches them with KNOB 1.
+While FX is held (or locked) the M-keys step aside: F5 (ECHO), G5 (WOBBLE) and F#5 (FADE OUT) play their effects,
+in a section's punch editor too.
 
 ### LFO and ENV (hold, temporary changes)
 
@@ -135,15 +136,16 @@ editor reaches them with KNOB 1.
 | Control | Does |
 |---|---|
 | **hold OCT+** | Init sound, Save as user…, Favourite, Undo last load, Sound designer |
-| **EDIT** (on an EDIT page) | The section map: **KNOB 2** category, **KNOB 1** / **SELECT** page, **OCT+** open, **OCT−** / **EDIT** close |
+| **EDIT** (on an EDIT page) | The section map: **KNOB 1** / **PRESETS** category, **KNOB 2** / **SELECT** page, **OCT+** open, **OCT−** / **EDIT** close |
 | **PRESETS** | Jump between sections (FM6: operator, CZ-1: line) |
 
 ### USER slots (SAVE → USER)
 
 | Control | Does |
 |---|---|
-| **KNOB 1 / KNOB 2** | Pick a slot |
-| **OCT+** | Its sheet: Load, Save here, Rename, Erase (Send, Import here) |
+| **KNOB 2 / PRESETS** | Pick a slot, one a detent |
+| **KNOB 1** | Ten slots a detent |
+| **OCT+** | Its sheet: Load, Save here, Rename, Erase (Send, Import here); **KNOB 2** or **PRESETS** its rows |
 | **hold OCT+ + SELECT / KNOB 1 / KNOB 2** | Select a range; then tap **OCT+** for Send selected, Erase selected, Clear selection |
 
 ### NAME screen
@@ -161,10 +163,8 @@ editor reaches them with KNOB 1.
 
 | Control | Does |
 |---|---|
-| **KNOB 1** | Slot: A–D, TMPL, NEW |
-| **KNOB 2** | BOOT: which project loads at power-on |
-| **KNOB 3 / KNOB 4** | LOAD / SAVE (GO) |
-| **OCT+** | The slot's sheet: Load, Save here, Rename, Boot, Erase |
+| **KNOB 1 / KNOB 2 / PRESETS** | Pick the slot: A–D, TMPL, NEW |
+| **OCT+** | The slot's sheet: Load, Save here, Rename, Boot (loads at power-on), Erase |
 
 **NEW** (stopped): **KNOB 1–3** root, scale, tempo, then a role on each knob (--, KEEP, DRUMS, BASS, CHORDS, LEAD, PAD).
 
@@ -178,7 +178,7 @@ editor reaches them with KNOB 1.
 | **ENV DEST** | Filter, pitch, shape amounts |
 | **LFO** | RATE WAVE PHS FADE |
 | **LFO 2** | SYNC TRIG polarity |
-| **MOD** | **KNOB 2** route 1–4, **KNOB 1** source, **KNOB 3** destination, **KNOB 4** amount |
+| **MOD** | **KNOB 2** (or **PRESETS**) route 1–4, **KNOB 1** source, **KNOB 3** destination, **KNOB 4** amount |
 
 ## Effects (FX)
 
@@ -187,7 +187,7 @@ editor reaches them with KNOB 1.
 | Control | Does |
 |---|---|
 | **FX** | SHARED rack; again (or **SELECT**): the track's NOTE FX rack |
-| **KNOB 2** | Pick a row (SHARED: slots A–C or RETURN) |
+| **KNOB 2 / PRESETS** | Pick a row (SHARED: slots A–C or RETURN) |
 | **KNOB 1** | The row's effect |
 | **KNOB 3** (SHARED) | ROUTE: CHAIN or SPLIT |
 | **KNOB 4** | Its amount (MIX, SEND or RETURN) |
@@ -247,12 +247,12 @@ editor reaches them with KNOB 1.
 | **black keys 1–8** (F#3 … A#4) | Pick the lane (KICK SNARE CLAP HATCL HATOP TOM RIM BELL) |
 | **C#5 held** | ACC: the white keys set accents |
 | **D#5** | The next page (goes round) |
-| **KNOB 1–4** | STEP, LANE, HIT, ACC of the cursor's step |
+| **KNOB 1–4** | STEP, LANE, HIT, ACC of the cursor's step (**PRESETS**: the lane too) |
 | **tap EDIT** | Clear the step (STEP CLEARED) |
 | **hold OCT+** | The pattern sheet; **Drum view** switches Grid / Notes (the piano roll) |
 
-With the key shortcuts built in, F5 and G5 (steps 15 and 16) are M1 and M2, so hold M3 (F#5) to tap them, and F#5
-(page up) is M3; D#5 goes round the pages.
+On the drum grid M1 and M2 step aside: F5 and G5 are steps 15 and 16. F#5 stays M3 (so M3 + A#4 still hears the
+step); D#5 goes round the pages.
 
 ### PATTERN and TEMPO
 
@@ -312,7 +312,8 @@ With the key shortcuts built in, F5 and G5 (steps 15 and 16) are M1 and M2, so h
 | Control | Does |
 |---|---|
 | **KNOB 1–4** | Each track's pattern (below the first: REST) |
-| **SELECT** | Length, a beat a detent (below one beat: AUTO) |
+| **PRESETS** | Length, a beat a detent (below one beat: AUTO) |
+| **SELECT** | The song's next / previous section (A, B, C …), stopping at the first and last; header k/n |
 | **PLAY** | Loop this section |
 | **OCT+** | Set preset, Remove preset, Punch FX, Copy as new section |
 | **tap FX** | Punch FX |
@@ -325,7 +326,7 @@ With the key shortcuts built in, F5 and G5 (steps 15 and 16) are M1 and M2, so h
 | Control | Does |
 |---|---|
 | **an effect key / KNOB 1** | The effect (KNOB 1 to OFF clears it) |
-| **KNOB 2** | One of four lanes |
+| **KNOB 2 / PRESETS** | One of four lanes |
 | **KNOB 3 / KNOB 4** | START / END, in track 1's steps |
 | **OCT+** | A free punch |
 | **EDIT** | Remove the punch (hold: undo) |
@@ -339,7 +340,7 @@ With the key shortcuts built in, F5 and G5 (steps 15 and 16) are M1 and M2, so h
 | Control | Does |
 |---|---|
 | **KNOB 1** | Motion playback on / off |
-| **KNOB 2** | Lane (**SEQ + KNOB 2**: clear the lane) |
+| **KNOB 2 / PRESETS** | Lane (**SEQ + KNOB 2**: clear the lane) |
 | **KNOB 3** | Step |
 | **KNOB 4** | Value (**SEQ + KNOB 4**: remove the point) |
 | **OCT+** | Play, Clear that parameter, Clear all motion |
@@ -359,7 +360,8 @@ Record motion: arm **REC**, press **PLAY**, turn a sound knob.
 
 ## Menu (hold HOME)
 
-**KNOB 2** picks the row; **KNOB 1** or **OCT+** changes it. Among the settings:
+**KNOB 2** or **PRESETS** picks the row (stopping at the first and last); **KNOB 1** or **OCT+** changes it. Among the
+settings:
 
 | Item | Does |
 |---|---|

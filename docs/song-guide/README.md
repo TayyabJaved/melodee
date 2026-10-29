@@ -168,12 +168,12 @@ they all play the same. A *track* is its numbered chip at the left of each row.
 
 ![Step 11: Set the section's length](11-set-length.svg)
 
-1. Turn **SELECT**: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).
+1. Turn **PRESETS**: one beat a click, from its AUTO length. Turn it below one beat for AUTO again (LENGTH: AUTO).
 2. A pattern longer than the section is cut where it ends: the red mark.
 
 *You see:* The AUTO chip goes when you set a length. On SONG its card shows it as bars:beats (3:0). Shorter patterns loop to fill the section.
 
-> There are no repeats: make a section longer, or place it twice. Every track starts again at each column.
+> There are no repeats: make a section longer, or place it twice. Every track starts again at each column. **SELECT** walks the song's other sections (A, B, C …), each on its own page.
 
 ### 12. Hear just this section
 
@@ -192,7 +192,7 @@ they all play the same. A *track* is its numbered chip at the left of each row.
 2. Set preset: a sound for the selected track in this section (**ALGORITHM** picks the track).
 3. Punch FX (or **FX**): master effects at steps of the section.
 
-*You see:* Set preset, Remove preset, Punch FX, Copy as new section. (The length is on **SELECT**, step 11.) A section's sound plays in that section only; the normal one returns elsewhere and on STOP.
+*You see:* Set preset, Remove preset, Punch FX, Copy as new section. (The length is on **PRESETS**, step 11.) A section's sound plays in that section only; the normal one returns elsewhere and on STOP.
 
 > Copy as new section makes the next letter with the same contents, then shows it, for a variation.
 
@@ -291,7 +291,8 @@ they all play the same. A *track* is its numbered chip at the left of each row.
 | SONG | FX | the picked section's master punches |
 | SONG | EDIT held | undo (EDIT + OCT- / OCT+: undo / redo) |
 | Section page | KNOB 1-4 | tracks 1-4's pattern in the section (below pattern 1: REST) |
-| Section page | SELECT | its length, a beat a click (below a beat: AUTO) |
+| Section page | PRESETS | its length, a beat a click (below a beat: AUTO) |
+| Section page | SELECT | the song's next / previous section (stops at the first and last) |
 | Section page | PLAY | loop just this section / stop |
 | Section page | OCT+ | Set / Remove preset, Punch FX, Copy as new section |
 | Section page | OCT- | back to SONG |

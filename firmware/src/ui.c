@@ -663,9 +663,12 @@ static void open_family(uint32_t fam)
         for (k = 0; k < n && pg[k] != ui.page; k++) {}
         if (!n)
             return;
-        ui.page = !ui.home && k < n ? nav_next_group(fam, pg, n, k, 1) /* again: the next one; from elsewhere the */
-                  : native_page(ui.fam_last[fam], fam) && fam_has(fam, ui.fam_last[fam]) ? ui.fam_last[fam] : pg[0];
-                                                                        /* engine's page last used, else its first */
+        if (!ui.home && k < n) {                        /* again: the next one (after the last: the first) */
+            uint8_t to = nav_next_group(fam, pg, n, k, 1);
+            ui.page = to != pg[k] ? to : pg[0];
+        } else {                                        /* from elsewhere: the engine's page last used, else its first */
+            ui.page = native_page(ui.fam_last[fam], fam) && fam_has(fam, ui.fam_last[fam]) ? ui.fam_last[fam] : pg[0];
+        }
     } else if (fam == FAM_FX && !ui.home && cur_page()->fam == FAM_FX && cur_page()->graph != GR_FXRACK) {
         ui.page = (uint8_t)fx_rack_page(cur_page()->scope == SC_GLOBAL);   /* FX on a slot's page: its rack */
     } else if (fam == FAM_FX && (ui.home || ui.page != page_first(FAM_FX))) {

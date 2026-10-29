@@ -36,7 +36,7 @@ static int designer_input(uint32_t pressed,uint32_t notes)
     if(pressed&(1u<<panel.btn[B_PLAY]))transport_req=transport_busy()?2:1;
     panel_enc(EN_ALGO);                                 /* (the track stays the designer's) */
     if(pop.on==POP_SHEET || pop.on==POP_LIST){          /* its sheet (ui_popup.c) */
-        int32_t k1=panel_enc(EN_K1),k2=panel_enc(EN_K2);
+        int32_t k1=panel_enc(EN_K1),k2=panel_enc(EN_K2)+panel_enc(EN_PRESET);   /* (PRESETS: the row, as KNOB 2) */
         if(pop.on==POP_LIST)vlist_input(k1,k2,oct);
         else sheet_input(k1,k2,oct);
         enc_drop();

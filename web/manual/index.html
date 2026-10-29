@@ -154,8 +154,9 @@
         <h2>Getting around</h2>
         <p>One navigation language everywhere:</p>
         <ul>
-          <li><kbd>SELECT</kbd> turns the pages of the open section. On Stage it turns whatever <strong>HOME SELECT</strong> is set to (hold <kbd>HOME</kbd>). BPM is the default.</li>
-          <li><kbd>KNOB 1</kbd> moves across (or edits a value). On list pages, <kbd>KNOB 2</kbd> moves the row and <kbd>KNOB 1</kbd> sets its value.</li>
+          <li><kbd>SELECT</kbd> turns the pages of the open section, sideways; it never moves up and down a list. It stops at the first and the last page, so a quick spin lands on either. On Stage it turns whatever <strong>HOME SELECT</strong> is set to (hold <kbd>HOME</kbd>). BPM is the default.</li>
+          <li><kbd>KNOB 1</kbd> moves across (or edits a value). On list pages, sheets and the menu, <kbd>KNOB 2</kbd> moves the row and <kbd>KNOB 1</kbd> sets its value; in a picker <kbd>KNOB 1</kbd> is the group and <kbd>KNOB 2</kbd> the item.</li>
+          <li><kbd>PRESETS</kbd> is the bigger step: sounds on Stage, the browser and PATTERNS; elsewhere the page’s next part (a section, an envelope group, the operator, a page of steps, the scale), or the next row of a list, a sheet, the menu, a rack, the slots or the drum grid’s lanes. Where it has nothing to do it says <strong>PRESETS: GO TO STAGE</strong> and changes nothing (it never browses there, where it would replace the sound you are editing).</li>
           <li><kbd>OCT+</kbd> enters, confirms, or opens a sheet. <kbd>OCT−</kbd> goes back or cancels, closing the innermost thing first (a question, a popup, a sub-screen) and only then returning to Stage.</li>
           <li>On Stage the octave buttons only shift the octave (both together reset). Everywhere else they are Enter / Esc.</li>
           <li>Named values often open a picker. Hold <kbd>HOME</kbd> and set <strong>PICKER POPUPS</strong> to <strong>OFF</strong> to edit those names on the knob instead. The choice is remembered. Sheets, and lists you open yourself, stay as they are. Short pages (CHORD, ENV DEST, LFO DEST, LFO 2, ARP 2) put their settings straight on the four knobs.</li>
@@ -183,8 +184,8 @@
             <tr><td><kbd>KNOB 1</kbd>–<kbd>4</kbd></td><td>Edit the four controls on the open page, or Stage’s four sound knobs.</td></tr>
             <tr><td><kbd>MASTER KNOB</kbd></td><td>Overall output volume.</td></tr>
             <tr><td><kbd>ALGORITHM KNOB</kbd></td><td>Change the selected track, from 1 up to the last one in use, on every page; the screen takes that track’s color.</td></tr>
-            <tr><td><kbd>PRESETS KNOB</kbd></td><td>Browse sounds; on engine EDIT pages, jump between sections (or pick the operator / line); on NOTES, zoom.</td></tr>
-            <tr><td><kbd>SELECT KNOB</kbd></td><td>Turn the pages within the open section, both ways. On Stage, turn the <strong>HOME SELECT</strong> control instead.</td></tr>
+            <tr><td><kbd>PRESETS KNOB</kbd></td><td>Browse sounds (Stage, the browser, PATTERNS); on engine EDIT pages, jump between sections (or pick the operator / line); on NOTES, zoom; on the section page, its length; on lists, sheets, the menu and racks, the row. See <a href="#navigate">Getting around</a>.</td></tr>
+            <tr><td><kbd>SELECT KNOB</kbd></td><td>Turn the pages within the open section, both ways, stopping at the first and the last. On Stage, turn the <strong>HOME SELECT</strong> control instead; on SONG’s section page, the song’s sections.</td></tr>
             <tr><td><kbd>FX</kbd> <kbd>SCL</kbd> <kbd>ENV</kbd> <kbd>LFO</kbd> <kbd>EDIT</kbd> <kbd>GLO</kbd> <kbd>ARP</kbd> <kbd>SEQ</kbd></td><td>Open that family’s pages; press again for the next page.</td></tr>
             <tr><td><kbd>HOME</kbd></td><td>Return to Stage. On Stage, tap again for the chord view. Hold for the menu.</td></tr>
             <tr><td><kbd>SAVE</kbd></td><td>Tap for PRESETS / USER / PROJECT. Hold to write the project back to its slot. Playing stops first.</td></tr>
@@ -194,7 +195,7 @@
           </tbody>
         </table>
         <h4>Keyboard shortcuts (M1, M2, M3)</h4>
-        <p>Three keys at the top of the keyboard work as modifiers, so the panel buttons can be reached from the keys. F5, G5 and F#5 do not play notes.</p>
+        <p>Three keys at the top of the keyboard work as modifiers, so the panel buttons can be reached from the keys. F5, G5 and F#5 do not play notes, except where the keys need them: while <kbd>FX</kbd> is held or locked and in a section’s punch editor all three are effects again (ECHO, WOBBLE, FADE OUT), and on the drum grid F5 and G5 are steps 15 and 16 (F#5 stays M3, so M3 + A#4 still hears the step).</p>
         <table>
           <thead><tr><th>Hold</th><th>Then press</th><th>Does</th></tr></thead>
           <tbody>
@@ -277,7 +278,7 @@
             <figure class="shot"><img src="ref_sheet_sound.png" alt="Sound action sheet" width="240" height="240"><figcaption>Sound sheet (hold OCT+ on a sound page).</figcaption></figure>
             <figure class="shot"><img src="name_typing.png" alt="Name entry screen" width="240" height="240"><figcaption>NAME: type with the keys.</figcaption></figure>
           </div>
-          <p>Stop, tap <kbd>SAVE</kbd>, choose <strong>USER</strong>, pick a slot with <kbd>KNOB 1</kbd>/<kbd>KNOB 2</kbd>, press <kbd>OCT+</kbd> for the sheet (Load, Save here, Rename, Erase), choose <strong>Save here</strong>, then <kbd>OCT+</kbd> again. Name it on the NAME screen.</p>
+          <p>Stop, tap <kbd>SAVE</kbd>, choose <strong>USER</strong>, pick a slot with <kbd>KNOB 2</kbd> or <kbd>PRESETS</kbd> (one a detent) or <kbd>KNOB 1</kbd> (ten a detent), press <kbd>OCT+</kbd> for the sheet (Load, Save here, Rename, Erase), choose <strong>Save here</strong>, then <kbd>OCT+</kbd> again. Name it on the NAME screen.</p>
           <ul>
             <li>Every engine shares one bank, <strong>U001–U384</strong>. A slot can hold a Prophet program, an FM6 voice, a CZ-1 tone, a SID sound, a drum kit, or any mix of those. <strong>SAVE → USER</strong>, <strong>FM6 → STORE</strong> and <strong>P5 STORE</strong> are that same bank. PRESETS lists a user sound under its own engine’s factory tones.</li>
             <li>Saving keeps the native voice and the sound’s envelopes, modulation, voice controls and spread. Loading leaves the track’s mix, effects, scale, arpeggiator and notes alone.</li>
@@ -310,11 +311,8 @@
         <table>
           <thead><tr><th>Control</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><kbd>KNOB 1</kbd> SLOT</td><td>A, B, C, D, TMPL (template), or <strong>NEW</strong> past the template.</td></tr>
-            <tr><td><kbd>KNOB 2</kbd> BOOT</td><td>OFF or A–D — which project loads at power-on. BOOT OFF with a saved template uses the template.</td></tr>
-            <tr><td><kbd>KNOB 3</kbd> LOAD</td><td>GO to load the chosen slot.</td></tr>
-            <tr><td><kbd>KNOB 4</kbd> SAVE</td><td>GO to save into the chosen slot.</td></tr>
-            <tr><td><kbd>OCT+</kbd></td><td>The slot’s sheet: Load, Save here, Rename, Boot, Erase (Erase asks first).</td></tr>
+            <tr><td><kbd>KNOB 1</kbd> / <kbd>KNOB 2</kbd></td><td>Pick the slot: A, B, C, D, TMPL (template), or <strong>NEW</strong> past the template.</td></tr>
+            <tr><td><kbd>OCT+</kbd></td><td>The slot’s sheet: Load, Save here, Rename, Boot, Erase (Erase asks first). <strong>Boot</strong> makes that slot the project loaded at power-on (BOOT, shown on the page; OFF with a saved template uses the template).</td></tr>
           </tbody>
         </table>
         <ul>
@@ -327,7 +325,7 @@
 
       <section id="engines">
         <h2>Engines</h2>
-        <p>Selectable instruments: <strong>PROPHET</strong>, <strong>FM6</strong>, <strong>CZ-1</strong>, <strong>SID</strong>, <strong>DRUM</strong>. Press <kbd>EDIT</kbd> for that engine’s pages; press again or use <kbd>SELECT</kbd> to move through them. On engines with several sections, <kbd>PRESETS</kbd> jumps between sections (and on FM6 / CZ-1 picks the operator / line). On an EDIT page, tap <kbd>EDIT</kbd> again for the section map. In that map, <kbd>KNOB 2</kbd> moves by category, and <kbd>KNOB 1</kbd> or <kbd>SELECT</kbd> picks a page within it, one step per detent. Each category remembers its page. <kbd>OCT+</kbd> opens the page; <kbd>OCT−</kbd> or <kbd>EDIT</kbd> closes the map. Hold <kbd>EDIT</kbd> to undo.</p>
+        <p>Selectable instruments: <strong>PROPHET</strong>, <strong>FM6</strong>, <strong>CZ-1</strong>, <strong>SID</strong>, <strong>DRUM</strong>. Press <kbd>EDIT</kbd> for that engine’s pages; press again or use <kbd>SELECT</kbd> to move through them. On engines with several sections, <kbd>PRESETS</kbd> jumps between sections (and on FM6 / CZ-1 picks the operator / line). On an EDIT page, tap <kbd>EDIT</kbd> again for the section map. In that map, <kbd>KNOB 1</kbd> (or <kbd>PRESETS</kbd>) moves by category, and <kbd>KNOB 2</kbd> or <kbd>SELECT</kbd> picks a page within it, one step per detent, as every picker puts the group on KNOB 1. Each category remembers its page. <kbd>OCT+</kbd> opens the page; <kbd>OCT−</kbd> or <kbd>EDIT</kbd> closes the map. Hold <kbd>EDIT</kbd> to undo.</p>
         <p>Track 1 powers on with PROPHET FUNK BASS II. Retired engines (ANALOG, DIGITAL, PHASE, VOICE, NOISE, TRIO, WHEEL, PHYS, and others) stay silent if an old project still names them; their saved values remain. Choose another sound to play again. Ranges below are the device’s own; the same values appear in the <a href="../editor/">web editor</a>.</p>
 
         <section id="prophet">
@@ -839,7 +837,8 @@
           </div>
           <ul>
             <li>The rows are PATTERNS’ cells: the pattern the section plays on each track is filled; a resting track says REST across them. <kbd>KNOB 1</kbd>–<kbd>4</kbd> choose it for tracks 1–4 (turn below the first pattern for <strong>REST</strong>). <kbd>ALGORITHM</kbd> selects tracks as everywhere.</li>
-            <li>The top row shows the length, with <strong>AUTO</strong> while it follows the longest pattern, and at the right how many columns play this section. <kbd>SELECT</kbd> sets the length a beat a detent (from AUTO: its current length); turned below one beat, it returns to AUTO (<strong>LENGTH: AUTO</strong>).</li>
+            <li>The top row shows the length, with <strong>AUTO</strong> while it follows the longest pattern, and at the right how many columns play this section. <kbd>PRESETS</kbd> sets the length a beat a detent (from AUTO: its current length); turned below one beat, it returns to AUTO (<strong>LENGTH: AUTO</strong>).</li>
+            <li><kbd>SELECT</kbd> walks the song’s sections, A, B, C and on, each on its own page (the header shows its place, 2/3 and so on); it stops at the first and the last. A section looping stops; <kbd>PLAY</kbd> loops the one shown.</li>
             <li>Under the rows, a lane per track shows how its pattern fills the length: the first loop bright, later loops lighter, a red mark where the section cuts a pattern, a dotted line for a rest.</li>
             <li><kbd>PLAY</kbd> loops just this section; the header shows <strong>LOOPING A</strong>. Pattern and length changes are heard from the next pass. Press <kbd>PLAY</kbd> again to stop.</li>
             <li><kbd>OCT+</kbd> opens the section sheet: Set preset and Remove preset (for the selected track), Punch FX, Copy as new section. Tap <kbd>FX</kbd> for the punches directly. <kbd>OCT−</kbd> returns to SONG.</li>
@@ -928,7 +927,7 @@
 
       <section id="menu">
         <h2>Menu</h2>
-        <p>Hold <kbd>HOME</kbd> for the settings menu (a list; <kbd>KNOB 2</kbd> moves the row, <kbd>KNOB 1</kbd> or <kbd>OCT+</kbd> changes the value).</p>
+        <p>Hold <kbd>HOME</kbd> for the settings menu (a list; <kbd>KNOB 2</kbd> or <kbd>PRESETS</kbd> moves the row, stopping at the first and last, <kbd>KNOB 1</kbd> or <kbd>OCT+</kbd> changes the value).</p>
         <div class="shots">
           <figure class="shot"><img src="menu.png" alt="Menu list" width="240" height="240"><figcaption>MENU.</figcaption></figure>
           <figure class="shot"><img src="menu_hold.png" alt="Menu hold time item" width="240" height="240"><figcaption>HOLD time.</figcaption></figure>

@@ -514,8 +514,9 @@ static void rack_test(void)
     press(B_OCTUP);assert(cur_page()->id[0]==P_FX2MIX);head_chip_text(chip);assert(str_eq(chip,"NOTE ECHO"));
     press(B_FX);assert(str_eq(cur_page()->title,"NOTE FX"));                       /* FX from a slot: its rack */
     turn(EN_SELECT,1);assert(cur_page()->id[0]==P_FXMIX);turn(EN_SELECT,1);assert(cur_page()->id[0]==P_FX2MIX);
-    turn(EN_SELECT,1);assert(str_eq(cur_page()->title,"SHARED"));                  /* (slot 3 empty: none) */
-    press(B_OCTDN);assert(ui.home);                                                /* (SHARED, the first: OCT- home) */
+    turn(EN_SELECT,1);assert(cur_page()->id[0]==P_FX2MIX);                         /* (slot 3 empty: none; the last:
+                                                                                    * SELECT stops) */
+    go_title("SHARED");press(B_OCTDN);assert(ui.home);                             /* (SHARED, the first: OCT- home) */
     go_title("NOTE FX");fx_rack_row[0]=3;
     TSEL->p[P_FXSEND]=10;turn(EN_K4,1);assert(TSEL->p[P_FXSEND]>10);              /* the shared row: SEND */
     press(B_OCTUP);assert(str_eq(cur_page()->title,"SHARED"));

@@ -62,6 +62,22 @@ in one part of the song, and the song places sections in up to 64 columns.
   GLO still shows it only while held. The GLO double-tap lock is gone (a tap
   does it).
 
+## Navigation: one set of rules
+
+- **SELECT** turns pages only, and stops at the first and the last page instead of wrapping round, so a quick spin
+  lands on either end. It never moves up and down a list.
+- **PRESETS** is the bigger step: sounds on Stage, the browser and PATTERNS; elsewhere the page's next part (a
+  section, an envelope group, the operator, NOTES' zoom), or the row of a list, sheet, picker, the settings menu, a
+  rack, the slots or the drum grid's lanes. Where it has nothing to do it shows **PRESETS: GO TO STAGE**.
+- **The section page:** PRESETS sets the length; SELECT walks the song's sections (A, B, C …), the header showing
+  where you are (2/3).
+- **The EDIT section map:** KNOB 1 (or PRESETS) the category, KNOB 2 (or SELECT) the page, as every other picker.
+- **USER and the STOREs:** KNOB 2 (or PRESETS) one slot, KNOB 1 ten.
+- **GLO's main page** shows 1/6. **The settings menu:** PRESETS stops at the ends, as KNOB 2.
+- **F5, G5, F#5** play their effects while FX is held (ECHO, WOBBLE, FADE OUT); on the drum grid F5 and G5 are
+  steps 15 and 16.
+- The audit and the decisions: [docs/NAVIGATION.md](NAVIGATION.md).
+
 ## M3: every panel button on the white keys
 
 - Hold **F#5** (M3) and press the white keys **F3 .. D4** for FX, SCL, ENV,

@@ -237,8 +237,8 @@ def keys_fx():
                      "The effect lasts while the key is held, on the whole master. Double-tap FX to lock the layer; "
                      "KNOB 1 browses this reference on the screen.", keys,
                      legend=list(zip(PF, PF_C)),
-                     foot=["F5 (ECHO), G5 (WOBBLE) and F#5 (FADE OUT) are M1, M2 and M3 with the key shortcuts "
-                         "built in: reach those three in a section's punch editor with KNOB 1."])
+                     foot=["While FX is held the M-keys step aside: F5, G5 and F#5 play ECHO, WOBBLE and FADE OUT "
+                           "(in a section's punch editor too)."])
 
 
 def keys_seq():
@@ -267,16 +267,17 @@ LANES = ["KICK", "SNARE", "CLAP", "HAT\nCL", "HAT\nOP", "TOM", "RIM", "BELL"]   
 
 
 def keys_drum():
-    keys = {k: (f"{i + 1}", SOFT if i < 14 else MID) for i, k in enumerate(WHITES)}
+    keys = {k: (f"{i + 1}", SOFT) for i, k in enumerate(WHITES)}
+    keys[FS5] = ("M3", SOFT)
     keys.update({k: (LANES[i], TRK[i % 4]) for i, k in enumerate(BLACKS[:8])})
     keys[20] = ("ACC", THEME)
     keys[22] = ("PAGE", MARK)
     return keys_page("The drum grid", "The drum grid (NOTES on a drum track)",
                      "White keys: the page's 16 steps (a tap sets the selected lane there). Black keys 1–8: the lane "
-                     "(and play it). C#5 held: ACC, the white keys set accents. D#5: the next page (wraps).",
-                     keys, (), ["Steps 15 and 16 are F5 and G5, M1 and M2: hold M3 (F#5) to tap them. F#5 (page up) "
-                                "is M3; D#5 goes round. KNOB 1 STEP, 2 LANE, 3 HIT, 4 ACC edit the cursor's step; "
-                                "tap EDIT clears it."])
+                     "(and play it). C#5 held: ACC, the white keys set accents. D#5: the next page (goes round).",
+                     keys, (), ["M1 and M2 step aside here: F5 and G5 are steps 15 and 16. F#5 stays M3 (A#4 hears "
+                                "the step); D#5 goes round the pages. KNOB 1 STEP, 2 LANE (PRESETS too), 3 HIT, 4 ACC "
+                                "edit the cursor's step; tap EDIT clears it."])
 
 
 def keys_shape():
@@ -303,7 +304,7 @@ BUTTONS = [
     ("PLAY", "start / stop", "with REC: record"),
     ("REC", "arm (SONG: launch)", "capture"),
 ]
-KNOBS = [("SELECT", "pages (Stage: BPM …)"), ("PRESETS", "sounds; EDIT: sections"),
+KNOBS = [("SELECT", "pages, stops at the ends"), ("PRESETS", "sounds; else the next part"),
          ("ALGORITHM", "the track"), ("KNOB 1–4", "the page's four controls")]
 
 
@@ -436,25 +437,29 @@ CARDS = {
                      "what you change here changes every column of it.",
                      [("TRACK 1", "its pattern (below 1: REST)"), ("TRACK 2", "its pattern"), ("TRACK 3", "its pattern"),
                       ("TRACK 4", "its pattern")],
-                     [("SELECT", "the length, a beat a detent (below one beat: AUTO)"), ("PLAY", "loop this section"),
+                     [("PRESETS", "the length, a beat a detent (below one beat: AUTO)"),
+                      ("SELECT", "the song's next / previous section (header k/n)"), ("PLAY", "loop this section"),
                       ("OCT+", "Set preset, Remove preset, Punch FX, Copy as new section"),
                       ("tap FX", "Punch FX"), ("OCT−", "back to SONG")]),
     "page-punch": ("The punch editor", "The punch editor (FX on SONG or the section page)", "Master punches on a "
                    "section, in track 1's steps, on every loop of its pattern.",
                    [("EFFECT", "OFF clears it (or an effect key)"), ("LANE", "one of four"), ("START", "track 1's step"),
                     ("END", "track 1's step")],
-                   [("OCT+", "a free punch"), ("EDIT", "remove it (hold: undo)"), ("PLAY", "audition"),
+                   [("OCT+", "a free punch"), ("PRESETS", "the lane, as KNOB 2"), ("EDIT", "remove it (hold: undo)"),
+                    ("PLAY", "audition"),
                     ("OCT−", "back")]),
     "page-motion": ("MOTION", "SEQ › MOTION", "Knob moves recorded into the pattern: arm REC, press PLAY, turn a sound "
                     "knob.",
                     [("PLAY", "motion on / off"), ("LANE", "SEQ held: clear it"), ("STEP", "in the lane"),
                      ("VALUE", "SEQ held: remove the point")],
-                    [("OCT+", "Play, Clear that parameter, Clear all motion"), ("hold EDIT", "undo")]),
+                    [("OCT+", "Play, Clear that parameter, Clear all motion"), ("PRESETS", "the lane, as KNOB 2"),
+                     ("hold EDIT", "undo")]),
     "page-fx": ("The effects racks", "FX: SHARED, then NOTE FX", "SHARED: three slots every track can send to. NOTE "
                 "FX: the track's note effects and its Send.",
                 [("EFFECT", "the row's effect"), ("ROW", "a slot, RETURN, Send"), ("ROUTE", "SHARED: CHAIN / SPLIT"),
                  ("AMOUNT", "MIX, SEND or RETURN")],
-                [("OCT+", "open the slot (empty: the picker)"), ("hold OCT+", "SHARED: Routing, Clear shared FX"),
+                [("OCT+", "open the slot (empty: the picker)"), ("PRESETS", "the row, as KNOB 2"),
+                 ("hold OCT+", "SHARED: Routing, Clear shared FX"),
                  ("SELECT", "the racks and used slots"), ("OCT−", "slot, rack, Stage")]),
     "page-mod": ("MOD", "LFO › MOD", "Four modulation routes.",
                  [("SOURCE", "LFO, ENV, VEL, KEY, …"), ("ROUTE", "1–4"), ("DEST", "PITCH, CUT, AMP, …"),
@@ -465,8 +470,9 @@ CARDS = {
                    [("SELECT", "GLO's pages as one list: main, MIXER, GLOBAL … WEIGHTS 2"),
                     ("GLO", "the next page")]),
     "page-projects": ("PROJECT", "SAVE › PROJECT", "Four slots, the template and NEW.",
-                      [("SLOT", "A–D, TMPL, NEW"), ("BOOT", "loads at power-on"), ("LOAD", "GO"), ("SAVE", "GO")],
-                      [("OCT+", "Load, Save here, Rename, Boot, Erase"), ("hold SAVE", "save to the slot")]),
+                      [("SLOT", "A–D, TMPL, NEW"), ("SLOT", "the same, as KNOB 1"), None, None],
+                      [("OCT+", "Load, Save here, Rename, Boot (at power-on), Erase"), ("PRESETS", "the slot, one"),
+                       ("hold SAVE", "save to the slot")]),
 }
 
 

@@ -232,6 +232,24 @@ int main(void)
     }
 
     reset(MAP);
+    fm1_input_nav_free((1u << M1) | (1u << M3));        /* (FX held: its punches on F5, F#5) */
+    down(M1); take();
+    ok = noted == 1u << M1 && !fm1_nav.mod;
+    down(TRIG[0]); take();
+    ok &= noted == 1u << TRIG[0] && !fm1_in.buttons;
+    up(TRIG[0]); up(M1); take();
+    ok &= !fm1_in.notes;
+    down(M2); down(TRIG[0]); take();
+    ok &= fm1_nav.mod == 1u << M2 && pressed == 1u << MAP[1][0];   /* (G5 not freed: M2) */
+    up(TRIG[0]); up(M2); take();
+    fm1_input_nav_free(0);
+    down(M1); take();
+    ok &= fm1_nav.mod == 1u << M1 && !noted;
+    up(M1);
+    ok &= quiet();
+    check("freed modifiers (fm1_input_nav_free) are notes, the others still modifiers; unfreed: M1 again", ok);
+
+    reset(MAP);
     fm1_input_nav_keep(1);
     down(M3);
     take();

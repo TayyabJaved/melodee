@@ -2540,19 +2540,19 @@ static int test_popups(void)
                      o && ui.page == f);
         press(B_EDIT);
         o = smap.on && smap.row == sec_of(ui.page);
-        turn(EN_K2, 1); turn(EN_K1, 0); press(B_OCTUP);
-        bad += check("SECTIONS: EDIT on an EDIT page: the map; KNOB 2 a row down, OCT+ opens its page",
+        turn(EN_K1, 1); turn(EN_K2, 0); press(B_OCTUP);
+        bad += check("SECTIONS: EDIT on an EDIT page: the map; KNOB 1 a row down, OCT+ opens its page",
                      o && !smap.on && str_eq(sec.name[sec_of(ui.page)], "Mod"));
         press(B_EDIT); press(B_EDIT);
         bad += check("SECTIONS: EDIT again closes the map", !smap.on);
         press(B_EDIT);
         uint32_t row = smap.row;
-        turn(EN_K2, -2);                              /* (Mod, then Mixer two rows up: no Store below Voice) */
+        turn(EN_K1, -2);                              /* (Mod, then Mixer two rows up: no Store below Voice) */
         o = smap.row == row - 2u;
-        turn(EN_K2, 2);
-        bad += check("SECTIONS: map KNOB 2 counts categories, including several detents in one frame",
+        turn(EN_K1, 2);
+        bad += check("SECTIONS: map KNOB 1 counts categories, including several detents in one frame",
                      o && smap.row == row);
-        turn(EN_K2, -1);                              /* Filter remembers P5 FILTER, not Mod's page column */
+        turn(EN_K1, -1);                              /* Filter remembers P5 FILTER, not Mod's page column */
         uint8_t pg[8];
         smap_pages(smap.row, pg);
         bad += check("SECTIONS: a category selects its remembered page independently of the previous category",
@@ -2562,11 +2562,11 @@ static int test_popups(void)
         set_engine_of(TSEL, ENGI_CZ); go_title("CZ LINE"); frame(); press(B_EDIT);   /* (its envelopes: ENV's) */
         row = smap.row; o = 1;
         for (uint32_t k = row; k + 1u < sec.n; k++) {
-            turn(EN_K2, 1);
+            turn(EN_K1, 1);
             o &= smap.row == k + 1u;
         }
         for (uint32_t k = smap.row; k > 0u; k--) {
-            turn(EN_K2, -1);
+            turn(EN_K1, -1);
             o &= smap.row == k - 1u;
         }
         bad += check("SECTIONS: CZ map visits each category once regardless of its envelope page count", o);
@@ -2574,10 +2574,10 @@ static int test_popups(void)
         ui_power_on(); set_engine_of(TSEL, ENGI_PROPHET); frame(); press(B_EDIT); press(B_EDIT);
         uint8_t sp[8];
         smap_pages(smap.row, sp);
-        turn(EN_K1, 1);
+        turn(EN_K2, 1);
         o = smap.on && str_eq(sec.name[smap.row], "Sound") && str_eq(PAGES[sp[smap.col]].title, "EDIT 2");
-        turn(EN_K1, -1); turn(EN_K2, 1);
-        bad += check("SECTIONS: Prophet map, one detent each: KNOB 1 Filter/tune -> PW/mix, KNOB 2 Sound -> Osc",
+        turn(EN_K2, -1); turn(EN_K1, 1);
+        bad += check("SECTIONS: Prophet map, one detent each: KNOB 2 Filter/tune -> PW/mix, KNOB 1 Sound -> Osc",
                      o && smap.on && str_eq(sec.name[smap.row], "Osc"));
         press(B_HOME);
         const uint32_t engines[] = {ENGI_PROPHET, ENGI_FM6, ENGI_CZ, 3u, ENGI_DRUM};
@@ -2592,25 +2592,25 @@ static int test_popups(void)
                 for (uint32_t c = 0; c < count; c++)
                     for (int32_t dir = -1; dir <= 1; dir += 2) {
                         smap.row = (uint8_t)r; smap.col = (uint8_t)c; ui.force = 1; frame();
-                        turn(EN_K2, dir);
+                        turn(EN_K1, dir);
                         categories &= smap.on && ui.page == opened &&
                             smap.row == (uint32_t)clamp((int32_t)r + dir, 0, (int32_t)sec.n - 1);
                         for (uint32_t k = 0; k < 2u; k++) {
                             smap.row = (uint8_t)r; smap.col = (uint8_t)c; ui.force = 1; frame();
-                            turn(k ? EN_SELECT : EN_K1, dir);
+                            turn(k ? EN_SELECT : EN_K2, dir);
                             pages &= smap.on && ui.page == opened && smap.row == r &&
                                 smap.col == (uint32_t)clamp((int32_t)c + dir, 0, (int32_t)count - 1);
                         }
                     }
                 smap.row = (uint8_t)r; smap.col = 0; ui.force = 1; frame();
-                turn(EN_K1, (int32_t)count - 1);             /* several detents in one frame: each a page */
+                turn(EN_K2, (int32_t)count - 1);             /* several detents in one frame: each a page */
                 pages &= smap.row == r && smap.col == count - 1u;
             }
             press(B_HOME);
         }
-        bad += check("SECTIONS: map KNOB 2 moves one category a detent from every page in every engine", categories);
-        bad += check("SECTIONS: map KNOB 1 / SELECT move one page a detent inside the category in every engine", pages);
-        /* The Drum example: KNOB 1 stays within Sound; KNOB 2 jumps straight to Drum.
+        bad += check("SECTIONS: map KNOB 1 moves one category a detent from every page in every engine", categories);
+        bad += check("SECTIONS: map KNOB 2 / SELECT move one page a detent inside the category in every engine", pages);
+        /* The Drum example: KNOB 2 stays within Sound; KNOB 1 jumps straight to Drum.
          * A fresh category starts at its first page; a previously opened page is still recalled. */
         ui_power_on(); set_engine_of(TSEL, ENGI_DRUM); go_title("EDIT 1"); frame(); press(B_EDIT);
         uint8_t drum_pages[8];
@@ -2622,15 +2622,15 @@ static int test_popups(void)
         bad += check("DRUM MAP: opens Sound with Kit selected, Hit beside it, Drum below",
                      smap.on && str_eq(sec.name[sound_row], "Sound") && sound_pages == 2u && !smap.col &&
                      str_eq(first, "Kit") && str_eq(second, "Hit") && str_eq(sec.name[sound_row + 1u], "Drum"));
-        turn(EN_K1, 1);
-        map_pixels &= map_pixels_match_full();
-        bad += check("DRUM MAP: one KNOB 1 detent selects Hit while Sound and Drum below stay put",
-                     smap.on && smap.row == sound_row && smap.col == 1u &&
-                     str_eq(sec.name[smap.row + 1u], "Drum"));
         turn(EN_K2, 1);
         map_pixels &= map_pixels_match_full();
+        bad += check("DRUM MAP: one KNOB 2 detent selects Hit while Sound and Drum below stay put",
+                     smap.on && smap.row == sound_row && smap.col == 1u &&
+                     str_eq(sec.name[smap.row + 1u], "Drum"));
+        turn(EN_K1, 1);
+        map_pixels &= map_pixels_match_full();
         smap_pages(smap.row, drum_pages);
-        bad += check("DRUM MAP: one KNOB 2 detent selects Drum sound in Drum, with Lanes below",
+        bad += check("DRUM MAP: one KNOB 1 detent selects Drum sound in Drum, with Lanes below",
                      smap.on && smap.row == sound_row + 1u && !smap.col &&
                      str_eq(PAGES[drum_pages[smap.col]].title, "DRUM SOUND") &&
                      str_eq(sec.name[smap.row + 1u], "Lanes"));
@@ -2641,17 +2641,21 @@ static int test_popups(void)
         uint32_t drum_mix = ui.page;
         go_title("EDIT 2"); frame(); press(B_EDIT);
         o = smap.row == sound_row && smap.col == 1u;
-        turn(EN_K2, 1);
+        turn(EN_K1, 1);
         smap_pages(smap.row, drum_pages);
-        bad += check("DRUM MAP: one KNOB 2 detent recalls Drum mix after it has been opened",
+        bad += check("DRUM MAP: one KNOB 1 detent recalls Drum mix after it has been opened",
                      o && smap.row == sound_row + 1u && drum_pages[smap.col] == drum_mix);
-        turn(EN_K2, -1); smap_pages(smap.row, drum_pages);
+        turn(EN_K1, -1); smap_pages(smap.row, drum_pages);
         bad += check("DRUM MAP: one reverse detent recalls Hit inside Sound",
                      smap.row == sound_row && str_eq(PAGES[drum_pages[smap.col]].title, "EDIT 2"));
-        turn(EN_K1, -1); turn(EN_K1, -1);
-        bad += check("DRUM MAP: KNOB 1 stops at Kit without leaving Sound", smap.row == sound_row && !smap.col);
-        turn(EN_K1, 1); turn(EN_K1, 1);
-        bad += check("DRUM MAP: KNOB 1 stops at Hit without leaving Sound", smap.row == sound_row && smap.col == 1u);
+        turn(EN_K2, -1); turn(EN_K2, -1);
+        bad += check("DRUM MAP: KNOB 2 stops at Kit without leaving Sound", smap.row == sound_row && !smap.col);
+        turn(EN_K2, 1); turn(EN_K2, 1);
+        bad += check("DRUM MAP: KNOB 2 stops at Hit without leaving Sound", smap.row == sound_row && smap.col == 1u);
+        turn(EN_PRESET, 1);
+        o = smap.row == sound_row + 1u;
+        turn(EN_PRESET, -1);
+        bad += check("DRUM MAP: PRESETS the category, as KNOB 1 (Sound -> Drum and back)", o && smap.row == sound_row);
         press(B_HOME);
     }
     go_page(GR_SONG); frame();
@@ -2798,22 +2802,30 @@ static int test_chain(void)
     press(B_OCTUP);
     bad += check("SONG OCT+ on a column opens its section page without starting transport", sect_on() && sp.row == 0 &&
         !chain.armed && !transport_req);
+    {
+        uint32_t k;
+        bad += check("  its page position: the song's sections (one here: none shown)", nav_pos(&k) == 1u && !k);
+    }
     turn(EN_K1, 1);
     bad += check("  KNOB 1 there: track 1's pattern in the section", chain_patterns[0][0] == 1);
     turn(EN_K1, -1); turn(EN_K1, -1);
     bad += check("  below P1: a rest", chain_patterns[0][0] == CHAIN_REST);
     turn(EN_K1, 1);
-    turn(EN_SELECT, 3);
-    bad += check("  SELECT: its length a beat a detent (from AUTO: 4 beats, +3)", chain_config.len[0] == 28u);
-    turn(EN_SELECT, -10);
+    turn(EN_PRESET, 3);
+    bad += check("  PRESETS: its length a beat a detent (from AUTO: 4 beats, +3)", chain_config.len[0] == 28u);
+    turn(EN_PRESET, -10);
     bad += check("  turned below a beat: AUTO again", !chain_config.len[0]);
     press(B_PLAY); events_block(32);
     bad += check("  PLAY loops the section (the header: LOOPING A)", chain.running && chain.solo && str_eq(song_edit_status(), "LOOPING A"));
-    turn(EN_SELECT, 2);
+    turn(EN_PRESET, 2);
     bad += check("  edits while it loops", chain_config.len[0] && chain.config.len[0] == chain_config.len[0]);
     press(B_PLAY); events_block(32);
     press(B_OCTDN);
-    bad += check("  OCT- back to SONG", !sect_on() && !ui.home && cur_page()->graph == GR_SONG && !chain.running);
+    {
+        uint32_t k, n = nav_pos(&k);
+        bad += check("  OCT- back to SONG (its page position again)", !sect_on() && !ui.home &&
+                     cur_page()->graph == GR_SONG && !chain.running && n >= 2u);
+    }
     chain_config.len[0] = 0;
     press(B_PLAY);
     bad += check("SONG PLAY starts at the selected section", chain.armed && transport_req == 1);
@@ -3329,11 +3341,13 @@ static int test_name(void)
 }
 
 /* the EDIT cycle (no ENGINE page: engines are the EDIT layer's) and its memory */
-static int engine_cycle(const char *const *want, uint32_t n)   /* EDIT tapped from HOME, then SELECT n - 1 times */
+static int engine_cycle(const char *const *want, uint32_t n)   /* EDIT tapped from HOME, then SELECT n - 1 times (the
+                                                                 * last twice: SELECT stops at the last page) */
 {                                                                 /* (EDIT again: the map, ui_sections.c) */
     uint32_t i;
     int ok = 1;
     go_home(); frame();
+    ui.fam_last[FAM_EDIT] = 0;                          /* (EDIT from HOME: the first page, not the last one used) */
     for (i = 0; i < n; i++) {
         if (i) turn(EN_SELECT, 1);
         else press(B_EDIT);
@@ -3347,7 +3361,7 @@ static int engine_cycle(const char *const *want, uint32_t n)   /* EDIT tapped fr
 static int test_cz1_pages(void)
 {
     static const char *const CYC[] = {"CZ TOOLS", "CZ LINE", "CZ DETUNE",   /* (its envelopes, vibrato: ENV's, LFO's) */
-        "CZ WINDOW", "CZ1 WAVE", "CZ1 TOUCH", "CZ2 WAVE", "CZ2 TOUCH", "VOICE", "CZ TOOLS"};
+        "CZ WINDOW", "CZ1 WAVE", "CZ1 TOUCH", "CZ2 WAVE", "CZ2 TOUCH", "VOICE", "VOICE"};
     uint8_t p[LCZ_PACKED], q[LCZ_PACKED], raw[CZ_BYTES], before[CZ_BYTES];
     uint32_t tr, id, v, i, ok = 1, sane = 1, kept = 1;
     int bad = 0;
@@ -3494,11 +3508,11 @@ static int test_cz1_factory(void)
 
 static int test_edit_cycle(void)
 {
-    static const char *const CYC_A[] = {"EDIT 1", "EDIT 2", "VOICE", "EDIT 1"};   /* (VOICE: VOICE 1-3's list) */
+    static const char *const CYC_A[] = {"EDIT 1", "EDIT 2", "VOICE", "VOICE"};   /* (VOICE: VOICE 1-3's list) */
     static const char *const CYC_F[] = {"EDIT 1", "EDIT 2", "ALGO", "FREQ", "OUT", "SCALE",   /* (its EGs, LFO: */
-                                        "CURVE", "FM BEND", "VOICE", "EDIT 1"};      /* ENV's, LFO's; no STORE) */
+                                        "CURVE", "FM BEND", "VOICE", "VOICE"};       /* ENV's, LFO's; no STORE) */
     static const char *const CYC_D[] = {"EDIT 1", "EDIT 2", "OP1 ENV", "OP2 ENV", "OP3 ENV", "OP4 ENV",
-                                        "OP LEVEL", "VOICE", "EDIT 1"};
+                                        "OP LEVEL", "VOICE", "VOICE"};
     int bad = 0, ok;
     uint32_t i;
     ui_power_on();
@@ -3510,14 +3524,14 @@ static int test_edit_cycle(void)
         ok &= !str_eq(PAGES[i].title, "ENGINE");
     bad += check("no ENGINE page (engines are the EDIT layer's)", ok);
     set_engine_of(TSEL, GENERAL_ENGINE);
-    bad += check("EDIT cycle (VOICE): EDIT 1 EDIT 2 VOICE EDIT 1", engine_cycle(CYC_A, NELEM(CYC_A)));
+    bad += check("EDIT cycle (VOICE): EDIT 1 EDIT 2 VOICE, stopping there", engine_cycle(CYC_A, NELEM(CYC_A)));
 #if MELODEE_LEGACY_EXTRAS                           /* (PHASE: retired) */
     set_engine_of(TSEL, 2);
     TSEL->p[P_E7] = 0;
     bad += check("PHASE LINK keeps the compact EDIT cycle", engine_cycle(CYC_A, NELEM(CYC_A)));
     TSEL->p[P_E7] = 1;
     static const char *const CYC_CZ[] = {"EDIT 1", "EDIT 2", "DCW1 ENV", "DCW2 ENV", "DCA2 ENV", "DCO ENV",
-        "CZ LEVEL", "VOICE", "EDIT 1"};
+        "CZ LEVEL", "VOICE", "VOICE"};
     bad += check("PHASE SPLIT exposes native envelope pages", engine_cycle(CYC_CZ, NELEM(CYC_CZ)));
     go_title("DCW1 ENV"); TSEL->p[P_FM1_ATK] = 0; turn(EN_K1, 1);
     bad += check("PHASE DCW1 knob edits its saved parameter", TSEL->p[P_FM1_ATK] > 0);
@@ -3634,6 +3648,92 @@ static int test_boot_template(void)
     settings_boot = 0;
     memset(&tmpl, 0, sizeof tmpl);
     memset(proj_slot, 0, sizeof proj_slot);
+    return bad;
+}
+
+/* docs/NAVIGATION.md's decisions: PRESETS the rows where KNOB 2 picks them (lists, sheets, the menu, the slots, the
+ * drum grid's lanes) and the section page's length, a message where it has nothing to do; SELECT walks the song's
+ * sections there (its page position k/n of them), stopping at the ends as everywhere; GLO's main page 1/6; the slot
+ * pages' KNOB 1 ten slots; F5 G5 F#5 notes under FX and (F5 G5) on the drum grid */
+static int test_navigation_rules(void)
+{
+    int bad = 0, ok;
+    uint32_t k, n;
+    ui_power_on();
+    stop_transport();
+    go_title("SCL"); frame();
+    lst.row = 0;
+    turn(EN_PRESET, 1);
+    bad += check("NAV: PRESETS on a list page (SCL) moves the row, as KNOB 2", lst.row == 1u);
+    go_title("USER"); frame();
+    ui.uslot = 5;
+    turn(EN_K1, 1); ok = ui.uslot == 15u;
+    turn(EN_K2, 1); ok &= ui.uslot == 16u;
+    turn(EN_PRESET, -1); ok &= ui.uslot == 15u;
+    turn(EN_K1, -5);
+    bad += check("NAV: USER: KNOB 1 ten slots a detent, KNOB 2 and PRESETS one, stopping at the first",
+                 ok && ui.uslot == 0u);
+    press(B_OCTUP);
+    ok = pop.on == POP_SHEET && pop.sel == 0u;
+    turn(EN_PRESET, 1);
+    bad += check("NAV: PRESETS in a sheet moves the row, as KNOB 2", ok && pop.sel == 1u);
+    press(B_OCTDN);
+    go_title("TEMPO"); frame();
+    turn(EN_PRESET, 1);
+    bad += check("NAV: PRESETS with nothing to do here: PRESETS: GO TO STAGE (the page unchanged)",
+                 msg_is("PRESETS: GO TO STAGE") && str_eq(cur_page()->title, "TEMPO"));
+    hold(B_HOME);
+    ok = ui.menu == 1u;
+    ui.menu_sel = (uint8_t)(MI_COUNT - 1u);
+    turn(EN_PRESET, 1); ok &= ui.menu_sel == MI_COUNT - 1u;
+    ui.menu_sel = 0;
+    turn(EN_PRESET, -1);
+    bad += check("NAV: the settings menu: PRESETS stops at the first and last rows (as KNOB 2)", ok && !ui.menu_sel);
+    press(B_OCTDN);
+    ui_power_on();
+    press(B_GLO);
+    n = nav_pos(&k);
+    bad += check("NAV: GLO's main page: 1/6 (main, MIXER, GLOBAL .. WEIGHTS 2)", ui.lock == LAYER_GLO && n == 6u && !k);
+    press(B_OCTDN);
+    ui_power_on();
+    stop_transport();
+    chain_defaults(&chain_config);                      /* A B A C: three sections */
+    chain_config.count = 4;
+    for (uint32_t r = 0; r < 4u; r++) {
+        uint32_t id = r == 2u ? 0u : r == 3u ? 2u : r;
+        chain_config.sect[r] = (uint8_t)id;
+        for (uint32_t t = 0; t < NTRK; t++) chain_patterns[r][t] = (uint8_t)id;
+        chain_config.row[r].slot = (uint8_t)id;
+    }
+    go_page(GR_SONG); frame();
+    ui.song_row = 2; press(B_OCTUP);
+    n = nav_pos(&k);
+    ok = sect_on() && sp.row == 2u && n == 3u && k == 0u;   /* (the third column: an A) */
+    turn(EN_SELECT, 1); ok &= sp.row == 1u;
+    turn(EN_SELECT, 1); ok &= sp.row == 3u;
+    n = nav_pos(&k); ok &= n == 3u && k == 2u;
+    turn(EN_SELECT, 1); ok &= sp.row == 3u;
+    turn(EN_SELECT, -3);
+    bad += check("NAV: the section page: SELECT walks A B C (k/n of them), stopping at the first and last (back: A's "
+                 "first column)", ok && sp.row == 0u && sect_on());
+    turn(EN_PRESET, 2);
+    bad += check("NAV: ..PRESETS its length, a beat a detent", chain_config.len[0] && chain_config.len[2] == chain_config.len[0]);
+    press(B_OCTDN);
+    chain_defaults(&chain_config);
+    ui_power_on();
+#if MELODEE_KEY_NAV
+    btn_down(B_FX); frame();
+    ok = fm1_nav_free == ((1u << FM1_NAV_MOD[0]) | (1u << FM1_NAV_MOD[1]) | (1u << FM1_NAV_MOD[2]));
+    btn_up(B_FX); frame(); frame();
+    bad += check("NAV: FX held: F5 G5 F#5 are its punches, not M1 M2 M3; let go: modifiers again", ok && !fm1_nav_free);
+    set_engine_of(TSEL, ENGI_DRUM);
+    go_page(GR_ROLL); frame();
+    ok = grid_on() && fm1_nav_free == ((1u << FM1_NAV_MOD[0]) | (1u << FM1_NAV_MOD[1]));
+    ui.lane = 0;
+    turn(EN_PRESET, 1);
+    bad += check("NAV: the drum grid: F5 G5 steps 15, 16 (F#5 stays M3); PRESETS the lane, as KNOB 2", ok && ui.lane == 1u);
+#endif
+    go_home(); frame();
     return bad;
 }
 
@@ -3971,7 +4071,7 @@ static int test_fm6_pages(void)
     }
     fm6_fn_reset();
     go_title("STORE");
-    turn(EN_K1, 4);
+    turn(EN_K2, 4);
     sheet_do("Save here");
     fm6_name(a, fm6_patch_of(tr));
     b[0] = 0;
@@ -4029,12 +4129,12 @@ static void host_slot_make(uint32_t k)                /* USR k + 1: 2 s at 22.05
 }
 static int test_slices(void)
 {
-    static const char *const CYC_S[] = {"EDIT 1", "EDIT 2", "SLICES", "VOICE", "EDIT 1"};
+    static const char *const CYC_S[] = {"EDIT 1", "EDIT 2", "SLICES", "VOICE", "VOICE"};
     int bad = 0, ok;
     uint32_t n, j, p0, k, note;
     ui_power_on();
     set_engine_of(TSEL, 13u);                        /* SLICE CHOP: BREAK, 16 */
-    bad += check("SLICES: SLICE's EDIT cycle EDIT 1 EDIT 2 SLICES VOICE VOICE 2 EDIT 1", engine_cycle(CYC_S, NELEM(CYC_S)));
+    bad += check("SLICES: SLICE's EDIT cycle EDIT 1 EDIT 2 SLICES VOICE, stopping there", engine_cycle(CYC_S, NELEM(CYC_S)));
     go_page(GR_SLICES); frame();
     n = slice_count();
     p0 = TSEL->p[P_E1];
@@ -5932,6 +6032,7 @@ int main(void)
     bad += test_save_edit_holds();
     bad += test_midi_status();
     bad += test_tempo_select();
+    bad += test_navigation_rules();
 #if MELODEE_SLICE
 #if SMP_USER_SLOTS
     bad += test_slices();

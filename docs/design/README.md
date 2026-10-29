@@ -143,6 +143,15 @@ One way to move on every screen with something to move through (Kerem, 2026-10-1
   Clear motion). A clearing row with nothing there says so instead of asking.
 - **SELECT** turns the pages, as before, NOTES too (Kerem, 2026-10-10): there KNOB 1 alone moves, the steps one by
   one (empty ones too) and a step's notes one at a time (a chord's, a take's), back onto the step before's last note.
+- **One set of rules** (this fork, 2026-10-28; the audit and its decisions: [docs/NAVIGATION.md](../NAVIGATION.md)):
+  SELECT is sideways only (pages, never a list's rows) and stops at the first and last page, as everything else
+  that moves does (only NOTES' cursor goes round the loop, and a page button tapped again still goes round its
+  pages). PRESETS is the bigger step: sounds on Stage, the browser and PATTERNS; the page's next part elsewhere (a
+  section, an envelope group, the operator, a page of steps, the scale); the row wherever KNOB 2 picks one (lists,
+  sheets, value lists, the menu, slots, racks, MOD, MOTION, the drum grid's and the punch editor's lanes); the section
+  page's length. Nothing to do: the toast PRESETS: GO TO STAGE. Pickers put the group on KNOB 1 and the item on
+  KNOB 2 (the browser, SCALES, the effect list, the EDIT map). The slot pages: KNOB 2 a slot, KNOB 1 ten. The page
+  position k/n shows wherever SELECT walks: GLO's main page 1/6, the section page the song's sections.
 - **GLO** (this fork, 2026-10-28): a tap opens its main page, the GLO layer locked open (header `[GLO] SET`, footer
   `GLO MIXER`; `ui_layer.c` `glo_main`); another button leaves it (PLAY, REC, OCT± stay). GLO again: MIXER, then
   GLOBAL .. WEIGHTS 2, after the last the main page. SELECT walks the same six as one list (main, MIXER, GLOBAL ..
@@ -159,9 +168,9 @@ One way to move on every screen with something to move through (Kerem, 2026-10-1
 |---|---|---|---|---|---|
 | Browser | list (category) | sound | FAV / engine | keep | back (revert) |
 | Settings | value | row | - | open / step | close |
-| PROJECT, USER, STORE | slot | slot | - | the slot's sheet | Stage |
+| PROJECT, USER, STORE | ten slots (PROJECT: one) | slot (PRESETS too) | - | the slot's sheet | Stage |
 | SONG | column | the column's section | - | the section page; on "+": add what plays / apply destination | cancel, then Stage |
-| SONG: section page | track 1's pattern (REST below P1) | track 2's | track 3's / 4's (SELECT: length) | the section's sheet | SONG |
+| SONG: section page | track 1's pattern (REST below P1) | track 2's | track 3's / 4's (PRESETS: length; SELECT: the sections) | the section's sheet | SONG |
 | PATTERNS | track 1's pattern | track 2's | track 3's / 4's | the pattern's sheet | the queue, Stage |
 | PATTERNS: Copy to | the place | the place | the place | copy there | leave |
 | MOD | source (its picker) | route | destination / amount | - | Stage |
@@ -201,9 +210,10 @@ The section page (OCT+ on a column) draws PATTERNS' cells with the section's pat
 across them), the length on top (AUTO chip) with the section's use count at its right, and a lane per track at the
 foot: the first loop bright, later loops
 lighter, a REC-coloured edge where the section cuts a pattern, a dotted line for a rest. KNOB k sets track k's
-pattern in the section, SELECT the length (below one beat: AUTO), PLAY loops the section alone (`chain.solo`; header
+pattern in the section, PRESETS the length (below one beat: AUTO), SELECT the song's next / previous section (header
+k/n of them), PLAY loops the section alone (`chain.solo`; header
 LOOPING A; pattern and length edits apply from the next pass), OCT+ its sheet (Set/Remove preset for the
-selected track, Punch FX, Copy as new section; the length is SELECT's alone, "LENGTH: AUTO" when it returns), FX its punches, OCT- back to SONG.
+selected track, Punch FX, Copy as new section; the length is PRESETS' alone, "LENGTH: AUTO" when it returns), FX its punches, OCT- back to SONG.
 Live launch: REC on SONG switches every track to the picked column's section together (seq.c `live_tick`): stopped,
 at once; patterns playing without the song, on the next bar, then at the end of the launched section. Patterns and
 rests only. The shared header shows "B NEXT" while queued and "A CHANGED" once a track is changed by hand (both on

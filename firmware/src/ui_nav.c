@@ -63,24 +63,30 @@ static uint32_t nav_group(uint32_t fam, uint32_t i)    /* the engine's envelope 
     return 0;
 }
 static uint8_t nav_next_group(uint32_t fam, const uint8_t *pg, uint32_t n, uint32_t k, int32_t dir)
-{                                                      /* from pg[k]: the first page of the next / previous group */
-    uint32_t g = nav_group(fam, pg[k]), j = k;
-    do j = (j + (dir > 0 ? 1u : n - 1u)) % n;
-    while (j != k && g && nav_group(fam, pg[j]) == g);
-    if (dir < 0)                                       /* (back: to that group's first page) */
-        for (g = nav_group(fam, pg[j]); g && nav_group(fam, pg[(j + n - 1u) % n]) == g && (j + n - 1u) % n != k;)
-            j = (j + n - 1u) % n;
+{                                                      /* from pg[k]: the first page of the next / previous group; */
+    uint32_t g = nav_group(fam, pg[k]), j = k;          /* none that way: pg[k] (no wrap, docs/NAVIGATION.md 4) */
+    if (dir > 0) {
+        while (j + 1u < n && g && nav_group(fam, pg[j + 1u]) == g)
+            j++;
+        return j + 1u < n ? pg[j + 1u] : pg[k];
+    }
+    while (j && g && nav_group(fam, pg[j - 1u]) == g)  /* (back: this group's first page, then the one before's) */
+        j--;
+    if (!j)
+        return pg[k];
+    for (g = nav_group(fam, pg[--j]); j && g && nav_group(fam, pg[j - 1u]) == g; j--)
+        ;
     return pg[j];
 }
-static void nav_scroll(int32_t dir)                    /* SELECT: the lit button's pages, both ways (wraps) */
-{
+static void nav_scroll(int32_t dir)                    /* SELECT: the lit button's pages, both ways, stopping at the */
+{                                                      /* first and the last (docs/NAVIGATION.md 4) */
     uint8_t pg[NPAGES];
     uint32_t fam = nav_owner(ui.page), n = nav_pages(fam, pg), k;
     for (k = 0; k < n && pg[k] != ui.page; k++)
         ;
-    if (!n || (n == 1u && k == 0u))
+    if (!n || (k < n && (dir > 0 ? k + 1u >= n : k == 0u)))
         return;
-    ui.page = k == n ? pg[0] : pg[(k + (dir > 0 ? 1u : n - 1u)) % n];
+    ui.page = k == n ? pg[0] : pg[dir > 0 ? k + 1u : k - 1u];
     ui.fam_last[fam] = ui.page;
     page_entered();
 }
@@ -130,8 +136,18 @@ static uint32_t nav_pos(uint32_t *k)                   /* -> n, the page's place
     uint8_t pg[NPAGES];
     uint32_t n = 0, m = 0, i, fam;
     *k = 0;
-    if (song_punch_on())
+    if (song_punch_on())                                /* (the punch editor: no pages of its own) */
         return 0;
+    if (sect_on()) {                                    /* SONG's section page: SELECT walks the song's sections */
+        for (i = 0; i < SONG_SECTIONS; i++)
+            if (sect_first(i) < CHAIN_ROWS)
+                *k += i < chain_config.sect[sp.row], n++;
+        return n;
+    }
+    if (ui.lock == LAYER_GLO) {                         /* GLO's main page: the first of its list (ui_layer.c glo_scroll) */
+        n = nav_pages(FAM_GLO, pg);
+        return n ? n + 1u : 0u;
+    }
     if (ui.home) {                                     /* (HOME: its "1/2" where there is room, after its octave
         *k = ui.home_pg;                               * pill: ui_draw.c draw_head) */
         return 2u;
@@ -162,7 +178,7 @@ static int32_t nav_head_pos(int32_t x)                 /* (ui_draw.c draw_head) 
     const char *st = "";
     uint32_t k, n = nav_pos(&k);
     int32_t w;
-    if (n < 2u || ui.home)
+    if (n < 2u || (ui.home && ui.lock != LAYER_GLO))    /* (GLO's main page over HOME: its 1/6 too) */
         return x;
     fmt_int(b, (int32_t)k + 1);
     str_cpy(b + str_len(b), "/", 2);
@@ -216,6 +232,12 @@ static void nav_keep(void)                             /* (ui_input.c, each pass
 #if MELODEE_KEY_NAV
     fm1_input_nav_keep(momentary.active);
     fm1_input_nav_whites_on(!shape_page_on());          /* (M3's white keys: ARP > SHAPE's steps there, ui.c) */
+    {   /* F5 G5 F#5 notes, not M1 M2 M3: FX held or locked (its punches), the punch editor; the drum grid F5 G5 (steps
+         * 15, 16; F#5 stays M3: A#4 hears, D#5 turns the page) */
+        uint32_t m = (1u << FM1_NAV_MOD[0]) | (1u << FM1_NAV_MOD[1]);
+        fm1_input_nav_free(ui.ly == LAYER_FX || (fm1_in.buttons & (1u << panel.btn[B_FX])) || song_punch_on() ?
+                           m | (1u << FM1_NAV_MOD[2]) : grid_on() ? m : 0u);
+    }
     if (fm1_nav.keep) {
         fm1_nav.keep = 0;
         if (momentary.active) {

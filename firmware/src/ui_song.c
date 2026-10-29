@@ -318,7 +318,7 @@ static void sect_pattern(uint32_t k, int32_t steps)
     if (sect_looping()) chain.len_dirty = 1;
     song_edit_end();
 }
-/* SELECT: the length a beat a detent (from AUTO: its length now); turned below a beat: AUTO */
+/* PRESETS: the length a beat a detent (from AUTO: its length now); turned below a beat: AUTO */
 static void sect_length(int32_t steps)
 {
     uint32_t row = sp.row, len = chain_config.len[row];
@@ -330,6 +330,19 @@ static void sect_length(int32_t steps)
     chain_config.len[row] = (uint16_t)to;
     sect_sync(row); song_edit_end();
     if (!to) ui_message("LENGTH: AUTO");
+}
+/* SELECT on the section page: the song's next / previous section (the letters in use, A .. Z), its first column;
+ * stopping at the first and the last. A loop playing stops (PLAY loops the one now shown) */
+static void sect_step(int32_t steps)
+{
+    int32_t i, d = steps > 0 ? 1 : -1, left = steps > 0 ? steps : -steps, at = (int32_t)chain_config.sect[sp.row];
+    for (i = at + d; left && i >= 0 && i < (int32_t)SONG_SECTIONS; i += d)
+        if (sect_first((uint32_t)i) < CHAIN_ROWS)
+            at = i, left--;
+    if (at == (int32_t)chain_config.sect[sp.row])
+        return;
+    if (sect_looping()) transport_req = 2;
+    sect_open(sect_first((uint32_t)at));
 }
 /* PLAY on the section page: this section again and again (again: stop) */
 static void sect_play(void)
